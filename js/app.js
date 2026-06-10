@@ -18,10 +18,23 @@ function init() {
   } catch(e) {}
   updateStatusUI();
   navigateTo('today');
-  fetchScores();
-  setInterval(() => { if (!document.hidden) fetchScores(); }, 30 * 60 * 1000);
+
+  // Only fetch on startup if cache is older than 30 minutes (or missing).
+  // This prevents burning API calls every time someone opens the app.
+  const cacheAge = STATE.lastUpdated ? (Date.now() - STATE.lastUpdated.getTime()) : Infinity;
+  if (cacheAge > 30 * 60 * 1000) fetchScores();
+
+  // Auto-refresh every 30 min, but ONLY on days when matches are scheduled.
+  // No point calling the API on days with no games.
+  setInterval(() => {
+    if (!document.hidden && isMatchDay()) fetchScores();
+  }, 30 * 60 * 1000);
+
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && STATE.lastUpdated && (Date.now() - STATE.lastUpdated.getTime() > 3 * 60 * 1000)) fetchScores();
+    if (!document.hidden && isMatchDay()) {
+      const age = STATE.lastUpdated ? (Date.now() - STATE.lastUpdated.getTime()) : Infinity;
+      if (age > 30 * 60 * 1000) fetchScores();
+    }
   });
 }
 
@@ -271,5 +284,14 @@ function openSettings()  { const m = document.getElementById('settings-modal'); 
 function closeSettings() { const m = document.getElementById('settings-modal'); if (m) m.classList.remove('open'); }
 function clearMyTeams()  { STATE.myTeams = []; localStorage.removeItem('wc2026_myteams'); showToast('My Teams cleared.'); renderActiveTab(); }
 function clearCache()    { localStorage.removeItem('wc2026_results'); STATE.results = { groupMatches: [], knockoutMatches: [] }; STATE.lastUpdated = null; updateStatusUI(); showToast('Cache cleared. Refreshing...'); fetchScores(); }
+
+// ── Match day detection ───────────────────────────────────────────────────
+// Returns true only on days when matches are actually scheduled.
+// Prevents pointless API calls on the 300+ non-match days of the year.
+function isMatchDay() {
+  const today = getTodayCT();
+  return SCHEDULE.some(m => m.date === today) ||
+         R32_MATCHES.some(m => m.date === today);
+}
 
 document.addEventListener('DOMContentLoaded', init);

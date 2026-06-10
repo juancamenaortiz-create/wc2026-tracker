@@ -158,26 +158,99 @@ function buildMatchToggle(match, key, override) {
   </div>`;
 }
 
-function buildTournamentPath(team, rank, group) {
-  // Determine which R32 match this team feeds into
-  const posKey = `${rank === 1 ? '1st' : '2nd'}-${group}`;
-  const r32MatchId = GROUP_POSITION_TO_R32[posKey];
-  const r32Match = r32MatchId ? R32_MATCHES.find(m => m.id === r32MatchId) : null;
+// ── Slot resolver ────────────────────────────────────────────────────────────
+// Turns a slot label ("2nd-B", "3rd-ABCDF") into live team data from standings.
+function resolveSlot(slot) {
+  // Single group: "1st-A", "2nd-B", etc.
+  const single = slot.match(/^(1st|2nd|3rd|4th)-([A-L])$/);
+  if (single) {
+    const idx = {'1st':0,'2nd':1,'3rd':2,'4th':3}[single[1]];
+    const grp  = single[2];
+    const s    = calculateStandings(grp);
+    const entry= s[idx];
+    return { type:'single', rank:single[1], group:grp, team:entry?.name||null, pts:entry?.Pts??0, p:entry?.P??0 };
+  }
+  // Multi-group 3rd place: "3rd-ABCDF"
+  const multi = slot.match(/^3rd-([A-L]{2,})$/);
+  if (multi) {
+    const groups     = multi[1].split('');
+    const candidates = groups.map(g => {
+      const s = calculateStandings(g);
+      const t = s[2]; // 3rd place
+      return { group:g, team:t?.name||null, pts:t?.Pts??0, gd:t?.GD??0, gf:t?.GF??0, p:t?.P??0 };
+    });
+    return { type:'multi3rd', groups, candidates, played: candidates.filter(c => c.p > 0) };
+  }
+  return { type:'unknown', slot };
+}
 
-  const steps = [
-    { round:'R32',   label: r32Match ? `vs ${r32Match.slot1 === posKey ? r32Match.slot2 : r32Match.slot1} · ${r32Match.city} · ${formatShortDate(r32Match.date)}` : '?', state:'open' },
-    { round:'R16',   label: 'Winner advances', state:'open' },
-    { round:'QF',    label: 'Winner advances', state:'open' },
-    { round:'SF',    label: 'Winner advances', state:'open' },
-    { round:'Final', label: 'Jul 19 · New York/NJ', state:'open' },
+function buildTournamentPath(team, rank, group) {
+  const posKey    = `${rank === 1 ? '1st' : '2nd'}-${group}`;
+  const r32MatchId= GROUP_POSITION_TO_R32[posKey];
+  const r32Match  = r32MatchId ? R32_MATCHES.find(m => m.id === r32MatchId) : null;
+  if (!r32Match) return '';
+
+  const opSlot = r32Match.slot1 === posKey ? r32Match.slot2 : r32Match.slot1;
+  const opp    = resolveSlot(opSlot);
+  const venue  = `${r32Match.city} · ${formatShortDate(r32Match.date)}`;
+
+  // Build R32 step HTML based on what we know
+  let r32Inner = '';
+  let wideClass = '';
+
+  if (opp.type === 'single') {
+    if (opp.team && opp.p > 0) {
+      // We know who's in that position right now
+      r32Inner = `<span class="path-round">R32</span>
+        <div class="path-opp">${getFlag(opp.team)}&nbsp;${opp.team}</div>
+        <div class="path-sub">${opp.rank} Grp ${opp.group} &middot; ${opp.pts}pts</div>
+        <div class="path-sub">${venue}</div>`;
+    } else {
+      r32Inner = `<span class="path-round">R32</span>
+        <span class="path-label">vs ${opSlot}</span>
+        <div class="path-sub">${venue}</div>`;
+    }
+  } else if (opp.type === 'multi3rd') {
+    wideClass = ' path-step-wide';
+    const groupStr = opp.groups.join('/');
+    if (opp.played.length > 0) {
+      // Sort by pts → GD → GF to show most likely qualifier first
+      const sorted = [...opp.played].sort((a,b) => b.pts-a.pts || b.gd-a.gd || b.gf-a.gf);
+      const rows = sorted.map((c,i) =>
+        `<div class="path-cand${i===0?' path-cand-top':''}">
+          ${getFlag(c.team)}&nbsp;<span class="path-cand-name">${c.team}</span>
+          <span class="path-cand-meta">Grp ${c.group}</span>
+          <span class="path-cand-pts">${c.pts}pts</span>
+        </div>`
+      ).join('');
+      r32Inner = `<span class="path-round">R32</span>
+        <div class="path-sub path-sub-hdr">Best 3rd · ${groupStr}</div>
+        <div class="path-cands">${rows}</div>
+        <div class="path-sub">${venue}</div>`;
+    } else {
+      r32Inner = `<span class="path-round">R32</span>
+        <span class="path-label">Best 3rd</span>
+        <div class="path-sub">${groupStr}</div>
+        <div class="path-sub">${venue}</div>`;
+    }
+  }
+
+  const plainSteps = [
+    { round:'R16',   label:'Winner advances' },
+    { round:'QF',    label:'Winner advances' },
+    { round:'SF',    label:'Winner advances' },
+    { round:'Final', label:'Jul 19 · New York/NJ' },
   ];
 
-  let stepsHtml = steps.map(s =>
-    `<div class="path-step ${s.state}">
-      <span class="path-round">${s.round}</span>
-      <span class="path-label">${s.label}</span>
-    </div>`
-  ).join('<div class="path-arrow">›</div>');
+  const stepsHtml =
+    `<div class="path-step open${wideClass}">${r32Inner}</div>` +
+    plainSteps.map(s =>
+      `<div class="path-arrow">›</div>
+       <div class="path-step open">
+         <span class="path-round">${s.round}</span>
+         <span class="path-label">${s.label}</span>
+       </div>`
+    ).join('');
 
   return `<div class="tournament-path">
     <div class="path-team-header">

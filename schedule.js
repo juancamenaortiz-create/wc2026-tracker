@@ -1,0 +1,129 @@
+// SCHEDULE.JS — Full schedule tab renderer
+
+const SCHEDULE_STATE = { view: 'date', filter: 'all' };
+
+function renderSchedule(container) {
+  const allMatches = [
+    ...SCHEDULE.map(m => ({ ...m, isKnockout: false })),
+    ...R32_MATCHES.map(m => ({ ...m, isKnockout: true })),
+  ];
+
+  const dates  = [...new Set(allMatches.map(m => m.date))].sort();
+  const groups = ['A','B','C','D','E','F','G','H','I','J','K','L','R32'];
+  const { view: viewMode, filter: filterKey } = SCHEDULE_STATE;
+
+  let filtered = allMatches;
+  if (filterKey !== 'all') {
+    if (viewMode === 'date') filtered = allMatches.filter(m => m.date === filterKey);
+    else if (filterKey === 'R32') filtered = allMatches.filter(m => m.isKnockout);
+    else filtered = allMatches.filter(m => m.g === filterKey);
+  }
+
+  const byDate = {};
+  filtered.forEach(m => { if (!byDate[m.date]) byDate[m.date] = []; byDate[m.date].push(m); });
+  const pills = viewMode === 'date' ? ['all', ...dates] : ['all', ...groups];
+
+  // Artifact-style active pill: crimson gradient, no border, shadow
+  const pillsHtml = pills.map(p => {
+    const label = p === 'all' ? 'All Groups' : viewMode === 'date' ? formatPillDate(p) : `Grp ${p}`;
+    return `<button class="pill${filterKey === p ? ' active' : ''}" onclick="setScheduleFilter('${p}')">${label}</button>`;
+  }).join('');
+
+  let html = `<div class="sched-header">
+    <div class="view-toggle">
+      <button class="toggle-btn${viewMode === 'date' ? ' active' : ''}" onclick="setScheduleView('date')">By Date</button>
+      <button class="toggle-btn${viewMode === 'group' ? ' active' : ''}" onclick="setScheduleView('group')">By Group</button>
+    </div>
+    <div class="pills-wrap">${pillsHtml}</div>
+  </div>
+  <div class="schedule-wrap">`;
+
+  if (filtered.length === 0) {
+    html += '<div class="empty-state">No matches found</div>';
+  } else {
+    Object.keys(byDate).sort().forEach(date => {
+      // Date header matching artifact DateHeader exactly
+      const d = new Date(date + 'T12:00:00');
+      const day  = d.toLocaleDateString('en-US', { weekday: 'long' });
+      const mon  = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      html += `<div class="date-hdr"><span class="date-hdr-day">${day}, </span><span class="date-hdr-date">${mon}</span></div>`;
+      byDate[date].forEach(match => { html += buildScheduleRow(match); });
+    });
+  }
+
+  html += '</div>';
+  container.innerHTML = html;
+
+  container.querySelectorAll('[data-star-team]').forEach(slot => {
+    const btn = starBtn(slot.dataset.starTeam, () => renderSchedule(container));
+    slot.appendChild(btn);
+  });
+}
+
+function buildScheduleRow(match) {
+  const result = match.isKnockout ? getKnockoutResult(match.id) : getMatchResult(match);
+  const status = result ? result.status : 'NS';
+  const score1 = result ? result.score1 : null;
+  const score2 = result ? result.score2 : null;
+  const isLive = status === 'LIVE', isFT = status === 'FT';
+
+  let w1 = '', w2 = '';
+  if (isFT && score1 !== null) {
+    if (score1 > score2)      { w1 = 'winner'; w2 = 'loser'; }
+    else if (score2 > score1) { w1 = 'loser';  w2 = 'winner'; }
+    else                      { w1 = 'draw';   w2 = 'draw'; }
+  }
+
+  const isMyT1 = isMyTeam(match.t1 || ''), isMyT2 = isMyTeam(match.t2 || '');
+  const t1Name = match.t1 || match.slot1 || 'TBD', t2Name = match.t2 || match.slot2 || 'TBD';
+  const t1Flag = match.t1 ? getFlag(match.t1) : '❓', t2Flag = match.t2 ? getFlag(match.t2) : '❓';
+  const roundLabel = match.isKnockout ? 'R32' : `Grp ${match.g}`;
+
+  let statusHtml = '';
+  if (isLive)     statusHtml = '<span class="live-badge sm"><span class="pulse-dot"></span>LIVE</span>';
+  else if (isFT)  statusHtml = '<span class="ft-badge sm">FT</span>';
+  else            statusHtml = `<span class="sched-time">${match.time} CT</span>`;
+
+  let centerHtml = '';
+  if ((isLive || isFT) && score1 !== null) {
+    centerHtml = `<div class="sched-score"><span class="${w1}">${score1}</span>–<span class="${w2}">${score2}</span></div>`;
+  } else {
+    centerHtml = '<div class="sched-score vs">vs</div>';
+  }
+
+  return `<div class="schedule-row${isMyT1 || isMyT2 ? ' my-team-row' : ''}">
+  <div class="sched-meta">
+    <span class="sched-round">${roundLabel}</span>
+    ${statusHtml}
+  </div>
+  <div class="sched-teams">
+    <div class="sched-team ${w1}${isMyT1 ? ' my-t' : ''}">
+      <span class="flag">${t1Flag}</span>
+      <span class="sched-name">${t1Name}</span>
+      ${match.t1 ? `<span data-star-team="${match.t1}"></span>` : ''}
+    </div>
+    ${centerHtml}
+    <div class="sched-team right ${w2}${isMyT2 ? ' my-t' : ''}">
+      ${match.t2 ? `<span data-star-team="${match.t2}"></span>` : ''}
+      <span class="sched-name r">${t2Name}</span>
+      <span class="flag">${t2Flag}</span>
+    </div>
+  </div>
+  <div class="sched-city">📍 ${match.city}</div>
+</div>`;
+}
+
+function setScheduleView(view) {
+  SCHEDULE_STATE.view = view; SCHEDULE_STATE.filter = 'all';
+  const c = document.getElementById('tab-content');
+  if (c) renderSchedule(STATE.demoMode ? document.getElementById('tab-inner') || c : c);
+}
+function setScheduleFilter(filter) {
+  SCHEDULE_STATE.filter = filter;
+  const c = document.getElementById('tab-content');
+  if (c) renderSchedule(STATE.demoMode ? document.getElementById('tab-inner') || c : c);
+}
+function formatPillDate(dateStr) {
+  const [y,mo,d] = dateStr.split('-').map(Number);
+  return new Date(y, mo-1, d).toLocaleDateString('en-US', { month:'short', day:'numeric' });
+}

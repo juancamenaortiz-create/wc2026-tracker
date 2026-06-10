@@ -1,0 +1,17 @@
+{
+  "name": "FIFA World Cup 2026",
+  "short_name": "WC 2026",
+  "description": "Live FIFA World Cup 2026 group stage tracker",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#06091A",
+  "theme_color": "#06091A",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

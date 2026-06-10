@@ -6,6 +6,10 @@
   <meta name="theme-color" content="#06091A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="WC 2026">
+  <link rel="apple-touch-icon" href="/icon.png">
+  <link rel="icon" type="image/png" href="/icon.png">
+  <link rel="manifest" href="/manifest.json">
   <title>FIFA World Cup 2026</title>
   <link rel="stylesheet" href="css/styles.css">
 </head>
@@ -21,10 +25,11 @@
     </div>
     <div class="header-actions">
       <span id="status-msg" class="status-msg">Not yet refreshed</span>
-      <button id="refresh-btn" onclick="fetchScores()">&#8635; Refresh Scores</button>
+      <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
+        <button id="refresh-btn" onclick="fetchScores()">&#8635; Refresh Scores</button>
+        <button class="settings-btn" onclick="openSettings()" title="Settings">&#9881;</button>
+      </div>
     </div>
-    <!-- settings gear (small, right side of actions) -->
-    <button class="settings-btn" onclick="openSettings()" title="Settings">&#9881;&#65039;</button>
   </header>
 
   <!-- ===== MAIN CONTENT ===== -->
@@ -104,6 +109,9 @@
       <button class="modal-close-btn" onclick="closeSettings()">Close</button>
     </div>
   </div>
+
+  <!-- Twemoji: renders flag emojis on all platforms including Windows -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/twemoji.min.js" crossorigin="anonymous"></script>
 
   <!-- Scripts -->
   <script src="js/data.js"></script>

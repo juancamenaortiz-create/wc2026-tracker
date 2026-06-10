@@ -833,3 +833,20 @@ img.emoji {
 ::-webkit-scrollbar       { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--dim); border-radius: 2px; }
+
+/* ══ FLAG IMAGES (Twemoji via CDN — works on Windows) ══ */
+.flag-img {
+  width: 20px;
+  height: 20px;
+  vertical-align: -4px;
+  display: inline-block;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.flag-sm .flag-img,
+.group-row-flag .flag-img,
+.bc-team .flag-img {
+  width: 16px;
+  height: 16px;
+  vertical-align: -3px;
+}

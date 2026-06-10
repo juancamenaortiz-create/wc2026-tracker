@@ -228,7 +228,7 @@ function toggleMyTeam(team) {
   const idx = STATE.myTeams.findIndex(t => normName(t) === normName(team));
   if (idx >= 0) { STATE.myTeams.splice(idx, 1); }
   else {
-    if (STATE.myTeams.length >= 4) { showToast('Max 4 teams. Remove one first.'); return false; }
+    if (STATE.myTeams.length >= 10) { showToast('Max 10 teams. Remove one first.'); return false; }
     STATE.myTeams.push(team);
   }
   localStorage.setItem('wc2026_myteams', JSON.stringify(STATE.myTeams));

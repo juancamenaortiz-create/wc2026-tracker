@@ -81,8 +81,12 @@ function renderAnalyzer(container) {
     pathHtml += buildTournamentPath(standings[i].name, i + 1, g);
   }
 
-  // Reset button only if overrides exist
-  const hasOverrides = Object.keys(overrides).length > 0;
+  // Any overrides anywhere → show Reset All. Current group overrides → show WHAT-IF badge.
+  const totalOverrides     = Object.keys(overrides).length;
+  const hasAnyOverrides    = totalOverrides > 0;
+  const currentGroupIds    = new Set(matches.map(m => String(m.id)));
+  const thisGroupOverrides = Object.keys(overrides).filter(k => currentGroupIds.has(k)).length;
+  const thisGroupWhatIf    = thisGroupOverrides > 0;
 
   container.innerHTML = `
     <div class="az-header">
@@ -90,7 +94,7 @@ function renderAnalyzer(container) {
     </div>
 
     <div class="az-section">
-      <div class="az-section-title">📊 Projected Standings ${hasOverrides ? '<span class="what-if-badge">WHAT-IF</span>' : ''}</div>
+      <div class="az-section-title">📊 Projected Standings ${thisGroupWhatIf ? '<span class="what-if-badge">WHAT-IF</span>' : ''}</div>
       ${standingsHtml}
       <div class="legend-row">
         <span class="legend-dot qualified"></span><span>Advance</span>
@@ -102,7 +106,7 @@ function renderAnalyzer(container) {
     ${remainingMatches.length > 0 ? `
     <div class="az-section">
       <div class="az-section-title">🔬 What-If Scenarios
-        ${hasOverrides ? `<button class="reset-btn" onclick="resetAnalyzerOverrides()">Reset</button>` : ''}
+        ${hasAnyOverrides ? `<button class="reset-btn" onclick="resetAnalyzerOverrides()">Reset All${totalOverrides > 1 ? ` (${totalOverrides})` : ''}</button>` : ''}
       </div>
       ${remainingHtml}
     </div>` : ''}
@@ -270,7 +274,7 @@ function formatShortDate(dateStr) {
 
 function selectAnalyzerGroup(g) {
   ANALYZER_STATE.selectedGroup = g;
-  ANALYZER_STATE.overrides = {};
+  // Overrides persist across group switches — use Reset All to clear.
   const content = document.getElementById('tab-content');
   if (content) renderAnalyzer(content);
 }

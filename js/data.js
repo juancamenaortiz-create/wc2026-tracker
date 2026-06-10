@@ -151,35 +151,37 @@ const R32_MATCHES = [
   {id:82, date:"2026-07-01", time:"3:00 PM",  city:"Seattle",       slot1:"1st-G", slot2:"3rd-AEHIJ"},
   {id:83, date:"2026-07-02", time:"6:00 PM",  city:"Toronto",       slot1:"2nd-K", slot2:"2nd-L"},
   {id:84, date:"2026-07-02", time:"2:00 PM",  city:"Los Angeles",   slot1:"1st-H", slot2:"2nd-J"},
-  {id:85, date:"2026-07-02", time:"10:00 PM", city:"Vancouver",     slot1:"1st-B", slot2:"3rd-DEIJL"},
+  {id:85, date:"2026-07-02", time:"10:00 PM", city:"Vancouver",     slot1:"1st-B", slot2:"3rd-EFGIJ"},
   {id:86, date:"2026-07-03", time:"5:00 PM",  city:"Miami",         slot1:"1st-J", slot2:"2nd-H"},
   {id:87, date:"2026-07-03", time:"8:30 PM",  city:"Kansas City",   slot1:"1st-K", slot2:"3rd-DEIJL"},
   {id:88, date:"2026-07-03", time:"1:00 PM",  city:"Dallas",        slot1:"2nd-D", slot2:"2nd-G"},
 ];
 
-// R16 → Final knockout schedule (IDs 89–104)
+// R16 → Final knockout schedule (IDs 89–104) — from official FIFA bracket
+// R16 left:  M89(W74vsW77), M90(W73vsW75), M93(W83vsW84), M94(W81vsW82)
+// R16 right: M91(W76vsW78), M92(W79vsW80), M95(W86vsW88), M96(W85vsW87)
 const KO_ROUNDS = [
-  // Round of 16 — Jul 5–7
-  {id:89,  date:"2026-07-05", time:"TBD", city:"New York/NJ", round:"R16",       slot1:"W-M73",  slot2:"W-M74"},
-  {id:90,  date:"2026-07-05", time:"TBD", city:"Houston",     round:"R16",       slot1:"W-M75",  slot2:"W-M76"},
-  {id:91,  date:"2026-07-06", time:"TBD", city:"Dallas",      round:"R16",       slot1:"W-M77",  slot2:"W-M78"},
-  {id:92,  date:"2026-07-06", time:"TBD", city:"Seattle",     round:"R16",       slot1:"W-M79",  slot2:"W-M80"},
-  {id:93,  date:"2026-07-07", time:"TBD", city:"Miami",       round:"R16",       slot1:"W-M81",  slot2:"W-M82"},
-  {id:94,  date:"2026-07-07", time:"TBD", city:"Los Angeles", round:"R16",       slot1:"W-M83",  slot2:"W-M84"},
-  {id:95,  date:"2026-07-07", time:"TBD", city:"Vancouver",   round:"R16",       slot1:"W-M85",  slot2:"W-M86"},
-  {id:96,  date:"2026-07-07", time:"TBD", city:"Kansas City", round:"R16",       slot1:"W-M87",  slot2:"W-M88"},
+  // Round of 16 — Jul 4–7
+  {id:89,  date:"2026-07-04", time:"4:00 PM",  city:"New York/NJ", round:"R16",       slot1:"W-M74",  slot2:"W-M77"},
+  {id:90,  date:"2026-07-04", time:"12:00 PM", city:"Houston",     round:"R16",       slot1:"W-M73",  slot2:"W-M75"},
+  {id:91,  date:"2026-07-05", time:"3:00 PM",  city:"Dallas",      round:"R16",       slot1:"W-M76",  slot2:"W-M78"},
+  {id:92,  date:"2026-07-05", time:"7:00 PM",  city:"Seattle",     round:"R16",       slot1:"W-M79",  slot2:"W-M80"},
+  {id:93,  date:"2026-07-06", time:"2:00 PM",  city:"Los Angeles", round:"R16",       slot1:"W-M83",  slot2:"W-M84"},
+  {id:94,  date:"2026-07-06", time:"7:00 PM",  city:"Miami",       round:"R16",       slot1:"W-M81",  slot2:"W-M82"},
+  {id:95,  date:"2026-07-07", time:"11:00 AM", city:"Vancouver",   round:"R16",       slot1:"W-M86",  slot2:"W-M88"},
+  {id:96,  date:"2026-07-07", time:"3:00 PM",  city:"Kansas City", round:"R16",       slot1:"W-M85",  slot2:"W-M87"},
   // Quarter Finals — Jul 9–11
-  {id:97,  date:"2026-07-09", time:"TBD", city:"Boston",      round:"QF",        slot1:"W-M89",  slot2:"W-M90"},
-  {id:98,  date:"2026-07-10", time:"TBD", city:"Los Angeles", round:"QF",        slot1:"W-M91",  slot2:"W-M92"},
-  {id:99,  date:"2026-07-11", time:"TBD", city:"Miami",       round:"QF",        slot1:"W-M93",  slot2:"W-M94"},
-  {id:100, date:"2026-07-11", time:"TBD", city:"Kansas City", round:"QF",        slot1:"W-M95",  slot2:"W-M96"},
+  {id:97,  date:"2026-07-09", time:"3:00 PM",  city:"Boston",      round:"QF",        slot1:"W-M89",  slot2:"W-M90"},
+  {id:98,  date:"2026-07-10", time:"2:00 PM",  city:"Los Angeles", round:"QF",        slot1:"W-M93",  slot2:"W-M94"},
+  {id:99,  date:"2026-07-11", time:"4:00 PM",  city:"Miami",       round:"QF",        slot1:"W-M91",  slot2:"W-M92"},
+  {id:100, date:"2026-07-11", time:"8:00 PM",  city:"Kansas City", round:"QF",        slot1:"W-M95",  slot2:"W-M96"},
   // Semi Finals — Jul 14–15
-  {id:101, date:"2026-07-14", time:"TBD", city:"Dallas",      round:"SF",        slot1:"W-M97",  slot2:"W-M98"},
-  {id:102, date:"2026-07-15", time:"TBD", city:"New York/NJ", round:"SF",        slot1:"W-M99",  slot2:"W-M100"},
+  {id:101, date:"2026-07-14", time:"2:00 PM",  city:"Dallas",      round:"SF",        slot1:"W-M97",  slot2:"W-M98"},
+  {id:102, date:"2026-07-15", time:"2:00 PM",  city:"New York/NJ", round:"SF",        slot1:"W-M99",  slot2:"W-M100"},
   // Third Place — Jul 18
-  {id:103, date:"2026-07-18", time:"TBD", city:"Miami",       round:"3rd Place", slot1:"L-M101", slot2:"L-M102"},
+  {id:103, date:"2026-07-18", time:"4:00 PM",  city:"Miami",       round:"3rd Place", slot1:"L-M101", slot2:"L-M102"},
   // Final — Jul 19
-  {id:104, date:"2026-07-19", time:"TBD", city:"New York/NJ", round:"Final",     slot1:"W-M101", slot2:"W-M102"},
+  {id:104, date:"2026-07-19", time:"2:00 PM",  city:"New York/NJ", round:"Final",     slot1:"W-M101", slot2:"W-M102"},
 ];
 
 // Maps group position → R32 match id they feed into

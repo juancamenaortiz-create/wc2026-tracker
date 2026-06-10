@@ -14,7 +14,9 @@ const TOTAL_W    = NUM_COLS * COL_STRIDE;
 
 // R32 match slot ordering (how they appear top-to-bottom in the bracket)
 // Pairs: R32[0]+R32[1] → R16[0], R32[2]+R32[3] → R16[1], etc.
-const R32_ORDER = [73,74, 75,76, 77,78, 79,80, 81,82, 83,84, 85,86, 87,88];
+// Visual order from official bracket: left-top M74,M77,M73,M75 | left-bottom M83,M84,M81,M82
+//                                     right-top M76,M78,M79,M80 | right-bottom M86,M88,M85,M87
+const R32_ORDER = [74,77, 73,75, 83,84, 81,82, 76,78, 79,80, 86,88, 85,87];
 
 function renderBracket(container) {
   const numR32 = 16;
@@ -28,18 +30,20 @@ function renderBracket(container) {
   // Round 3: SF (2 cards)
   // Round 4: Final (1 card)
 
-  const r16Info = [
-    {matchId:89, ...BRACKET_TREE.r16a}, {matchId:90, ...BRACKET_TREE.r16b},
-    {matchId:91, ...BRACKET_TREE.r16c}, {matchId:92, ...BRACKET_TREE.r16d},
-    {matchId:93, ...BRACKET_TREE.r16e}, {matchId:94, ...BRACKET_TREE.r16f},
-    {matchId:95, ...BRACKET_TREE.r16g}, {matchId:96, ...BRACKET_TREE.r16h},
-  ].map((info, i) => ({ ...info, ...KO_ROUNDS[i] }));
+  // Helper: find KO_ROUNDS entry by match id
+  const koById = (id) => KO_ROUNDS.find(r => r.id === id) || {};
+  // R16 visual order (pairs 0-1, 2-3, 4-5, 6-7 feed into QF 0,1,2,3):
+  //   left-top: M89(W74vsW77), M90(W73vsW75)  → QF M97
+  //   left-bot: M93(W83vsW84), M94(W81vsW82)  → QF M98
+  //   right-top: M91(W76vsW78), M92(W79vsW80) → QF M99
+  //   right-bot: M95(W86vsW88), M96(W85vsW87) → QF M100
+  const r16Info = [89, 90, 93, 94, 91, 92, 95, 96].map(id => ({matchId:id, ...koById(id)}));
   const roundCards = [
     buildR32Cards(slotR32),
     buildRoundCards(1, slotR32, 2,  r16Info),
-    buildRoundCards(2, slotR32, 4,  [{matchId:97,...KO_ROUNDS[8]},{matchId:98,...KO_ROUNDS[9]},{matchId:99,...KO_ROUNDS[10]},{matchId:100,...KO_ROUNDS[11]}]),
-    buildRoundCards(3, slotR32, 8,  [{matchId:101,...KO_ROUNDS[12]},{matchId:102,...KO_ROUNDS[13]}]),
-    buildRoundCards(4, slotR32, 16, [{matchId:104,...KO_ROUNDS[15]}]),
+    buildRoundCards(2, slotR32, 4,  [97,98,99,100].map(id => ({matchId:id, ...koById(id)}))),
+    buildRoundCards(3, slotR32, 8,  [101,102].map(id => ({matchId:id, ...koById(id)}))),
+    buildRoundCards(4, slotR32, 16, [104].map(id => ({matchId:id, ...koById(id)}))),
   ];
 
   // SVG lines

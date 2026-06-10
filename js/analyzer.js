@@ -318,12 +318,14 @@ function resetAnalyzerOverrides() {
 // ── Bracket Predictor ─────────────────────────────────────────────────────
 
 function renderBracketPredictor(container) {
-  const totalPicks = Object.keys(STATE.bracketPicks).length;
-  const isPost = isGroupStageOver();
+  const totalPicks   = Object.keys(STATE.bracketPicks).length;
+  const isPost       = isGroupStageOver();
+  const activeOvr    = !isPost ? Object.keys(ANALYZER_STATE.overrides || {}) : [];
+  const hasGroupOvr  = activeOvr.length > 0;
 
   const roundDefs = [
     { label:'R32',        dates:'Jun 28–Jul 3', matches: R32_MATCHES },
-    { label:'R16',        dates:'Jul 5–7',      matches: KO_ROUNDS.filter(m => m.round === 'R16') },
+    { label:'R16',        dates:'Jul 4–7',      matches: KO_ROUNDS.filter(m => m.round === 'R16') },
     { label:'QF',         dates:'Jul 9–11',     matches: KO_ROUNDS.filter(m => m.round === 'QF') },
     { label:'SF',         dates:'Jul 14–15',    matches: KO_ROUNDS.filter(m => m.round === 'SF') },
     { label:'3rd Place',  dates:'Jul 18',       matches: KO_ROUNDS.filter(m => m.round === '3rd Place') },
@@ -336,8 +338,12 @@ function renderBracketPredictor(container) {
         <button class="toggle-btn" onclick="setAnalyzerMode('group')">📊 Groups</button>
         <button class="toggle-btn active" onclick="setAnalyzerMode('bracket')">🏆 Bracket</button>
       </div>
-      ${!isPost ? '<div style="font-size:11px;color:var(--amber);padding:0 0 8px">Available after Jun 27 · Previewing with current projected qualifiers</div>' : ''}
-      ${totalPicks > 0 ? `<button class="reset-btn" style="margin-bottom:8px" onclick="resetBracketPicks()">Reset All Picks (${totalPicks})</button>` : ''}
+      ${hasGroupOvr ? `
+        <div class="bp-ovr-banner">
+          ⚡ Showing your group what-if scenario (${activeOvr.length} match${activeOvr.length>1?'es':''} overridden)
+          <button class="reset-btn" onclick="resetAnalyzerOverrides()">Clear</button>
+        </div>` : (!isPost ? '<div style="font-size:11px;color:var(--amber);padding:0 0 8px">Available after Jun 27 · Previewing with projected qualifiers</div>' : '')}
+      ${totalPicks > 0 ? `<button class="reset-btn" style="margin-bottom:8px" onclick="resetBracketPicks()">Reset Bracket Picks (${totalPicks})</button>` : ''}
     </div>`;
 
   roundDefs.forEach(({ label, dates, matches }) => {

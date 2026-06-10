@@ -298,17 +298,24 @@ function isMatchDay() {
 // ── Bracket resolution helpers (used by bracket.js + analyzer.js) ─────────
 // Resolve any slot label to a team name using live standings + picks/results.
 function resolveKOSlot(slot) {
+  // Pass any active what-if overrides from the group analyzer through to standings.
+  // ANALYZER_STATE is defined in analyzer.js (loads after app.js) but is always
+  // in global scope by the time any UI function calls this. Safe to reference at runtime.
+  // After Jun 27, group games are done so overrides are naturally empty anyway.
+  const ovr = (typeof ANALYZER_STATE !== 'undefined' && getTodayCT() <= '2026-06-27')
+    ? (ANALYZER_STATE.overrides || {}) : {};
+
   // Group position: "1st-A", "2nd-B"
   const single = slot.match(/^(1st|2nd)-([A-L])$/);
   if (single) {
-    const s = calculateStandings(single[2]);
+    const s = calculateStandings(single[2], ovr);
     return (single[1] === '1st' ? s[0] : s[1])?.name || null;
   }
   // Best 3rd from pool: "3rd-ABCDF"
   const third = slot.match(/^3rd-([A-L]+)$/);
   if (third) {
     const best = third[1].split('').map(g => {
-      const s = calculateStandings(g);
+      const s = calculateStandings(g, ovr);
       const t = s[2];
       return { team: t?.name||null, pts: t?.Pts??0, gd: t?.GD??0, p: t?.P??0 };
     }).filter(c => c.p > 0 && c.team).sort((a,b) => b.pts-a.pts||b.gd-a.gd);

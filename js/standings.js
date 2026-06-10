@@ -14,6 +14,8 @@ function renderGroups(container) {
     slot.appendChild(btn);
   });
 }
+  if (typeof twemoji !== 'undefined') twemoji.parse(container);
+
 
 function buildGroupCard(g, isExpanded) {
   const standings = calculateStandings(g);

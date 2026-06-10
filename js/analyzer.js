@@ -130,6 +130,8 @@ function renderAnalyzer(container) {
     slot.appendChild(btn);
   });
 }
+  if (typeof twemoji !== 'undefined') twemoji.parse(container);
+
 
 function buildMatchToggle(match, key, override) {
   const t1 = match.t1, t2 = match.t2;

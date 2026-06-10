@@ -19,7 +19,7 @@ function init() {
   updateStatusUI();
   navigateTo('today');
   fetchScores();
-  setInterval(() => { if (!document.hidden) fetchScores(); }, 3 * 60 * 1000);
+  setInterval(() => { if (!document.hidden) fetchScores(); }, 30 * 60 * 1000);
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden && STATE.lastUpdated && (Date.now() - STATE.lastUpdated.getTime() > 3 * 60 * 1000)) fetchScores();
   });

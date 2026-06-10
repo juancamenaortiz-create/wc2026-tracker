@@ -87,6 +87,8 @@ function renderBracket(container) {
       ${thirdHtml}
     </div>`;
 }
+  if (typeof twemoji !== 'undefined') twemoji.parse(container);
+
 
 function buildR32Cards(slotH) {
   return R32_ORDER.map((matchId, idx) => {

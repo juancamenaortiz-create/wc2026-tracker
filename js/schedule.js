@@ -59,6 +59,8 @@ function renderSchedule(container) {
     slot.appendChild(btn);
   });
 }
+  if (typeof twemoji !== 'undefined') twemoji.parse(container);
+
 
 function buildScheduleRow(match) {
   const result = match.isKnockout ? getKnockoutResult(match.id) : getMatchResult(match);

@@ -58,6 +58,8 @@ function renderToday(container) {
   });
   startCountdowns(container);
 }
+  if (typeof twemoji !== 'undefined') twemoji.parse(container);
+
 
 // Matches the artifact MatchCard exactly
 function buildMatchCard(match, now) {

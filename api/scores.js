@@ -60,13 +60,11 @@ export default async function handler(req, res) {
 
   const EMPTY = { content: [{ type: 'text', text: '{"groupMatches":[],"knockoutMatches":[]}' }] };
 
-  // ── Pre-tournament guard ──────────────────────────────────────────────────
-  // No matches exist before June 11 2026 — skip the API call entirely.
   const today = new Date();
-  const tournamentStart = new Date('2026-06-11T00:00:00-05:00'); // CT midnight
-  if (today < tournamentStart) {
-    return res.status(200).json(EMPTY);
-  }
+
+  // ── Pre-tournament guard (re-enable after testing by uncommenting below) ──
+  // const tournamentStart = new Date('2026-06-11T00:00:00-05:00');
+  // if (today < tournamentStart) return res.status(200).json(EMPTY);
 
   // ── API key check ─────────────────────────────────────────────────────────
   const apiKey = process.env.GEMINI_API_KEY;

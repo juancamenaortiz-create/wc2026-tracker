@@ -128,16 +128,24 @@ body {
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .settings-btn {
-  position: absolute;
-  right: 0;
-  top: -6px;
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 16px;
-  padding: 4px;
-  opacity: 0.6;
-  display: none; /* hidden when inside header-actions */
+  color: var(--muted);
+  font-size: 20px;
+  padding: 4px 6px;
+  line-height: 1;
+  transition: color 0.2s;
+  flex-shrink: 0;
+}
+.settings-btn:hover { color: var(--white); }
+
+/* Twemoji images - size relative to surrounding text */
+img.emoji {
+  height: 1.1em;
+  width: 1.1em;
+  vertical-align: -0.15em;
+  display: inline-block;
 }
 
 /* ══ BOTTOM NAV ══ */

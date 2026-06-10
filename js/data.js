@@ -2,20 +2,44 @@
 // DATA.JS — All static tournament data
 // ═══════════════════════════════════════════
 
-const FLAGS = {
-  "Mexico":"🇲🇽","South Africa":"🇿🇦","South Korea":"🇰🇷","Czechia":"🇨🇿",
-  "Canada":"🇨🇦","Bosnia & Herzegovina":"🇧🇦","Qatar":"🇶🇦","Switzerland":"🇨🇭",
-  "Brazil":"🇧🇷","Morocco":"🇲🇦","Haiti":"🇭🇹","Scotland":"🏴󠁧󠁢󠁳󠁣󠁴󠁿",
-  "USA":"🇺🇸","Paraguay":"🇵🇾","Australia":"🇦🇺","Türkiye":"🇹🇷",
-  "Germany":"🇩🇪","Curaçao":"🇨🇼","Ivory Coast":"🇨🇮","Ecuador":"🇪🇨",
-  "Netherlands":"🇳🇱","Japan":"🇯🇵","Tunisia":"🇹🇳","Sweden":"🇸🇪",
-  "Spain":"🇪🇸","Cape Verde":"🇨🇻","Saudi Arabia":"🇸🇦","Uruguay":"🇺🇾",
-  "Belgium":"🇧🇪","Egypt":"🇪🇬","Iran":"🇮🇷","New Zealand":"🇳🇿",
-  "France":"🇫🇷","Senegal":"🇸🇳","Iraq":"🇮🇶","Norway":"🇳🇴",
-  "Argentina":"🇦🇷","Algeria":"🇩🇿","Austria":"🇦🇹","Jordan":"🇯🇴",
-  "Portugal":"🇵🇹","Congo DR":"🇨🇩","Uzbekistan":"🇺🇿","Colombia":"🇨🇴",
-  "England":"🏴󠁧󠁢󠁥󠁮󠁧󠁿","Croatia":"🇭🇷","Ghana":"🇬🇭","Panama":"🇵🇦",
+// ── Flag images via Twemoji CDN (works on all platforms including Windows) ──
+// Maps country name → 2-letter ISO code so we can compute the Twemoji URL.
+const COUNTRY_ISO = {
+  "Mexico":"MX","South Africa":"ZA","South Korea":"KR","Czechia":"CZ",
+  "Canada":"CA","Bosnia & Herzegovina":"BA","Qatar":"QA","Switzerland":"CH",
+  "Brazil":"BR","Morocco":"MA","Haiti":"HT",
+  "USA":"US","Paraguay":"PY","Australia":"AU","Türkiye":"TR",
+  "Germany":"DE","Curaçao":"CW","Ivory Coast":"CI","Ecuador":"EC",
+  "Netherlands":"NL","Japan":"JP","Tunisia":"TN","Sweden":"SE",
+  "Spain":"ES","Cape Verde":"CV","Saudi Arabia":"SA","Uruguay":"UY",
+  "Belgium":"BE","Egypt":"EG","Iran":"IR","New Zealand":"NZ",
+  "France":"FR","Senegal":"SN","Iraq":"IQ","Norway":"NO",
+  "Argentina":"AR","Algeria":"DZ","Austria":"AT","Jordan":"JO",
+  "Portugal":"PT","Congo DR":"CD","Uzbekistan":"UZ","Colombia":"CO",
+  "Croatia":"HR","Ghana":"GH","Panama":"PA",
 };
+
+// Scotland and England use subdivision tag sequences, not ISO country codes
+const SUBDIVISION_FLAGS = {
+  "Scotland":"1f3f4-e0067-e0062-e0073-e0063-e0074-e007f",
+  "England": "1f3f4-e0067-e0062-e0065-e006e-e0067-e007f",
+};
+
+const CDN = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/";
+
+function getFlag(team) {
+  if (!team) return '';
+  if (SUBDIVISION_FLAGS[team]) {
+    return `<img src="${CDN}${SUBDIVISION_FLAGS[team]}.png" alt="${team}" class="flag-img" loading="lazy">`;
+  }
+  const iso = COUNTRY_ISO[team];
+  if (iso) {
+    const c1 = (0x1F1E6 + iso.charCodeAt(0) - 65).toString(16);
+    const c2 = (0x1F1E6 + iso.charCodeAt(1) - 65).toString(16);
+    return `<img src="${CDN}${c1}-${c2}.png" alt="${team}" class="flag-img" loading="lazy">`;
+  }
+  return '<span style="font-size:18px">🏳️</span>';
+}
 
 const GROUP_TEAMS = {
   A:["Mexico","South Africa","South Korea","Czechia"],
@@ -192,10 +216,6 @@ const DEMO_RESULTS = {
   ],
   knockoutMatches: []
 };
-
-function getFlag(team) {
-  return FLAGS[team] || '🏳️';
-}
 
 function normName(name) {
   return (name || '').trim().toLowerCase();

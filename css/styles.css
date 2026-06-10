@@ -575,7 +575,7 @@ img.emoji {
 .group-matches   { padding: 8px 10px; border-top: 1px solid var(--border); }
 .group-match-row { display: flex; align-items: center; gap: 6px; padding: 4px 0; font-size: 11px; }
 .gm-team { flex: 1; display: flex; align-items: center; gap: 4px; }
-.gm-team.right { flex-direction: row-reverse; }
+.gm-team.right { flex-direction: row-reverse; justify-content: flex-start; }
 .gm-team.bold span { font-weight: 700; }
 .gm-team.dim  { opacity: 0.5; }
 .gm-score  { min-width: 60px; text-align: center; font-size: 11px; }

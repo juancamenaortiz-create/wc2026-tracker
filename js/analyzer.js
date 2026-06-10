@@ -50,7 +50,7 @@ function renderAnalyzer(container) {
     standingsHtml += `<div class="az-standing-row ${cls}">
       <span class="rank-num">${idx+1}</span>
       <span class="flag">${getFlag(team.name)}</span>
-      <span class="az-team-name">${team.name}</span>
+      <span class="az-team-name">${displayName(team.name)}</span>
       <span data-star-team="${team.name}"></span>
       <span class="az-pts">${team.Pts}pts</span>
       <span class="az-gd">${team.GD >= 0 ? '+'+team.GD : team.GD}</span>
@@ -165,9 +165,9 @@ function buildMatchToggle(match, key, override) {
   return `<div class="az-match-toggle">
     <div class="az-toggle-teams">
       <span class="flag">${getFlag(t1)}</span>
-      <span class="toggle-team">${t1}</span>
+      <span class="toggle-team">${displayName(t1)}</span>
       <span class="vs-text">vs</span>
-      <span class="toggle-team">${t2}</span>
+      <span class="toggle-team">${displayName(t2)}</span>
       <span class="flag">${getFlag(t2)}</span>
     </div>
     <div class="az-toggle-btns">
@@ -277,7 +277,7 @@ function buildTournamentPath(team, rank, group, overrides = {}) {
   return `<div class="tournament-path">
     <div class="path-team-header">
       <span class="flag">${getFlag(team)}</span>
-      <span>${team}</span>
+      <span>${displayName(team)}</span>
       <span class="rank-badge">${rank === 1 ? '1st' : '2nd'}</span>
     </div>
     <div class="path-steps">${stepsHtml}</div>
@@ -382,7 +382,7 @@ function buildPickRow(matchId, team, slot, cls, isFinal) {
   const onclick   = clickable ? `onclick="pickBracket(${matchId},'${team.replace(/'/g,"\\'")}')"` : '';
   const check     = cls === 'bp-winner' ? '<span class="bp-check">✓</span>' : '';
   return `<div class="bp-team ${cls}" ${onclick} style="${clickable?'cursor:pointer':''}">
-    ${getFlag(team)}<span class="bp-name">${team}</span>${check}
+    ${getFlag(team)}<span class="bp-name">${displayName(team)}</span>${check}
   </div>`;
 }
 

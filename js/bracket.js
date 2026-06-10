@@ -182,13 +182,13 @@ function buildBracketCard(card, round) {
     <div class="bc-status">${statusBadge}</div>
     <div class="bc-team ${w1} ${isMy1 ? 'my-t' : ''}">
       <span class="flag sm">${flag1}</span>
-      <span class="bc-name">${label1}</span>
+      <span class="bc-name">${displayName(label1)}</span>
       <span class="bc-score">${isFT || isLive ? score1 : ''}</span>
     </div>
     <div class="bc-divider"></div>
     <div class="bc-team ${w2} ${isMy2 ? 'my-t' : ''}">
       <span class="flag sm">${flag2}</span>
-      <span class="bc-name">${label2}</span>
+      <span class="bc-name">${displayName(label2)}</span>
       <span class="bc-score">${isFT || isLive ? score2 : ''}</span>
     </div>
   </div>`;

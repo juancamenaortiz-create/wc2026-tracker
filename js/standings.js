@@ -74,7 +74,7 @@ function buildExpandedCard(g, standings, matches, hasPlayed) {
       <td class="rank-cell">${idx+1}</td>
       <td class="team-cell">
         <span class="flag">${getFlag(team.name)}</span>
-        <span>${team.name}</span>
+        <span>${displayName(team.name)}</span>
         <span data-star-team="${team.name}"></span>
       </td>
       <td>${team.P}</td><td>${team.W}</td><td>${team.D}</td><td>${team.L}</td>
@@ -100,9 +100,9 @@ function buildExpandedCard(g, standings, matches, hasPlayed) {
     else scoreStr = `<span class="ns-time">${formatPillDate(m.date)} · ${m.time} CT</span>`;
 
     matchRows += `<div class="group-match-row">
-      <div class="gm-team ${w1}"><span class="flag">${getFlag(m.t1)}</span><span>${m.t1}</span></div>
+      <div class="gm-team ${w1}"><span class="flag">${getFlag(m.t1)}</span><span>${displayName(m.t1)}</span></div>
       <div class="gm-score">${scoreStr}</div>
-      <div class="gm-team right ${w2}"><span>${m.t2}</span><span class="flag">${getFlag(m.t2)}</span></div>
+      <div class="gm-team right ${w2}"><span class="flag">${getFlag(m.t2)}</span><span>${displayName(m.t2)}</span></div>
     </div>`;
   });
 

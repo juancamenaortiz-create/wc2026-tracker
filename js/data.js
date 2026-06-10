@@ -27,6 +27,12 @@ const SUBDIVISION_FLAGS = {
 
 const CDN = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/";
 
+// Short display names for teams with long names (internal names stay unchanged)
+const DISPLAY_NAMES = {
+  "Bosnia & Herzegovina": "Bosnia",
+};
+function displayName(team) { return DISPLAY_NAMES[team] || team || ''; }
+
 function getFlag(team) {
   if (!team) return '';
   if (SUBDIVISION_FLAGS[team]) {

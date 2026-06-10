@@ -102,13 +102,13 @@ function buildScheduleRow(match) {
   <div class="sched-teams">
     <div class="sched-team ${w1}${isMyT1 ? ' my-t' : ''}">
       <span class="flag">${t1Flag}</span>
-      <span class="sched-name">${t1Name}</span>
+      <span class="sched-name">${displayName(t1Name)}</span>
       ${match.t1 ? `<span data-star-team="${match.t1}"></span>` : ''}
     </div>
     ${centerHtml}
     <div class="sched-team right ${w2}${isMyT2 ? ' my-t' : ''}">
       ${match.t2 ? `<span data-star-team="${match.t2}"></span>` : ''}
-      <span class="sched-name r">${t2Name}</span>
+      <span class="sched-name r">${displayName(t2Name)}</span>
       <span class="flag">${t2Flag}</span>
     </div>
   </div>

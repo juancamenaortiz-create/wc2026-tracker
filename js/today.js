@@ -109,14 +109,14 @@ function buildMatchCard(match, now) {
   <div class="mc-right">
     <div class="mc-team ${cls1}">
       <span class="mc-flag">${getFlag(match.t1)}</span>
-      <span class="mc-name">${match.t1}</span>
+      <span class="mc-name">${displayName(match.t1)}</span>
       <span data-star-team="${match.t1}"></span>
       ${s1html}
     </div>
     <div class="mc-divider"></div>
     <div class="mc-team ${cls2}">
       <span class="mc-flag">${getFlag(match.t2)}</span>
-      <span class="mc-name">${match.t2}</span>
+      <span class="mc-name">${displayName(match.t2)}</span>
       <span data-star-team="${match.t2}"></span>
       ${s2html}
     </div>

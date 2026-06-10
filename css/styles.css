@@ -850,3 +850,29 @@ img.emoji {
   height: 16px;
   vertical-align: -3px;
 }
+
+/* ══ TOURNAMENT PATH ENHANCEMENTS ══ */
+.path-step-wide { min-width: 140px; }
+
+.path-opp {
+  font-size: 11px; font-weight: 700; color: var(--white);
+  margin: 3px 0 1px; display: flex; align-items: center; gap: 2px;
+}
+.path-sub {
+  font-size: 8px; color: var(--muted); margin-top: 2px; line-height: 1.4;
+}
+.path-sub-hdr {
+  font-weight: 700; color: var(--muted); letter-spacing: 0.04em;
+  text-transform: uppercase; font-size: 8px; margin-bottom: 3px;
+}
+.path-cands { display: flex; flex-direction: column; gap: 2px; margin: 2px 0; }
+.path-cand {
+  display: flex; align-items: center; gap: 3px;
+  font-size: 9px; color: var(--muted);
+  padding: 2px 0;
+}
+.path-cand-top { color: var(--white); }
+.path-cand-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.path-cand-meta { color: var(--muted); font-size: 8px; flex-shrink: 0; }
+.path-cand-pts  { color: var(--gold); font-weight: 700; font-size: 9px; flex-shrink: 0; padding-left: 3px; }
+.path-cand-top .path-cand-meta { color: var(--muted); }

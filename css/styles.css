@@ -876,3 +876,44 @@ img.emoji {
 .path-cand-meta { color: var(--muted); font-size: 8px; flex-shrink: 0; }
 .path-cand-pts  { color: var(--gold); font-weight: 700; font-size: 9px; flex-shrink: 0; padding-left: 3px; }
 .path-cand-top .path-cand-meta { color: var(--muted); }
+
+/* ══ BRACKET PREDICTOR ══ */
+.bp-round-label {
+  font-size: 11px; font-weight: 700; color: var(--gold);
+  text-transform: uppercase; letter-spacing: 0.1em;
+  padding: 14px 0 6px;
+}
+.bp-round-dates {
+  color: var(--muted); font-weight: 400;
+  text-transform: none; letter-spacing: 0; font-size: 10px;
+}
+.bp-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 8px; margin-bottom: 4px;
+}
+.bp-single { grid-template-columns: 1fr; max-width: 280px; }
+.bp-card {
+  background: var(--card2); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+}
+.bp-card-hdr {
+  font-size: 9px; color: var(--muted);
+  background: var(--navy); padding: 4px 8px;
+  letter-spacing: 0.04em; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.bp-team {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 10px; transition: background 0.12s;
+}
+.bp-team[onclick]:hover { background: rgba(255,255,255,0.04); }
+.bp-name {
+  flex: 1; font-size: 12px; font-weight: 500; color: var(--white);
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.bp-team.bp-winner { background: rgba(212,175,55,0.08); }
+.bp-team.bp-winner .bp-name { color: var(--gold); font-weight: 700; }
+.bp-team.bp-loser  { opacity: 0.35; }
+.bp-tbd-ico { font-size: 14px; }
+.bp-check   { color: var(--gold); font-size: 12px; font-weight: 900; flex-shrink: 0; }
+.bp-divider { height: 1px; background: var(--border); opacity: 0.5; }

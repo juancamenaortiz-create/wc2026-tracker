@@ -917,3 +917,29 @@ img.emoji {
 .bp-tbd-ico { font-size: 14px; }
 .bp-check   { color: var(--gold); font-size: 12px; font-weight: 900; flex-shrink: 0; }
 .bp-divider { height: 1px; background: var(--border); opacity: 0.5; }
+
+/* what-if rollover banner in bracket predictor */
+.bp-ovr-banner {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; padding: 7px 10px; border-radius: 8px; margin-bottom: 8px;
+  background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.4);
+  font-size: 11px; color: var(--amber); font-weight: 600;
+}
+
+/* Settings — Resources section */
+.modal-section-label {
+  font-size: 10px; font-weight: 800; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.12em;
+  padding: 14px 0 6px;
+}
+.modal-link-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 11px 0; border-bottom: 1px solid var(--border);
+  text-decoration: none; color: inherit;
+  transition: opacity 0.15s;
+}
+.modal-link-row:last-of-type { border-bottom: none; }
+.modal-link-row:hover { opacity: 0.75; }
+.modal-link-arrow {
+  font-size: 16px; color: var(--gold); flex-shrink: 0; padding-left: 8px;
+}

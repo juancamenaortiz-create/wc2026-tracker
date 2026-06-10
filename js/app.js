@@ -7,6 +7,7 @@ const STATE = {
   activeTab:   'today',
   isLoading:   false,
   demoMode:    false,
+  bracketPicks: {},  // matchId → team name, for bracket predictor
 };
 
 // ── Init ─────────────────────────────────────
@@ -292,6 +293,59 @@ function isMatchDay() {
   const today = getTodayCT();
   return SCHEDULE.some(m => m.date === today) ||
          R32_MATCHES.some(m => m.date === today);
+}
+
+// ── Bracket resolution helpers (used by bracket.js + analyzer.js) ─────────
+// Resolve any slot label to a team name using live standings + picks/results.
+function resolveKOSlot(slot) {
+  // Group position: "1st-A", "2nd-B"
+  const single = slot.match(/^(1st|2nd)-([A-L])$/);
+  if (single) {
+    const s = calculateStandings(single[2]);
+    return (single[1] === '1st' ? s[0] : s[1])?.name || null;
+  }
+  // Best 3rd from pool: "3rd-ABCDF"
+  const third = slot.match(/^3rd-([A-L]+)$/);
+  if (third) {
+    const best = third[1].split('').map(g => {
+      const s = calculateStandings(g);
+      const t = s[2];
+      return { team: t?.name||null, pts: t?.Pts??0, gd: t?.GD??0, p: t?.P??0 };
+    }).filter(c => c.p > 0 && c.team).sort((a,b) => b.pts-a.pts||b.gd-a.gd);
+    return best[0]?.team || null;
+  }
+  // Winner of previous match: "W-M89"
+  const wm = slot.match(/^W-M(\d+)$/);
+  if (wm) return getKOWinner(parseInt(wm[1]));
+  // Loser of previous match: "L-M101"
+  const lm = slot.match(/^L-M(\d+)$/);
+  if (lm) {
+    const prevId = parseInt(lm[1]);
+    const [t1, t2] = getKOMatchTeams(prevId);
+    const winner = getKOWinner(prevId);
+    if (!winner || !t1 || !t2) return null;
+    return winner === t1 ? t2 : t1;
+  }
+  return null;
+}
+
+function getKOMatchTeams(matchId) {
+  if (matchId <= 88) {
+    const m = R32_MATCHES.find(r => r.id === matchId);
+    return m ? [resolveKOSlot(m.slot1), resolveKOSlot(m.slot2)] : [null, null];
+  }
+  const m = KO_ROUNDS.find(r => r.id === matchId);
+  return m ? [resolveKOSlot(m.slot1), resolveKOSlot(m.slot2)] : [null, null];
+}
+
+function getKOWinner(matchId) {
+  // Real result takes priority
+  const result = getKnockoutResult(matchId);
+  if (result && result.status === 'FT') {
+    return parseInt(result.score1) > parseInt(result.score2) ? result.team1 : result.team2;
+  }
+  // Fall back to user's bracket pick
+  return STATE.bracketPicks[matchId] || null;
 }
 
 document.addEventListener('DOMContentLoaded', init);

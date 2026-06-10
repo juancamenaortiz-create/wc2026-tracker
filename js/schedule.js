@@ -5,17 +5,18 @@ const SCHEDULE_STATE = { view: 'date', filter: 'all' };
 function renderSchedule(container) {
   const allMatches = [
     ...SCHEDULE.map(m => ({ ...m, isKnockout: false })),
-    ...R32_MATCHES.map(m => ({ ...m, isKnockout: true })),
+    ...R32_MATCHES.map(m => ({ ...m, round: 'R32', isKnockout: true })),
+    ...KO_ROUNDS.map(m => ({ ...m, isKnockout: true })),
   ];
 
   const dates  = [...new Set(allMatches.map(m => m.date))].sort();
-  const groups = ['A','B','C','D','E','F','G','H','I','J','K','L','R32'];
+  const groups = ['A','B','C','D','E','F','G','H','I','J','K','L','Knockout'];
   const { view: viewMode, filter: filterKey } = SCHEDULE_STATE;
 
   let filtered = allMatches;
   if (filterKey !== 'all') {
     if (viewMode === 'date') filtered = allMatches.filter(m => m.date === filterKey);
-    else if (filterKey === 'R32') filtered = allMatches.filter(m => m.isKnockout);
+    else if (filterKey === 'Knockout') filtered = allMatches.filter(m => m.isKnockout);
     else filtered = allMatches.filter(m => m.g === filterKey);
   }
 
@@ -25,7 +26,7 @@ function renderSchedule(container) {
 
   // Artifact-style active pill: crimson gradient, no border, shadow
   const pillsHtml = pills.map(p => {
-    const label = p === 'all' ? 'All Groups' : viewMode === 'date' ? formatPillDate(p) : `Grp ${p}`;
+    const label = p === 'all' ? 'All Groups' : viewMode === 'date' ? formatPillDate(p) : p === 'Knockout' ? 'Knockout' : `Grp ${p}`;
     return `<button class="pill${filterKey === p ? ' active' : ''}" onclick="setScheduleFilter('${p}')">${label}</button>`;
   }).join('');
 
@@ -79,7 +80,7 @@ function buildScheduleRow(match) {
   const isMyT1 = isMyTeam(match.t1 || ''), isMyT2 = isMyTeam(match.t2 || '');
   const t1Name = match.t1 || match.slot1 || 'TBD', t2Name = match.t2 || match.slot2 || 'TBD';
   const t1Flag = match.t1 ? getFlag(match.t1) : '❓', t2Flag = match.t2 ? getFlag(match.t2) : '❓';
-  const roundLabel = match.isKnockout ? 'R32' : `Grp ${match.g}`;
+  const roundLabel = match.round ? match.round : (match.g ? `Grp ${match.g}` : 'R32');
 
   let statusHtml = '';
   if (isLive)     statusHtml = '<span class="live-badge sm"><span class="pulse-dot"></span>LIVE</span>';

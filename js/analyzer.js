@@ -5,9 +5,22 @@
 const ANALYZER_STATE = {
   selectedGroup: 'A',
   overrides: {},
+  mode: 'auto', // 'auto'|'group'|'bracket'
 };
 
+function isGroupStageOver() { return getTodayCT() > '2026-06-27'; }
+
+function setAnalyzerMode(mode) {
+  ANALYZER_STATE.mode = mode;
+  const content = document.getElementById('tab-content');
+  if (content) renderAnalyzer(STATE.demoMode ? document.getElementById('tab-inner') || content : content);
+}
+
 function renderAnalyzer(container) {
+  const effectiveMode = ANALYZER_STATE.mode === 'auto'
+    ? (isGroupStageOver() ? 'bracket' : 'group')
+    : ANALYZER_STATE.mode;
+  if (effectiveMode === 'bracket') { renderBracketPredictor(container); return; }
   const g = ANALYZER_STATE.selectedGroup;
   const overrides = ANALYZER_STATE.overrides;
 
@@ -78,7 +91,7 @@ function renderAnalyzer(container) {
   // Tournament path for top 2 teams
   let pathHtml = '';
   for (let i = 0; i < Math.min(2, standings.length); i++) {
-    pathHtml += buildTournamentPath(standings[i].name, i + 1, g);
+    pathHtml += buildTournamentPath(standings[i].name, i + 1, g, overrides);
   }
 
   // Any overrides anywhere → show Reset All. Current group overrides → show WHAT-IF badge.
@@ -88,8 +101,13 @@ function renderAnalyzer(container) {
   const thisGroupOverrides = Object.keys(overrides).filter(k => currentGroupIds.has(k)).length;
   const thisGroupWhatIf    = thisGroupOverrides > 0;
 
+  const isPostGroup = isGroupStageOver();
   container.innerHTML = `
     <div class="az-header">
+      <div class="view-toggle" style="margin-bottom:8px">
+        <button class="toggle-btn active" onclick="setAnalyzerMode('group')">📊 Groups</button>
+        <button class="toggle-btn${isPostGroup ? '' : ''}" onclick="setAnalyzerMode('bracket')">🏆 Bracket${isPostGroup ? '' : ' (preview)'}</button>
+      </div>
       <div class="pills-scroll">${groupPills}</div>
     </div>
 
@@ -164,13 +182,13 @@ function buildMatchToggle(match, key, override) {
 
 // ── Slot resolver ────────────────────────────────────────────────────────────
 // Turns a slot label ("2nd-B", "3rd-ABCDF") into live team data from standings.
-function resolveSlot(slot) {
+function resolveSlot(slot, overrides = {}) {
   // Single group: "1st-A", "2nd-B", etc.
   const single = slot.match(/^(1st|2nd|3rd|4th)-([A-L])$/);
   if (single) {
     const idx = {'1st':0,'2nd':1,'3rd':2,'4th':3}[single[1]];
     const grp  = single[2];
-    const s    = calculateStandings(grp);
+    const s    = calculateStandings(grp, overrides);
     const entry= s[idx];
     return { type:'single', rank:single[1], group:grp, team:entry?.name||null, pts:entry?.Pts??0, p:entry?.P??0 };
   }
@@ -179,7 +197,7 @@ function resolveSlot(slot) {
   if (multi) {
     const groups     = multi[1].split('');
     const candidates = groups.map(g => {
-      const s = calculateStandings(g);
+      const s = calculateStandings(g, overrides);
       const t = s[2]; // 3rd place
       return { group:g, team:t?.name||null, pts:t?.Pts??0, gd:t?.GD??0, gf:t?.GF??0, p:t?.P??0 };
     });
@@ -188,14 +206,14 @@ function resolveSlot(slot) {
   return { type:'unknown', slot };
 }
 
-function buildTournamentPath(team, rank, group) {
+function buildTournamentPath(team, rank, group, overrides = {}) {
   const posKey    = `${rank === 1 ? '1st' : '2nd'}-${group}`;
   const r32MatchId= GROUP_POSITION_TO_R32[posKey];
   const r32Match  = r32MatchId ? R32_MATCHES.find(m => m.id === r32MatchId) : null;
   if (!r32Match) return '';
 
   const opSlot = r32Match.slot1 === posKey ? r32Match.slot2 : r32Match.slot1;
-  const opp    = resolveSlot(opSlot);
+  const opp    = resolveSlot(opSlot, overrides);
   const venue  = `${r32Match.city} · ${formatShortDate(r32Match.date)}`;
 
   // Build R32 step HTML based on what we know
@@ -295,4 +313,87 @@ function resetAnalyzerOverrides() {
   ANALYZER_STATE.overrides = {};
   const content = document.getElementById('tab-content');
   if (content) renderAnalyzer(content);
+}
+
+// ── Bracket Predictor ─────────────────────────────────────────────────────
+
+function renderBracketPredictor(container) {
+  const totalPicks = Object.keys(STATE.bracketPicks).length;
+  const isPost = isGroupStageOver();
+
+  const roundDefs = [
+    { label:'R32',        dates:'Jun 28–Jul 3', matches: R32_MATCHES },
+    { label:'R16',        dates:'Jul 5–7',      matches: KO_ROUNDS.filter(m => m.round === 'R16') },
+    { label:'QF',         dates:'Jul 9–11',     matches: KO_ROUNDS.filter(m => m.round === 'QF') },
+    { label:'SF',         dates:'Jul 14–15',    matches: KO_ROUNDS.filter(m => m.round === 'SF') },
+    { label:'3rd Place',  dates:'Jul 18',       matches: KO_ROUNDS.filter(m => m.round === '3rd Place') },
+    { label:'Final 🏆',   dates:'Jul 19',       matches: KO_ROUNDS.filter(m => m.round === 'Final') },
+  ];
+
+  let html = `
+    <div class="az-header">
+      <div class="view-toggle" style="margin-bottom:8px">
+        <button class="toggle-btn" onclick="setAnalyzerMode('group')">📊 Groups</button>
+        <button class="toggle-btn active" onclick="setAnalyzerMode('bracket')">🏆 Bracket</button>
+      </div>
+      ${!isPost ? '<div style="font-size:11px;color:var(--amber);padding:0 0 8px">Available after Jun 27 · Previewing with current projected qualifiers</div>' : ''}
+      ${totalPicks > 0 ? `<button class="reset-btn" style="margin-bottom:8px" onclick="resetBracketPicks()">Reset All Picks (${totalPicks})</button>` : ''}
+    </div>`;
+
+  roundDefs.forEach(({ label, dates, matches }) => {
+    if (matches.length === 0) return;
+    html += `<div class="bp-round-label">${label} <span class="bp-round-dates">${dates}</span></div>`;
+    const isSingle = matches.length <= 1;
+    html += `<div class="bp-grid${isSingle ? ' bp-single' : ''}">`;
+    matches.forEach(m => { html += buildBracketPickCard(m); });
+    html += '</div>';
+  });
+
+  container.innerHTML = html;
+  if (typeof twemoji !== 'undefined') twemoji.parse(container);
+}
+
+function buildBracketPickCard(match) {
+  const [t1, t2] = getKOMatchTeams(match.id);
+  const picked = getKOWinner(match.id);
+  const realResult = getKnockoutResult(match.id);
+  const isFinal = !!(realResult && realResult.status === 'FT');
+
+  const c1 = picked === t1 ? 'bp-winner' : (picked && picked !== t1 ? 'bp-loser' : '');
+  const c2 = picked === t2 ? 'bp-winner' : (picked && picked !== t2 ? 'bp-loser' : '');
+
+  const dateStr = match.date ? formatPillDate(match.date) : '';
+  const hdr = `${match.round || 'R32'} · ${dateStr}${match.city ? ' · ' + match.city : ''}`;
+
+  return `<div class="bp-card">
+    <div class="bp-card-hdr">${hdr}</div>
+    ${buildPickRow(match.id, t1, match.slot1, c1, isFinal)}
+    <div class="bp-divider"></div>
+    ${buildPickRow(match.id, t2, match.slot2, c2, isFinal)}
+  </div>`;
+}
+
+function buildPickRow(matchId, team, slot, cls, isFinal) {
+  if (!team) {
+    const label = slot.replace('W-M','W').replace('L-M','L');
+    return `<div class="bp-team bp-tbd"><span class="bp-tbd-ico">❓</span><span class="bp-name" style="color:var(--dim)">${label}</span></div>`;
+  }
+  const clickable = !isFinal;
+  const onclick   = clickable ? `onclick="pickBracket(${matchId},'${team.replace(/'/g,"\\'")}')"` : '';
+  const check     = cls === 'bp-winner' ? '<span class="bp-check">✓</span>' : '';
+  return `<div class="bp-team ${cls}" ${onclick} style="${clickable?'cursor:pointer':''}">
+    ${getFlag(team)}<span class="bp-name">${team}</span>${check}
+  </div>`;
+}
+
+function pickBracket(matchId, team) {
+  STATE.bracketPicks[matchId] = team;
+  const content = document.getElementById('tab-content');
+  if (content) renderAnalyzer(STATE.demoMode ? document.getElementById('tab-inner') || content : content);
+}
+
+function resetBracketPicks() {
+  STATE.bracketPicks = {};
+  const content = document.getElementById('tab-content');
+  if (content) renderAnalyzer(STATE.demoMode ? document.getElementById('tab-inner') || content : content);
 }

@@ -28,12 +28,18 @@ function renderBracket(container) {
   // Round 3: SF (2 cards)
   // Round 4: Final (1 card)
 
+  const r16Info = [
+    {matchId:89, ...BRACKET_TREE.r16a}, {matchId:90, ...BRACKET_TREE.r16b},
+    {matchId:91, ...BRACKET_TREE.r16c}, {matchId:92, ...BRACKET_TREE.r16d},
+    {matchId:93, ...BRACKET_TREE.r16e}, {matchId:94, ...BRACKET_TREE.r16f},
+    {matchId:95, ...BRACKET_TREE.r16g}, {matchId:96, ...BRACKET_TREE.r16h},
+  ].map((info, i) => ({ ...info, ...KO_ROUNDS[i] }));
   const roundCards = [
     buildR32Cards(slotR32),
-    buildRoundCards(1, slotR32, 2),
-    buildRoundCards(2, slotR32, 4),
-    buildRoundCards(3, slotR32, 8),
-    buildRoundCards(4, slotR32, 16),
+    buildRoundCards(1, slotR32, 2,  r16Info),
+    buildRoundCards(2, slotR32, 4,  [{matchId:97,...KO_ROUNDS[8]},{matchId:98,...KO_ROUNDS[9]},{matchId:99,...KO_ROUNDS[10]},{matchId:100,...KO_ROUNDS[11]}]),
+    buildRoundCards(3, slotR32, 8,  [{matchId:101,...KO_ROUNDS[12]},{matchId:102,...KO_ROUNDS[13]}]),
+    buildRoundCards(4, slotR32, 16, [{matchId:104,...KO_ROUNDS[15]}]),
   ];
 
   // SVG lines
@@ -107,29 +113,25 @@ function buildR32Cards(slotH) {
   });
 }
 
-function buildRoundCards(round, slotR32, slotsPerCard) {
+function buildRoundCards(round, slotR32, slotsPerCard, infos = []) {
   const slotH = slotR32 * slotsPerCard;
   const count = 16 / slotsPerCard;
   return Array.from({ length: count }, (_, idx) => {
     const y = idx * slotH + (slotH - CARD_H) / 2;
+    const info = infos[idx] || {};
     return {
-      matchId: null,
-      slot1: 'TBD', slot2: 'TBD',
+      matchId: info.matchId || null,
+      slot1: info.slot1 || 'TBD', slot2: info.slot2 || 'TBD',
       t1: null, t2: null,
       y, midY: y + CARD_H / 2,
-      date: '', city: '', time: '',
+      date: info.date || '', city: info.city || '', time: info.time || '',
     };
   });
 }
 
 function getR32Team(slot) {
-  // Try to resolve slot1/slot2 labels like "1st-A" to actual team names
-  const [pos, grp] = slot.split('-');
-  if (!grp || !GROUP_TEAMS[grp]) return null;
-  const standings = calculateStandings(grp);
-  if (pos === '1st') return standings[0]?.name || null;
-  if (pos === '2nd') return standings[1]?.name || null;
-  return null;
+  // Delegate to the shared resolver in app.js
+  return resolveKOSlot(slot);
 }
 
 function buildBracketCard(card, round) {
@@ -141,13 +143,10 @@ function buildBracketCard(card, round) {
   let t1 = card.t1;
   let t2 = card.t2;
 
-  // For R32, try to resolve from group standings
-  if (round === 0 && card.matchId) {
-    const match = R32_MATCHES.find(m => m.id === card.matchId);
-    if (match) {
-      t1 = getR32Team(match.slot1) || null;
-      t2 = getR32Team(match.slot2) || null;
-    }
+  // Resolve teams for R32 (from group standings) and R16+ (from picks/results)
+  if (card.matchId) {
+    const [rt1, rt2] = getKOMatchTeams(card.matchId);
+    t1 = rt1; t2 = rt2;
   }
 
   // Look up result
@@ -174,7 +173,10 @@ function buildBracketCard(card, round) {
   let statusBadge = '';
   if (isLive) statusBadge = `<span class="live-badge xs"><span class="pulse-dot"></span>LIVE</span>`;
   else if (isFT) statusBadge = `<span class="ft-badge xs">FT</span>`;
-  else if (card.time) statusBadge = `<span class="bracket-time">${card.time.replace(' CT','')}</span>`;
+  const dateDisp = card.date ? (card.date.includes('-') ? formatPillDate(card.date) : card.date) : '';
+  const timeDisp = card.time && card.time !== 'TBD' ? card.time.replace(' CT','') : '';
+  const statusDisp = [dateDisp, timeDisp].filter(Boolean).join(' · ');
+  if (statusDisp) statusBadge = `<span class="bracket-time">${statusDisp}</span>`;
 
   return `<div class="bracket-card" style="top:${card.y}px;width:${CARD_W}px">
     <div class="bc-status">${statusBadge}</div>

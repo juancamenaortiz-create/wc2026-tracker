@@ -20,54 +20,132 @@ function init() {
   updateStatusUI();
   navigateTo('today');
 
-  // Only fetch on startup if cache is older than 30 minutes (or missing).
-  // This prevents burning API calls every time someone opens the app.
+  // Fetch on startup only if cache is older than 1 hour.
   const cacheAge = STATE.lastUpdated ? (Date.now() - STATE.lastUpdated.getTime()) : Infinity;
-  if (cacheAge > 30 * 60 * 1000) fetchScores();
+  if (cacheAge > 60 * 60 * 1000) fetchScores();
 
-  // Auto-refresh every 30 min, but ONLY on days when matches are scheduled.
-  // No point calling the API on days with no games.
+  // Auto-refresh once per hour on match days — manual refresh available anytime.
   setInterval(() => {
     if (!document.hidden && isMatchDay()) fetchScores();
-  }, 30 * 60 * 1000);
+  }, 60 * 60 * 1000);
 
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden && isMatchDay()) {
       const age = STATE.lastUpdated ? (Date.now() - STATE.lastUpdated.getTime()) : Infinity;
-      if (age > 30 * 60 * 1000) fetchScores();
+      if (age > 60 * 60 * 1000) fetchScores();
     }
   });
 }
 
-// ── Fetch ─────────────────────────────────────
+// ── ESPN free scores (primary source — $0) ────────────────────────────────
+// Maps ESPN's team display names to our internal names where they differ.
+const ESPN_NAMES = {
+  "Korea Republic":           "South Korea",
+  "Bosnia-Herzegovina":       "Bosnia & Herzegovina",
+  "Bosnia and Herzegovina":   "Bosnia & Herzegovina",
+  "Curacao":                  "Curaçao",
+  "Turkey":                   "Türkiye",
+  "Côte d'Ivoire":            "Ivory Coast",
+  "DR Congo":                 "Congo DR",
+  "Congo, DR":                "Congo DR",
+  "Republic of Ireland":      "Ireland",
+};
+function espnToApp(n) { return ESPN_NAMES[n] || n || ''; }
+
+async function fetchFromESPN() {
+  const found = [];
+  // Fetch today + yesterday so we catch scores even if opened late
+  for (let back = 0; back <= 1; back++) {
+    const d = new Date();
+    d.setDate(d.getDate() - back);
+    const ds = d.toISOString().split('T')[0].replace(/-/g, '');
+    try {
+      const r = await fetch(
+        `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=${ds}`,
+        { signal: AbortSignal.timeout(7000) }
+      );
+      if (!r.ok) continue;
+      const data = await r.json();
+      for (const ev of (data.events || [])) {
+        const comp = ev.competitions?.[0];
+        if (!comp) continue;
+        const st = comp.status?.type || ev.status?.type || {};
+        const sn = (st.name || '').toUpperCase();
+        let status;
+        if (st.completed || sn.includes('FINAL'))               status = 'FT';
+        else if (sn.includes('PROGRESS') || sn.includes('HALF')) status = 'LIVE';
+        else continue; // not started yet
+        const cs = comp.competitors || [];
+        const home = cs.find(c => c.homeAway === 'home') || cs[0];
+        const away = cs.find(c => c.homeAway === 'away') || cs[1];
+        if (!home || !away) continue;
+        const n1 = espnToApp(home.team?.displayName || '');
+        const n2 = espnToApp(away.team?.displayName || '');
+        const s1 = parseInt(home.score) || 0;
+        const s2 = parseInt(away.score) || 0;
+        const m = SCHEDULE.find(m =>
+          (normName(m.t1)===normName(n1) && normName(m.t2)===normName(n2)) ||
+          (normName(m.t1)===normName(n2) && normName(m.t2)===normName(n1))
+        );
+        if (!m) continue;
+        const flip = normName(m.t1) === normName(n2);
+        found.push({ matchId:m.id, team1:m.t1, team2:m.t2,
+          score1: flip ? s2 : s1, score2: flip ? s1 : s2,
+          status, group:m.g, date:m.date });
+      }
+    } catch(_) { /* skip date on network error */ }
+  }
+  // Return what we found — empty list is valid on non-match days
+  return { groupMatches: found, knockoutMatches: [] };
+}
+
+// Merge fresh results into cached ones (keeps history, updates changed scores)
+function mergeResults(cached, fresh) {
+  const out = [...cached];
+  for (const r of fresh) {
+    const i = out.findIndex(x => x.matchId === r.matchId);
+    if (i >= 0) out[i] = r; else out.push(r);
+  }
+  return out;
+}
+
+// ── Fetch ─────────────────────────────────────────────────────────────────
 async function fetchScores() {
   if (STATE.isLoading || STATE.demoMode) return;
   STATE.isLoading = true;
   setRefreshUI(true);
 
   try {
-    const resp = await fetch('/api/scores', { method: 'POST' });
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const data = await resp.json();
-
-    let parsed = null;
-    if (data.content && Array.isArray(data.content)) {
-      for (const block of data.content) {
-        if (block.type === 'text') {
-          const m = block.text.match(/\{[\s\S]*?"groupMatches"[\s\S]*?\}/);
-          if (m) { try { parsed = JSON.parse(m[0]); break; } catch(e) {} }
-        }
-      }
+    let fresh;
+    let source = 'ESPN';
+    try {
+      fresh = await fetchFromESPN();
+    } catch(espnErr) {
+      // ESPN failed — fall back to Claude Haiku (cheap, ~$0.01/call)
+      source = 'Claude';
+      console.warn('ESPN failed, using Claude fallback:', espnErr.message);
+      const resp = await fetch('/api/scores', { method: 'POST' });
+      if (!resp.ok) throw new Error(`Server error ${resp.status}`);
+      const data = await resp.json();
+      if (data._error) console.warn('API warning:', data._error);
+      if (!Array.isArray(data.groupMatches)) throw new Error('Bad API response');
+      fresh = data;
     }
 
-    if (parsed && parsed.groupMatches) {
-      STATE.results = parsed;
-      STATE.lastUpdated = new Date();
-      localStorage.setItem('wc2026_results', JSON.stringify({ results: parsed, timestamp: STATE.lastUpdated.toISOString() }));
-      updateStatusUI();
-      renderActiveTab();
-    }
+    // Merge fresh data into existing cache so history isn't lost
+    const merged = mergeResults(STATE.results.groupMatches, fresh.groupMatches);
+    STATE.results = { groupMatches: merged, knockoutMatches: fresh.knockoutMatches || [] };
+    STATE.lastUpdated = new Date();
+    localStorage.setItem('wc2026_results', JSON.stringify({
+      results: STATE.results,
+      timestamp: STATE.lastUpdated.toISOString(),
+    }));
+    console.log(`Scores updated via ${source}: ${merged.filter(m=>m.status==='FT').length} FT, ${merged.filter(m=>m.status==='LIVE').length} LIVE`);
+    updateStatusUI();
+    renderActiveTab();
+
   } catch(err) {
+    console.error('fetchScores:', err.message);
     setStatusError(err.message);
     showToast('Could not refresh scores. Using cached data.');
   } finally {

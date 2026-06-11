@@ -96,15 +96,22 @@ function buildScheduleRow(match) {
     centerHtml = '<div class="sched-score vs">vs</div>';
   }
 
-  // Goals + cards (compact — show below row for completed/live matches)
-  const showEvents = (isLive || isFT) && result?.events?.length;
-  const g1 = showEvents ? matchGoalsHtml(result, 1) : '';
-  const g2 = showEvents ? matchGoalsHtml(result, 2) : '';
-  const c1 = showEvents ? matchCardsHtml(result, 1) : '';
-  const c2 = showEvents ? matchCardsHtml(result, 2) : '';
-  const eventsRow = (g1 || g2 || c1 || c2)
-    ? `<div class="sched-events">${g1}${c1}${g2 || c2 ? `<span class="sched-ev-sep">·</span>${g2}${c2}` : ''}</div>`
-    : '';
+  // Events: one line per team, flag-prefixed so attribution is clear
+  let eventsRow = '';
+  if ((isLive || isFT) && result?.events?.length) {
+    const teamLine = (num, flag) => {
+      const tid   = num === 1 ? result.tid1 : result.tid2;
+      const goals = result.events.filter(e => e.g && e.tid === tid);
+      const y     = result.events.filter(e => e.y && e.tid === tid).length;
+      const r     = result.events.filter(e => e.r && e.tid === tid).length;
+      if (!goals.length && !y && !r) return '';
+      const gTxt  = goals.length ? '⚽ ' + goals.map(g => `${g.min} ${g.p}${g.og?' (OG)':''}`).join(' · ') : '';
+      const cTxt  = '🟨'.repeat(y) + '🟥'.repeat(r);
+      return `<div class="sched-ev-row">${flag} ${[gTxt, cTxt].filter(Boolean).join(' ')}</div>`;
+    };
+    const l1 = teamLine(1, t1Flag), l2 = teamLine(2, t2Flag);
+    if (l1 || l2) eventsRow = `<div class="sched-events">${l1}${l2}</div>`;
+  }
 
   return `<div class="schedule-row${isMyT1 || isMyT2 ? ' my-team-row' : ''}">
   <div class="sched-meta">

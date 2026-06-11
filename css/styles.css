@@ -953,3 +953,23 @@ img.emoji {
 }
 .src-espn  { background: rgba(34,197,94,0.15);  color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
 .src-claude { background: rgba(245,158,11,0.15); color: var(--amber); border: 1px solid rgba(245,158,11,0.4); }
+
+/* ── Goals + Cards on match cards ── */
+.mc-events {
+  padding: 2px 0 3px 28px; /* indent under flag */
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+}
+.mc-scorers {
+  font-size: 10px; color: var(--muted); line-height: 1.3;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.mc-cards { font-size: 12px; line-height: 1; flex-shrink: 0; }
+
+/* Schedule row events (compact, single line) */
+.sched-events {
+  display: flex; align-items: center; gap: 5px;
+  padding: 2px 0 1px; flex-wrap: wrap;
+}
+.sched-events .mc-scorers { font-size: 10px; }
+.sched-events .mc-cards   { font-size: 11px; }
+.sched-ev-sep { color: var(--dim); font-size: 10px; }

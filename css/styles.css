@@ -973,3 +973,15 @@ img.emoji {
 .sched-events .mc-scorers { font-size: 10px; }
 .sched-events .mc-cards   { font-size: 11px; }
 .sched-ev-sep { color: var(--dim); font-size: 10px; }
+
+/* Schedule row events — one line per team */
+.sched-events {
+  padding: 2px 0 1px;
+  display: flex; flex-direction: column; gap: 1px;
+}
+.sched-ev-row {
+  font-size: 10px; color: var(--muted);
+  display: flex; align-items: center; gap: 4px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  line-height: 1.4;
+}

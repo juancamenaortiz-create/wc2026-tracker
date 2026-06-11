@@ -4,6 +4,7 @@ const STATE = {
   results:     { groupMatches: [], knockoutMatches: [] },
   myTeams:     [],
   lastUpdated: null,
+  lastSource:  null,   // 'ESPN' | 'Claude' | null — visible in header
   activeTab:   'today',
   isLoading:   false,
   demoMode:    false,
@@ -136,6 +137,7 @@ async function fetchScores() {
     const merged = mergeResults(STATE.results.groupMatches, fresh.groupMatches);
     STATE.results = { groupMatches: merged, knockoutMatches: fresh.knockoutMatches || [] };
     STATE.lastUpdated = new Date();
+    STATE.lastSource  = source;
     localStorage.setItem('wc2026_results', JSON.stringify({
       results: STATE.results,
       timestamp: STATE.lastUpdated.toISOString(),
@@ -176,11 +178,18 @@ function updateStatusUI() {
   const msg = document.getElementById('status-msg');
   if (!msg) return;
   msg.classList.remove('loading', 'error');
-  if (STATE.demoMode) { msg.textContent = '🎭 Demo Mode'; return; }
+  if (STATE.demoMode) { msg.innerHTML = '🎭 Demo Mode'; return; }
   if (STATE.lastUpdated) {
-    msg.textContent = `Updated ${STATE.lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    const time = STATE.lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const src  = STATE.lastSource;
+    const badge = src === 'Claude'
+      ? `<span class="src-badge src-claude" title="ESPN unavailable — using Claude API (may incur cost)">Claude ⚠</span>`
+      : src === 'ESPN'
+      ? `<span class="src-badge src-espn" title="Live data from ESPN (free)">ESPN ✓</span>`
+      : '';
+    msg.innerHTML = `Updated ${time} ${badge}`;
   } else {
-    msg.textContent = 'Not yet refreshed';
+    msg.innerHTML = 'Not yet refreshed';
   }
 }
 

@@ -90,9 +90,28 @@ async function fetchFromESPN() {
         );
         if (!m) continue;
         const flip = normName(m.t1) === normName(n2);
+        // Extract events (goals + cards) and live clock from ESPN
+        const homeId = home.team?.id || '';
+        const awayId = away.team?.id || '';
+        const events = (comp.details || [])
+          .filter(d => d.scoringPlay || d.yellowCard || d.redCard)
+          .map(d => ({
+            min: d.clock?.displayValue || '',
+            tid: d.team?.id || '',
+            p:   d.athletesInvolved?.[0]?.shortName || '',
+            g:   !!(d.scoringPlay),
+            y:   !!(d.yellowCard),
+            r:   !!(d.redCard),
+            og:  !!(d.ownGoal),
+          }));
         found.push({ matchId:m.id, team1:m.t1, team2:m.t2,
           score1: flip ? s2 : s1, score2: flip ? s1 : s2,
-          status, group:m.g, date:m.date });
+          status, group:m.g, date:m.date,
+          clock:  comp.status?.displayClock || '',
+          events,
+          tid1: flip ? awayId : homeId,
+          tid2: flip ? homeId : awayId,
+        });
       }
     } catch(_) { /* skip date on network error */ }
   }
@@ -440,6 +459,26 @@ function getKOWinner(matchId) {
   }
   // Fall back to user's bracket pick
   return STATE.bracketPicks[matchId] || null;
+}
+
+// ── Match event helpers (goals + cards from ESPN details) ─────────────────
+function matchGoalsHtml(result, num) {
+  if (!result?.events?.length) return '';
+  const tid   = num === 1 ? result.tid1 : result.tid2;
+  const goals = result.events.filter(e => e.g && e.tid === tid);
+  if (!goals.length) return '';
+  const list = goals.map(g => `${g.min} ${g.p}${g.og ? ' (OG)' : ''}`).join(' · ');
+  return `<div class="mc-scorers">⚽ ${list}</div>`;
+}
+
+function matchCardsHtml(result, num) {
+  if (!result?.events?.length) return '';
+  const tid = num === 1 ? result.tid1 : result.tid2;
+  const evs = result.events.filter(e => e.tid === tid);
+  const y = evs.filter(e => e.y).length;
+  const r = evs.filter(e => e.r).length;
+  if (!y && !r) return '';
+  return `<span class="mc-cards">${'🟨'.repeat(y)}${'🟥'.repeat(r)}</span>`;
 }
 
 document.addEventListener('DOMContentLoaded', init);

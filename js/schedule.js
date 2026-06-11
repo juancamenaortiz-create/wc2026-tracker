@@ -83,8 +83,10 @@ function buildScheduleRow(match) {
   const roundLabel = match.round ? match.round : (match.g ? `Grp ${match.g}` : 'R32');
 
   let statusHtml = '';
-  if (isLive)     statusHtml = '<span class="live-badge sm"><span class="pulse-dot"></span>LIVE</span>';
-  else if (isFT)  statusHtml = '<span class="ft-badge sm">FT</span>';
+  if (isLive) {
+    const clockStr = result?.clock ? ` ${result.clock}` : '';
+    statusHtml = `<span class="live-badge sm"><span class="pulse-dot"></span>LIVE${clockStr}</span>`;
+  } else if (isFT)  statusHtml = '<span class="ft-badge sm">FT</span>';
   else            statusHtml = `<span class="sched-time">${match.time} CT</span>`;
 
   let centerHtml = '';
@@ -93,6 +95,16 @@ function buildScheduleRow(match) {
   } else {
     centerHtml = '<div class="sched-score vs">vs</div>';
   }
+
+  // Goals + cards (compact — show below row for completed/live matches)
+  const showEvents = (isLive || isFT) && result?.events?.length;
+  const g1 = showEvents ? matchGoalsHtml(result, 1) : '';
+  const g2 = showEvents ? matchGoalsHtml(result, 2) : '';
+  const c1 = showEvents ? matchCardsHtml(result, 1) : '';
+  const c2 = showEvents ? matchCardsHtml(result, 2) : '';
+  const eventsRow = (g1 || g2 || c1 || c2)
+    ? `<div class="sched-events">${g1}${c1}${g2 || c2 ? `<span class="sched-ev-sep">·</span>${g2}${c2}` : ''}</div>`
+    : '';
 
   return `<div class="schedule-row${isMyT1 || isMyT2 ? ' my-team-row' : ''}">
   <div class="sched-meta">
@@ -112,6 +124,7 @@ function buildScheduleRow(match) {
       <span class="flag">${t2Flag}</span>
     </div>
   </div>
+  ${eventsRow}
   <div class="sched-city">📍 ${match.city}</div>
 </div>`;
 }

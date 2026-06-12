@@ -179,6 +179,8 @@ function buildMatchCard(match, now) {
       ${s2html}
     </div>
     ${hasEvents2 ? `<div class="mc-events">${goals2}${cards2}</div>` : ''}
+    ${hasResult && result?.stats ? `<div class="stats-toggle${STATE.openStatsMatchId===match.id?' open':''}" onclick="toggleStats(${match.id})">${STATE.openStatsMatchId===match.id?'▲ Hide stats':'📊 Match stats'}</div>` : ''}
+    ${STATE.openStatsMatchId===match.id ? buildStatsPanel(result) : ''}
     <div class="mc-footer">
       <span class="mc-city">📍 ${match.city}</span>
       ${countdown ? `<span class="mc-countdown" data-kickoff="${kickoffUTC.getTime()}">${countdown}</span>` : ''}

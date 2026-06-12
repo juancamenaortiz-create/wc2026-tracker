@@ -132,6 +132,8 @@ function buildScheduleRow(match) {
     </div>
   </div>
   ${eventsRow}
+  ${(isLive || isFT) && result?.stats ? `<div class="stats-toggle sched-stats${STATE.openStatsMatchId===match.id?' open':''}" onclick="toggleStats(${match.id})">${STATE.openStatsMatchId===match.id?'▲ Hide stats':'📊 Match stats'}</div>` : ''}
+  ${STATE.openStatsMatchId===match.id ? buildStatsPanel(result) : ''}
   <div class="sched-city">📍 ${match.city}</div>
 </div>`;
 }

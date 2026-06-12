@@ -228,6 +228,8 @@ const DEMO_RESULTS = {
     // Group A — Mexico won with goals; South Africa got 3 cards
     { matchId:1, team1:"Mexico",      team2:"South Africa",         score1:2, score2:0, status:"FT",   group:"A", date:"2026-06-11",
       clock:"90'+8'", tid1:"t-MEX", tid2:"t-RSA",
+      stats:{ t1:{possessionPct:60.5,totalShots:16,shotsOnTarget:4,wonCorners:3,foulsCommitted:12},
+              t2:{possessionPct:39.5,totalShots:3, shotsOnTarget:2,wonCorners:1,foulsCommitted:11} },
       events:[
         {min:"9'",  tid:"t-MEX", p:"J. Quiñones", g:true,  y:false, r:false, og:false},
         {min:"67'", tid:"t-MEX", p:"R. Jiménez",  g:true,  y:false, r:false, og:false},
@@ -238,6 +240,8 @@ const DEMO_RESULTS = {
     // Group A — South Korea vs Czechia LIVE right now at 73'
     { matchId:2, team1:"South Korea", team2:"Czechia",              score1:1, score2:2, status:"LIVE", group:"A", date:"2026-06-11",
       clock:"73'", tid1:"t-KOR", tid2:"t-CZE",
+      stats:{ t1:{possessionPct:45,totalShots:8, shotsOnTarget:3,wonCorners:4,foulsCommitted:9},
+              t2:{possessionPct:55,totalShots:11,shotsOnTarget:5,wonCorners:5,foulsCommitted:7} },
       events:[
         {min:"22'", tid:"t-KOR", p:"H. Son",     g:true,  y:false, r:false, og:false},
         {min:"55'", tid:"t-CZE", p:"P. Schick",  g:true,  y:false, r:false, og:false},
@@ -257,6 +261,8 @@ const DEMO_RESULTS = {
     // Group B
     { matchId:3,  team1:"Canada",     team2:"Bosnia & Herzegovina", score1:3, score2:1, status:"FT",   group:"B", date:"2026-06-12",
       clock:"FT", tid1:"t-CAN", tid2:"t-BIH",
+      stats:{ t1:{possessionPct:58,totalShots:14,shotsOnTarget:6,wonCorners:7,foulsCommitted:8},
+              t2:{possessionPct:42,totalShots:7, shotsOnTarget:3,wonCorners:3,foulsCommitted:12} },
       events:[
         {min:"12'", tid:"t-CAN", p:"A. Davies",  g:true, y:false, r:false, og:false},
         {min:"44'", tid:"t-CAN", p:"C. Larin",   g:true, y:false, r:false, og:false},
@@ -283,6 +289,8 @@ const DEMO_RESULTS = {
     // Group E
     { matchId:9,  team1:"Germany",    team2:"Curaçao",              score1:4, score2:0, status:"FT",   group:"E", date:"2026-06-14",
       clock:"FT", tid1:"t-GER", tid2:"t-CUW",
+      stats:{ t1:{possessionPct:72,totalShots:24,shotsOnTarget:8,wonCorners:10,foulsCommitted:5},
+              t2:{possessionPct:28,totalShots:4, shotsOnTarget:1,wonCorners:2, foulsCommitted:14} },
       events:[
         {min:"8'",  tid:"t-GER", p:"K. Havertz", g:true, y:false, r:false, og:false},
         {min:"31'", tid:"t-GER", p:"J. Kimmich",  g:true, y:false, r:false, og:false},
@@ -299,6 +307,8 @@ const DEMO_RESULTS = {
     // Group L
     { matchId:22, team1:"England",    team2:"Croatia",              score1:2, score2:1, status:"FT",   group:"L", date:"2026-06-17",
       clock:"FT", tid1:"t-ENG", tid2:"t-CRO",
+      stats:{ t1:{possessionPct:55,totalShots:18,shotsOnTarget:7,wonCorners:8,foulsCommitted:9},
+              t2:{possessionPct:45,totalShots:12,shotsOnTarget:4,wonCorners:5,foulsCommitted:11} },
       events:[
         {min:"27'", tid:"t-ENG", p:"B. Saka",    g:true, y:false, r:false, og:false},
         {min:"71'", tid:"t-ENG", p:"H. Kane",    g:true, y:false, r:false, og:false},

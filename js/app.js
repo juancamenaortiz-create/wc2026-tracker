@@ -8,7 +8,8 @@ const STATE = {
   activeTab:   'today',
   isLoading:   false,
   demoMode:    false,
-  bracketPicks: {},  // matchId → team name, for bracket predictor
+  bracketPicks:     {},  // matchId → team name, for bracket predictor
+  openStatsMatchId: null, // which match has the stats drawer open
 };
 
 // ── Init ─────────────────────────────────────
@@ -126,6 +127,17 @@ async function fetchFromESPN() {
             r:   !!(d.redCard),
             og:  !!(d.ownGoal),
           }));
+        // Extract per-team match statistics
+        const parseStats = (competitor) => {
+          const s = {};
+          (competitor.statistics || []).forEach(st => {
+            const v = parseFloat(st.displayValue);
+            if (!isNaN(v)) s[st.name] = v;
+          });
+          return s;
+        };
+        const homeStats = parseStats(home);
+        const awayStats = parseStats(away);
         found.push({ matchId:m.id, team1:m.t1, team2:m.t2,
           score1: flip ? s2 : s1, score2: flip ? s1 : s2,
           status, group:m.g, date:m.date,
@@ -133,6 +145,10 @@ async function fetchFromESPN() {
           events,
           tid1: flip ? awayId : homeId,
           tid2: flip ? homeId : awayId,
+          stats: {
+            t1: flip ? awayStats : homeStats,
+            t2: flip ? homeStats : awayStats,
+          },
         });
       }
     } catch(_) { /* skip date on network error */ }
@@ -625,6 +641,44 @@ function matchCardsHtml(result, num) {
   const r = evs.filter(e => e.r).length;
   if (!y && !r) return '';
   return `<span class="mc-cards">${'🟨'.repeat(y)}${'🟥'.repeat(r)}</span>`;
+}
+
+// ── Match stats drawer ────────────────────────────────────────────────────
+const STAT_ROWS = [
+  { key:'possessionPct',  label:'Possession',      fmt: v => v + '%', isPct: true },
+  { key:'totalShots',     label:'Shots' },
+  { key:'shotsOnTarget',  label:'Shots on Target' },
+  { key:'wonCorners',     label:'Corners' },
+  { key:'foulsCommitted', label:'Fouls' },
+];
+
+function toggleStats(matchId) {
+  STATE.openStatsMatchId = STATE.openStatsMatchId === matchId ? null : matchId;
+  renderActiveTab();
+}
+
+function buildStatsPanel(result) {
+  if (!result?.stats) return '';
+  const s1 = result.stats.t1 || {}, s2 = result.stats.t2 || {};
+  const rows = STAT_ROWS.map(({ key, label, fmt, isPct }) => {
+    const v1 = s1[key], v2 = s2[key];
+    if (v1 == null || v2 == null) return '';
+    const total  = isPct ? 100 : (v1 + v2 || 1);
+    const pct1   = Math.round((v1 / total) * 100);
+    const disp   = fmt || (v => v);
+    return `<div class="stat-row">
+      <span class="stat-val">${disp(v1)}</span>
+      <div class="stat-mid">
+        <div class="stat-bar">
+          <div class="stat-bar-1" style="width:${pct1}%"></div>
+          <div class="stat-bar-2" style="width:${100 - pct1}%"></div>
+        </div>
+        <span class="stat-label">${label}</span>
+      </div>
+      <span class="stat-val r">${disp(v2)}</span>
+    </div>`;
+  }).filter(Boolean).join('');
+  return rows ? `<div class="match-stats-panel">${rows}</div>` : '';
 }
 
 document.addEventListener('DOMContentLoaded', init);

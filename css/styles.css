@@ -985,3 +985,43 @@ img.emoji {
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   line-height: 1.4;
 }
+/* ── Live bracket card glow ── */
+.bracket-card.bc-live {
+  border-color: var(--crimson);
+  box-shadow: 0 0 0 1px rgba(192,24,46,0.4), 0 0 14px rgba(192,24,46,0.2);
+  animation: bc-pulse 2s ease-in-out infinite;
+}
+@keyframes bc-pulse {
+  0%,100% { box-shadow: 0 0 0 1px rgba(192,24,46,0.4), 0 0 14px rgba(192,24,46,0.2); }
+  50%      { box-shadow: 0 0 0 2px rgba(192,24,46,0.6), 0 0 22px rgba(192,24,46,0.35); }
+}
+
+/* ── Today tab — upcoming accordion ── */
+.upcoming-toggle {
+  display: flex; justify-content: space-between; align-items: center;
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  background: var(--navy3); border: 1px solid var(--border);
+  border-radius: var(--radius); cursor: pointer;
+  font-size: 12px; font-weight: 700; color: var(--white);
+  transition: background 0.15s;
+}
+.upcoming-toggle:hover { background: var(--navy4); }
+.upcoming-chevron { color: var(--gold); font-size: 11px; }
+.upcoming-day-hdr {
+  font-size: 10px; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  padding: 10px 4px 4px;
+}
+.upcoming-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 8px; margin-bottom: 4px;
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: 8px; font-size: 11px;
+}
+.upcoming-row.my-t { border-color: rgba(212,175,55,0.4); }
+.upcoming-time  { color: var(--gold); font-weight: 700; font-size: 10px; min-width: 52px; }
+.upcoming-grp   { color: var(--muted); font-size: 9px; font-weight: 700;
+                  background: var(--navy4); padding: 2px 5px; border-radius: 3px; }
+.upcoming-teams-txt { flex: 1; color: var(--white); }
+.upcoming-vs    { color: var(--muted); font-size: 10px; }

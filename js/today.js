@@ -1,5 +1,28 @@
 // TODAY.JS — Today tab renderer
 
+const TODAY_STATE = { showUpcoming: false };
+
+function toggleUpcoming() {
+  TODAY_STATE.showUpcoming = !TODAY_STATE.showUpcoming;
+  const c = document.getElementById('tab-content');
+  if (c) renderToday(STATE.demoMode ? document.getElementById('tab-inner') || c : c);
+}
+
+function getUpcomingDays(afterDate, numDays) {
+  const dates = [...new Set(SCHEDULE.map(m => m.date))]
+    .filter(d => d > afterDate).sort().slice(0, numDays);
+  return dates.map(date => ({
+    date,
+    day: SCHEDULE.find(m => m.date === date)?.day || '',
+    matches: SCHEDULE.filter(m => m.date === date),
+  }));
+}
+
+function fmtShort(d) {
+  const [,mo,day] = d.split('-').map(Number);
+  return ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][mo] + ' ' + day;
+}
+
 function renderToday(container) {
   const todayStr = getTodayCT();
   let displayDate = todayStr, isNextDay = false;
@@ -47,6 +70,30 @@ function renderToday(container) {
     html += '<div class="empty-state">🏆<br>No matches scheduled yet.<br><span>Tournament starts June 11, 2026</span></div>';
   } else {
     todayMatches.forEach(m => { html += buildMatchCard(m, now); });
+  }
+
+  // ── Upcoming matches accordion ──────────────────────────────────────────
+  const upcomingDays = getUpcomingDays(displayDate, 5);
+  if (upcomingDays.length > 0) {
+    const totalGames = upcomingDays.reduce((n, d) => n + d.matches.length, 0);
+    const isOpen = TODAY_STATE.showUpcoming;
+    html += `<div class="upcoming-toggle" onclick="toggleUpcoming()">
+      <span>📅 Upcoming — ${totalGames} matches over next ${upcomingDays.length} days</span>
+      <span class="upcoming-chevron">${isOpen ? '▲' : '▼'}</span>
+    </div>`;
+    if (isOpen) {
+      upcomingDays.forEach(({ date, day, matches }) => {
+        html += `<div class="upcoming-day-hdr">${day}, ${fmtShort(date)}</div>`;
+        matches.forEach(m => {
+          const starred = STATE.myTeams.some(t => normName(t)===normName(m.t1)||normName(t)===normName(m.t2));
+          html += `<div class="upcoming-row${starred?' my-t':''}">
+            <span class="upcoming-time">${m.time}</span>
+            <span class="upcoming-grp">Grp ${m.g}</span>
+            <span class="upcoming-teams-txt">${getFlag(m.t1)} ${displayName(m.t1)} <span class="upcoming-vs">vs</span> ${displayName(m.t2)} ${getFlag(m.t2)}</span>
+          </div>`;
+        });
+      });
+    }
   }
 
   html += '</div>';

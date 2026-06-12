@@ -225,30 +225,94 @@ const BRACKET_TREE = {
 // Covers: FT + LIVE results, tiebreaker scenario, standings, analyzer, bracket.
 const DEMO_RESULTS = {
   groupMatches: [
-    // Group A — 4 played; tiebreaker Mexico vs Czechia (both 4 pts, decided by GD)
-    {team1:"Mexico",      team2:"South Africa",        score1:2, score2:0, status:"FT", group:"A"},
-    {team1:"South Korea", team2:"Czechia",             score1:1, score2:1, status:"FT", group:"A"},
-    {team1:"Mexico",      team2:"South Korea",         score1:1, score2:1, status:"FT", group:"A"},
-    {team1:"Czechia",     team2:"South Africa",        score1:2, score2:1, status:"FT", group:"A"},
-    // Group B — Round 1
-    {team1:"Canada",      team2:"Bosnia & Herzegovina",score1:3, score2:1, status:"FT", group:"B"},
-    {team1:"Qatar",       team2:"Switzerland",         score1:0, score2:2, status:"FT", group:"B"},
-    // Group C — draw + upset
-    {team1:"Brazil",      team2:"Morocco",             score1:2, score2:2, status:"FT", group:"C"},
-    {team1:"Haiti",       team2:"Scotland",            score1:0, score2:2, status:"FT", group:"C"},
-    // Group D — LIVE right now
-    {team1:"USA",         team2:"Paraguay",            score1:1, score2:0, status:"LIVE", group:"D"},
-    // Group E — Round 1
-    {team1:"Germany",     team2:"Curaçao",             score1:4, score2:0, status:"FT", group:"E"},
-    {team1:"Ivory Coast", team2:"Ecuador",             score1:1, score2:2, status:"FT", group:"E"},
-    // Group H — Round 1
-    {team1:"Spain",       team2:"Cape Verde",          score1:3, score2:0, status:"FT", group:"H"},
-    {team1:"Saudi Arabia",team2:"Uruguay",             score1:1, score2:2, status:"FT", group:"H"},
-    // Group L — England vs Croatia classic
-    {team1:"England",     team2:"Croatia",             score1:2, score2:1, status:"FT", group:"L"},
-    {team1:"Ghana",       team2:"Panama",              score1:1, score2:0, status:"FT", group:"L"},
+    // Group A — Mexico won with goals; South Africa got 3 cards
+    { matchId:1, team1:"Mexico",      team2:"South Africa",         score1:2, score2:0, status:"FT",   group:"A", date:"2026-06-11",
+      clock:"90'+8'", tid1:"t-MEX", tid2:"t-RSA",
+      events:[
+        {min:"9'",  tid:"t-MEX", p:"J. Quiñones", g:true,  y:false, r:false, og:false},
+        {min:"67'", tid:"t-MEX", p:"R. Jiménez",  g:true,  y:false, r:false, og:false},
+        {min:"17'", tid:"t-RSA", p:"T. Mokoena",  g:false, y:true,  r:false, og:false},
+        {min:"49'", tid:"t-RSA", p:"S. Sithole",  g:false, y:false, r:true,  og:false},
+        {min:"84'", tid:"t-RSA", p:"T. Zwane",    g:false, y:false, r:true,  og:false},
+      ]},
+    // Group A — South Korea vs Czechia LIVE right now at 73'
+    { matchId:2, team1:"South Korea", team2:"Czechia",              score1:1, score2:2, status:"LIVE", group:"A", date:"2026-06-11",
+      clock:"73'", tid1:"t-KOR", tid2:"t-CZE",
+      events:[
+        {min:"22'", tid:"t-KOR", p:"H. Son",     g:true,  y:false, r:false, og:false},
+        {min:"55'", tid:"t-CZE", p:"P. Schick",  g:true,  y:false, r:false, og:false},
+        {min:"61'", tid:"t-CZE", p:"T. Souček",  g:true,  y:false, r:false, og:false},
+        {min:"38'", tid:"t-KOR", p:"K. Lee",     g:false, y:true,  r:false, og:false},
+        {min:"69'", tid:"t-CZE", p:"V. Coufal",  g:false, y:true,  r:false, og:false},
+      ]},
+    // Group A — Round 2
+    { matchId:28, team1:"Mexico",     team2:"South Korea",          score1:1, score2:1, status:"FT",   group:"A", date:"2026-06-18",
+      clock:"FT", tid1:"t-MEX", tid2:"t-KOR",
+      events:[
+        {min:"34'", tid:"t-MEX", p:"H. Lozano",  g:true,  y:false, r:false, og:false},
+        {min:"81'", tid:"t-KOR", p:"H. Son",     g:true,  y:false, r:false, og:false},
+      ]},
+    { matchId:25, team1:"Czechia",    team2:"South Africa",         score1:2, score2:1, status:"FT",   group:"A", date:"2026-06-18",
+      clock:"FT", tid1:"t-CZE", tid2:"t-RSA", events:[] },
+    // Group B
+    { matchId:3,  team1:"Canada",     team2:"Bosnia & Herzegovina", score1:3, score2:1, status:"FT",   group:"B", date:"2026-06-12",
+      clock:"FT", tid1:"t-CAN", tid2:"t-BIH",
+      events:[
+        {min:"12'", tid:"t-CAN", p:"A. Davies",  g:true, y:false, r:false, og:false},
+        {min:"44'", tid:"t-CAN", p:"C. Larin",   g:true, y:false, r:false, og:false},
+        {min:"70'", tid:"t-CAN", p:"J. David",   g:true, y:false, r:false, og:false},
+        {min:"58'", tid:"t-BIH", p:"E. Džeko",   g:true, y:false, r:false, og:false},
+      ]},
+    { matchId:5,  team1:"Qatar",      team2:"Switzerland",          score1:0, score2:2, status:"FT",   group:"B", date:"2026-06-13",
+      clock:"FT", tid1:"t-QAT", tid2:"t-SUI", events:[] },
+    // Group C
+    { matchId:6,  team1:"Brazil",     team2:"Morocco",              score1:2, score2:2, status:"FT",   group:"C", date:"2026-06-13",
+      clock:"FT", tid1:"t-BRA", tid2:"t-MAR",
+      events:[
+        {min:"18'", tid:"t-BRA", p:"V. Jr.",     g:true, y:false, r:false, og:false},
+        {min:"54'", tid:"t-BRA", p:"Rodrygo",    g:true, y:false, r:false, og:false},
+        {min:"66'", tid:"t-MAR", p:"H. Ziyech",  g:true, y:false, r:false, og:false},
+        {min:"88'", tid:"t-MAR", p:"Y. En-Nesyri",g:true,y:false, r:false, og:false},
+      ]},
+    { matchId:7,  team1:"Haiti",      team2:"Scotland",             score1:0, score2:2, status:"FT",   group:"C", date:"2026-06-13",
+      clock:"FT", tid1:"t-HAI", tid2:"t-SCO", events:[] },
+    // Group D — USA just scored, 1–0
+    { matchId:4,  team1:"USA",        team2:"Paraguay",             score1:1, score2:0, status:"FT",   group:"D", date:"2026-06-12",
+      clock:"FT", tid1:"t-USA", tid2:"t-PAR",
+      events:[{min:"62'", tid:"t-USA", p:"C. Pulisic", g:true, y:false, r:false, og:false}]},
+    // Group E
+    { matchId:9,  team1:"Germany",    team2:"Curaçao",              score1:4, score2:0, status:"FT",   group:"E", date:"2026-06-14",
+      clock:"FT", tid1:"t-GER", tid2:"t-CUW",
+      events:[
+        {min:"8'",  tid:"t-GER", p:"K. Havertz", g:true, y:false, r:false, og:false},
+        {min:"31'", tid:"t-GER", p:"J. Kimmich",  g:true, y:false, r:false, og:false},
+        {min:"57'", tid:"t-GER", p:"L. Goretzka", g:true, y:false, r:false, og:false},
+        {min:"78'", tid:"t-GER", p:"T. Müller",   g:true, y:false, r:false, og:false},
+      ]},
+    { matchId:11, team1:"Ivory Coast",team2:"Ecuador",              score1:1, score2:2, status:"FT",   group:"E", date:"2026-06-14",
+      clock:"FT", tid1:"t-CIV", tid2:"t-ECU", events:[] },
+    // Group H
+    { matchId:13, team1:"Spain",      team2:"Cape Verde",           score1:3, score2:0, status:"FT",   group:"H", date:"2026-06-15",
+      clock:"FT", tid1:"t-ESP", tid2:"t-CPV", events:[] },
+    { matchId:15, team1:"Saudi Arabia",team2:"Uruguay",             score1:1, score2:2, status:"FT",   group:"H", date:"2026-06-15",
+      clock:"FT", tid1:"t-KSA", tid2:"t-URU", events:[] },
+    // Group L
+    { matchId:22, team1:"England",    team2:"Croatia",              score1:2, score2:1, status:"FT",   group:"L", date:"2026-06-17",
+      clock:"FT", tid1:"t-ENG", tid2:"t-CRO",
+      events:[
+        {min:"27'", tid:"t-ENG", p:"B. Saka",    g:true, y:false, r:false, og:false},
+        {min:"71'", tid:"t-ENG", p:"H. Kane",    g:true, y:false, r:false, og:false},
+        {min:"53'", tid:"t-CRO", p:"L. Modrić",  g:true, y:false, r:false, og:false},
+      ]},
+    { matchId:23, team1:"Ghana",      team2:"Panama",               score1:1, score2:0, status:"FT",   group:"L", date:"2026-06-17",
+      clock:"FT", tid1:"t-GHA", tid2:"t-PAN", events:[] },
   ],
-  knockoutMatches: []
+  // Demo R32 scores so bracket cards show results
+  knockoutMatches: [
+    { matchId:73, team1:"Mexico",     team2:"South Korea",  score1:2, score2:1, status:"FT",   round:"R32" },
+    { matchId:76, team1:"England",    team2:"Switzerland",  score1:1, score2:0, status:"FT",   round:"R32" },
+    { matchId:79, team1:"Mexico",     team2:"South Korea",  score1:0, score2:0, status:"LIVE", round:"R32" },
+  ]
 };
 
 function normName(name) {

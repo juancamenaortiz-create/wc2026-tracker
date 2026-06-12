@@ -139,26 +139,19 @@ function getR32Team(slot) {
 }
 
 function buildBracketCard(card, round) {
-  const result = card.matchId ? getKnockoutResult(card.matchId) : null;
+  // Use unified lookup: R32 results in groupMatches, R16+ in knockoutMatches
+  const result = card.matchId ? getAnyMatchResult(card.matchId) : null;
   const status = result ? result.status : 'NS';
   const isLive = status === 'LIVE';
   const isFT   = status === 'FT';
 
-  let t1 = card.t1;
-  let t2 = card.t2;
-
-  // Resolve teams for R32 (from group standings) and R16+ (from picks/results)
-  if (card.matchId) {
-    const [rt1, rt2] = getKOMatchTeams(card.matchId);
-    t1 = rt1; t2 = rt2;
-  }
-
-  // Look up result
+  let t1 = card.t1, t2 = card.t2;
+  if (card.matchId) { const [rt1, rt2] = getKOMatchTeams(card.matchId); t1 = rt1; t2 = rt2; }
   if (result && result.team1) t1 = result.team1;
   if (result && result.team2) t2 = result.team2;
 
-  let label1 = t1 || card.slot1 || 'TBD';
-  let label2 = t2 || card.slot2 || 'TBD';
+  const label1 = t1 || card.slot1 || 'TBD';
+  const label2 = t2 || card.slot2 || 'TBD';
   const flag1 = t1 ? getFlag(t1) : '❓';
   const flag2 = t2 ? getFlag(t2) : '❓';
 
@@ -166,23 +159,32 @@ function buildBracketCard(card, round) {
   let score2 = result ? result.score2 : '';
   let w1 = '', w2 = '';
   if (isFT && score1 !== '' && score2 !== '') {
-    if (score1 > score2) { w1 = 'winner'; w2 = 'loser'; }
-    else if (score2 > score1) { w1 = 'loser'; w2 = 'winner'; }
-    else { w1 = 'draw'; w2 = 'draw'; }
+    if (score1 > score2)      { w1 = 'winner'; w2 = 'loser'; }
+    else if (score2 > score1) { w1 = 'loser';  w2 = 'winner'; }
+    else                       { w1 = 'draw';   w2 = 'draw'; }
   }
 
   const isMy1 = t1 ? isMyTeam(t1) : false;
   const isMy2 = t2 ? isMyTeam(t2) : false;
 
+  // Status badge: show clock during LIVE, date otherwise
   let statusBadge = '';
-  if (isLive) statusBadge = `<span class="live-badge xs"><span class="pulse-dot"></span>LIVE</span>`;
-  else if (isFT) statusBadge = `<span class="ft-badge xs">FT</span>`;
-  const dateDisp = card.date ? (card.date.includes('-') ? formatPillDate(card.date) : card.date) : '';
-  const timeDisp = card.time && card.time !== 'TBD' ? card.time.replace(' CT','') : '';
-  const statusDisp = [dateDisp, timeDisp].filter(Boolean).join(' · ');
-  if (statusDisp) statusBadge = `<span class="bracket-time">${statusDisp}</span>`;
+  if (isLive) {
+    const clockStr = result?.clock ? ` ${result.clock}` : '';
+    statusBadge = `<span class="live-badge xs"><span class="pulse-dot"></span>LIVE${clockStr}</span>`;
+  } else if (isFT) {
+    statusBadge = `<span class="ft-badge xs">FT</span>`;
+  } else {
+    const dd = card.date ? (card.date.includes('-') ? formatPillDate(card.date) : card.date) : '';
+    const dt = card.time && card.time !== 'TBD' ? card.time.replace(' CT', '') : '';
+    const ds = [dd, dt].filter(Boolean).join(' · ');
+    if (ds) statusBadge = `<span class="bracket-time">${ds}</span>`;
+  }
 
-  return `<div class="bracket-card" style="top:${card.y}px;width:${CARD_W}px">
+  // Live game gets a glowing red outline
+  const liveClass = isLive ? ' bc-live' : '';
+
+  return `<div class="bracket-card${liveClass}" style="top:${card.y}px;width:${CARD_W}px">
     <div class="bc-status">${statusBadge}</div>
     <div class="bc-team ${w1} ${isMy1 ? 'my-t' : ''}">
       <span class="flag sm">${flag1}</span>

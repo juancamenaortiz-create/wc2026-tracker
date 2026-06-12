@@ -329,6 +329,12 @@ function getMatchResult(match) {
 function getKnockoutResult(matchId) {
   return STATE.results.knockoutMatches.find(m => m.matchId === matchId) || null;
 }
+// Unified lookup: R32 (73-88) live in groupMatches, R16+ in knockoutMatches
+function getAnyMatchResult(matchId) {
+  if (!matchId) return null;
+  if (matchId <= 88) return STATE.results.groupMatches.find(m => m.matchId === matchId) || null;
+  return STATE.results.knockoutMatches.find(m => m.matchId === matchId) || null;
+}
 
 // ── Time Helpers ──────────────────────────────
 function getTodayCT() {

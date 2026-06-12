@@ -708,9 +708,9 @@ img.emoji {
   cursor: pointer; transition: all 0.15s; min-width: 60px;
 }
 .toggle-opt:hover { border-color: var(--muted); color: var(--white); }
-.toggle-opt.active-home { background: rgba(34,197,94,0.15);  border-color: var(--green);  color: var(--green); }
-.toggle-opt.active-draw { background: rgba(212,175,55,0.15); border-color: var(--gold);   color: var(--gold); }
-.toggle-opt.active-away { background: rgba(239,68,68,0.15);  border-color: var(--red);    color: var(--red); }
+.toggle-opt.active-home { background: rgba(14,165,233,0.18);  border-color: #0EA5E9; color: #38BDF8; }
+.toggle-opt.active-draw { background: rgba(139,92,246,0.18);  border-color: #8B5CF6; color: #A78BFA; }
+.toggle-opt.active-away { background: rgba(251,146,60,0.18);  border-color: #FB923C; color: #FDBA74; }
 .toggle-opt.clear-btn   { flex: 0; min-width: 32px; color: var(--muted); }
 .az-match-date { font-size: 10px; color: var(--muted); margin-top: 5px; }
 .az-empty      { padding: 12px; font-size: 12px; color: var(--muted); }

@@ -21,21 +21,42 @@ function init() {
   updateStatusUI();
   navigateTo('today');
 
-  // Fetch on startup only if cache is older than 1 hour.
+  // Start adaptive refresh: 1 min via ESPN (free), 60 min via Claude (costs money)
   const cacheAge = STATE.lastUpdated ? (Date.now() - STATE.lastUpdated.getTime()) : Infinity;
-  if (cacheAge > 60 * 60 * 1000) fetchScores();
+  if (cacheAge > 5 * 60 * 1000) {
+    fetchScores(); // scheduleNextRefresh() is called inside fetchScores's finally block
+  } else {
+    scheduleNextRefresh();
+  }
 
-  // Auto-refresh once per hour on match days — manual refresh available anytime.
-  setInterval(() => {
-    if (!document.hidden && isMatchDay()) fetchScores();
-  }, 60 * 60 * 1000);
-
+  // Re-check on tab focus — fetch if stale
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden && isMatchDay()) {
       const age = STATE.lastUpdated ? (Date.now() - STATE.lastUpdated.getTime()) : Infinity;
-      if (age > 60 * 60 * 1000) fetchScores();
+      if (age > getRefreshInterval()) {
+        if (_refreshTimer) clearTimeout(_refreshTimer);
+        fetchScores();
+      }
     }
   });
+}
+
+// ── Adaptive refresh ──────────────────────────────────────────────────────
+// 1 min on match days via ESPN (free), 60 min if ESPN is down and Claude kicks in.
+// Non-match days: 30 min (no live games to track).
+let _refreshTimer = null;
+
+function getRefreshInterval() {
+  if (!isMatchDay()) return 30 * 60 * 1000;
+  return STATE.lastSource === 'Claude' ? 60 * 60 * 1000 : 60 * 1000;
+}
+
+function scheduleNextRefresh() {
+  if (_refreshTimer) clearTimeout(_refreshTimer);
+  _refreshTimer = setTimeout(() => {
+    if (!document.hidden && isMatchDay()) fetchScores();
+    else scheduleNextRefresh(); // reschedule without fetching if tab is hidden
+  }, getRefreshInterval());
 }
 
 // ── ESPN free scores (primary source — $0) ────────────────────────────────
@@ -172,6 +193,7 @@ async function fetchScores() {
   } finally {
     STATE.isLoading = false;
     setRefreshUI(false);
+    scheduleNextRefresh(); // reschedule with the correct interval for next source
   }
 }
 
@@ -387,7 +409,39 @@ function showToast(msg) {
 }
 
 // ── Settings ──────────────────────────────────
-function openSettings()  { const m = document.getElementById('settings-modal'); if (m) m.classList.add('open'); }
+function openSettings() {
+  const m = document.getElementById('settings-modal');
+  if (!m) return;
+
+  // Update dynamic labels to reflect current source and interval
+  const src = STATE.lastSource;
+  const onClaudeFallback = src === 'Claude';
+
+  const refreshDetail = document.getElementById('setting-refresh-detail');
+  if (refreshDetail) {
+    refreshDetail.textContent = onClaudeFallback
+      ? 'Every 60 min — ESPN unavailable, Claude fallback active'
+      : 'Every 1 min on match days (ESPN)';
+  }
+  const refreshStatus = document.getElementById('setting-refresh-status');
+  if (refreshStatus) {
+    refreshStatus.textContent = 'On';
+    refreshStatus.style.color = 'var(--green)';
+  }
+  const sourceDetail = document.getElementById('setting-source-detail');
+  if (sourceDetail) {
+    sourceDetail.textContent = onClaudeFallback
+      ? 'ESPN unavailable — using Claude AI (may incur cost)'
+      : 'Free live data from ESPN — no API cost';
+  }
+  const sourceBadge = document.getElementById('setting-source-badge');
+  if (sourceBadge) {
+    sourceBadge.textContent = onClaudeFallback ? 'Claude ⚠' : 'ESPN ✓';
+    sourceBadge.style.color = onClaudeFallback ? 'var(--amber)' : 'var(--green)';
+  }
+
+  m.classList.add('open');
+}
 function closeSettings() { const m = document.getElementById('settings-modal'); if (m) m.classList.remove('open'); }
 function clearMyTeams()  { STATE.myTeams = []; localStorage.removeItem('wc2026_myteams'); showToast('My Teams cleared.'); renderActiveTab(); }
 function clearCache()    { localStorage.removeItem('wc2026_results'); STATE.results = { groupMatches: [], knockoutMatches: [] }; STATE.lastUpdated = null; updateStatusUI(); showToast('Cache cleared. Refreshing...'); fetchScores(); }

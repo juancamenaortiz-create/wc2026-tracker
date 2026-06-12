@@ -20,6 +20,7 @@ function init() {
   } catch(e) {}
   updateStatusUI();
   navigateTo('today');
+  initTimezone();
 
   // Start adaptive refresh: 1 min via ESPN (free), 60 min via Claude (costs money)
   const cacheAge = STATE.lastUpdated ? (Date.now() - STATE.lastUpdated.getTime()) : Infinity;
@@ -349,6 +350,91 @@ function parseGameTimeCT(dateStr, timeStr) {
   if (ampm === 'AM' && h === 12) h = 0;
   return new Date(Date.UTC(year, month-1, day, h+5, min));
 }
+
+// ── Timezone preferences ───────────────────────────────────────────────────
+const PREFS = { timezone: null }; // null = browser auto-detect
+
+const TIMEZONE_OPTIONS = [
+  { value:'auto',                           label:'Auto-detect' },
+  { value:'America/New_York',               label:'New York (ET)',       region:'Americas' },
+  { value:'America/Chicago',                label:'Chicago (CT)',        region:'Americas' },
+  { value:'America/Denver',                 label:'Denver (MT)',         region:'Americas' },
+  { value:'America/Los_Angeles',            label:'Los Angeles (PT)',    region:'Americas' },
+  { value:'America/Mexico_City',            label:'Mexico City',         region:'Americas' },
+  { value:'America/Bogota',                 label:'Bogotá / Lima',       region:'Americas' },
+  { value:'America/Sao_Paulo',              label:'São Paulo',           region:'Americas' },
+  { value:'America/Argentina/Buenos_Aires', label:'Buenos Aires',        region:'Americas' },
+  { value:'Europe/London',                  label:'London',              region:'Europe'   },
+  { value:'Europe/Madrid',                  label:'Madrid / Paris',      region:'Europe'   },
+  { value:'Europe/Berlin',                  label:'Berlin / Amsterdam',  region:'Europe'   },
+  { value:'Europe/Istanbul',                label:'Istanbul',            region:'Europe'   },
+  { value:'Africa/Lagos',                   label:'Lagos / Accra',       region:'Africa'   },
+  { value:'Africa/Johannesburg',            label:'Johannesburg',        region:'Africa'   },
+  { value:'Asia/Dubai',                     label:'Dubai (GST)',         region:'Asia'     },
+  { value:'Asia/Karachi',                   label:'Karachi',             region:'Asia'     },
+  { value:'Asia/Kolkata',                   label:'Mumbai / Delhi',      region:'Asia'     },
+  { value:'Asia/Tokyo',                     label:'Seoul / Tokyo',       region:'Asia'     },
+  { value:'Australia/Sydney',               label:'Sydney',              region:'Pacific'  },
+];
+
+function getEffectiveTZ() {
+  return PREFS.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+}
+
+function getTZAbbr() {
+  try {
+    return new Intl.DateTimeFormat('en-US', {
+      timeZone: getEffectiveTZ(), timeZoneName: 'short',
+    }).formatToParts(new Date()).find(p => p.type === 'timeZoneName')?.value || '';
+  } catch(e) { return ''; }
+}
+
+// Convert a CT match time to display string in the user's timezone
+function formatGameTime(dateStr, timeStr) {
+  if (!timeStr || timeStr === 'TBD') return timeStr || '';
+  try {
+    const utc = parseGameTimeCT(dateStr, timeStr);
+    if (!utc || isNaN(utc.getTime())) return timeStr;
+    return new Intl.DateTimeFormat('en-US', {
+      hour: 'numeric', minute: '2-digit',
+      timeZone: getEffectiveTZ(), hour12: true,
+    }).format(utc);
+  } catch(e) { return timeStr; }
+}
+
+function updateTZLabel() {
+  const abbr = getTZAbbr();
+  const hdr = document.getElementById('tz-label');
+  if (hdr) hdr.textContent = `All times ${abbr}`;
+  const det = document.getElementById('setting-tz-detail');
+  if (det) det.textContent = PREFS.timezone
+    ? PREFS.timezone.split('/').pop().replace(/_/g,' ')
+    : `Auto-detected (${abbr})`;
+  const sel = document.getElementById('tz-select');
+  if (sel) sel.value = PREFS.timezone || 'auto';
+}
+
+function setTimezone(value) {
+  PREFS.timezone = (value === 'auto') ? null : value;
+  localStorage.setItem('wc2026_tz', value || 'auto');
+  updateTZLabel();
+  renderActiveTab();
+  closeSettings();
+}
+
+function initTimezone() {
+  const saved = localStorage.getItem('wc2026_tz');
+  if (saved && saved !== 'auto') {
+    PREFS.timezone = saved;
+  } else if (!saved) {
+    // First open — show a one-time toast if the browser isn't in CT
+    const detected = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (detected && detected !== 'America/Chicago') {
+      setTimeout(() => showToast(`Times shown in your local timezone (${getTZAbbr()})`), 2000);
+    }
+  }
+  updateTZLabel();
+}
 function formatCountdown(ms) {
   const totalMin = Math.floor(ms / 60000), h = Math.floor(totalMin / 60), m = totalMin % 60;
   return h > 0 ? `Kicks off in ${h}h ${m}m` : `Kicks off in ${m}m`;
@@ -419,7 +505,7 @@ function openSettings() {
   const m = document.getElementById('settings-modal');
   if (!m) return;
 
-  // Update dynamic labels to reflect current source and interval
+  updateTZLabel();
   const src = STATE.lastSource;
   const onClaudeFallback = src === 'Claude';
 

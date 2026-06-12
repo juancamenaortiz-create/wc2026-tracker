@@ -97,7 +97,7 @@ function buildExpandedCard(g, standings, matches, hasPlayed) {
     let scoreStr = '';
     if (isLive) scoreStr = `<span class="live-badge xs"><span class="pulse-dot"></span>LIVE ${s1}–${s2}</span>`;
     else if (isFT && s1 !== null) scoreStr = `<span class="ft-score">${s1}–${s2} FT</span>`;
-    else scoreStr = `<span class="ns-time">${formatPillDate(m.date)} · ${m.time} CT</span>`;
+    else scoreStr = `<span class="ns-time">${formatPillDate(m.date)} · ${formatGameTime(m.date, m.time)} ${getTZAbbr()}</span>`;
 
     matchRows += `<div class="group-match-row">
       <div class="gm-team ${w1}"><span class="flag">${getFlag(m.t1)}</span><span>${displayName(m.t1)}</span></div>

@@ -87,7 +87,7 @@ function renderToday(container) {
         matches.forEach(m => {
           const starred = STATE.myTeams.some(t => normName(t)===normName(m.t1)||normName(t)===normName(m.t2));
           html += `<div class="upcoming-row${starred?' my-t':''}">
-            <span class="upcoming-time">${m.time}</span>
+            <span class="upcoming-time">${formatGameTime(m.date, m.time)}</span>
             <span class="upcoming-grp">Grp ${m.g}</span>
             <span class="upcoming-teams-txt">${getFlag(m.t1)} ${displayName(m.t1)} <span class="upcoming-vs">vs</span> ${displayName(m.t2)} ${getFlag(m.t2)}</span>
           </div>`;
@@ -139,7 +139,8 @@ function buildMatchCard(match, now) {
   } else {
     // Two-line time display matching artifact
     const t = match.time;
-    leftStatus = `<span class="mc-time">${t}</span><span class="mc-tz">CT</span>`;
+    const tzAbbr = getTZAbbr();
+    leftStatus = `<span class="mc-time">${formatGameTime(match.date, t)}</span><span class="mc-tz">${tzAbbr}</span>`;
   }
   const grpLabel = match.g ? `GRP ${match.g}` : 'R32';
 

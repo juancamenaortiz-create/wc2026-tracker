@@ -176,7 +176,7 @@ function buildBracketCard(card, round) {
     statusBadge = `<span class="ft-badge xs">FT</span>`;
   } else {
     const dd = card.date ? (card.date.includes('-') ? formatPillDate(card.date) : card.date) : '';
-    const dt = card.time && card.time !== 'TBD' ? card.time.replace(' CT', '') : '';
+    const dt = card.time && card.time !== 'TBD' ? formatGameTime(card.date || '', card.time) : '';
     const ds = [dd, dt].filter(Boolean).join(' · ');
     if (ds) statusBadge = `<span class="bracket-time">${ds}</span>`;
   }

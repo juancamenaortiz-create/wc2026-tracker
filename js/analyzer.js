@@ -176,7 +176,7 @@ function buildMatchToggle(match, key, override) {
       <button class="toggle-opt ${isAway ? 'active-away' : ''}" onclick="setOverride('${key}','away')">${t2.split(' ')[0]} Win</button>
       ${!none ? `<button class="toggle-opt clear-btn" onclick="clearOverride('${key}')">✕</button>` : ''}
     </div>
-    <div class="az-match-date">${formatDate(match.date)} · ${match.time} CT · ${match.city}</div>
+    <div class="az-match-date">${formatDate(match.date)} · ${formatGameTime(match.date, match.time)} ${getTZAbbr()} · ${match.city}</div>
   </div>`;
 }
 

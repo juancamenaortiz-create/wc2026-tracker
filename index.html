@@ -21,7 +21,7 @@
       <div class="header-eyebrow">LIVE GROUP STAGE TRACKER</div>
       <div class="header-trophy">&#127942;</div>
       <div class="header-title">FIFA WORLD CUP 2026</div>
-      <div class="header-tz">&#128336; All Times U.S. Central (CT)</div>
+      <div class="header-tz" id="tz-label">&#128336; All Times U.S. Central (CT)</div>
     </div>
     <div class="header-actions">
       <span id="status-msg" class="status-msg">Not yet refreshed</span>
@@ -104,6 +104,45 @@
           <div class="modal-row-label" id="setting-source-detail">Free live data from ESPN — no API cost</div>
         </div>
         <span id="setting-source-badge" style="color:var(--green);font-size:11px;">ESPN ✓</span>
+      </div>
+
+      <div class="modal-row">
+        <div>
+          <div class="modal-row-name">Timezone</div>
+          <div class="modal-row-label" id="setting-tz-detail">Auto-detected</div>
+        </div>
+        <select id="tz-select" class="modal-select" onchange="setTimezone(this.value)">
+          <option value="auto">Auto</option>
+          <optgroup label="Americas">
+            <option value="America/New_York">New York (ET)</option>
+            <option value="America/Chicago">Chicago (CT)</option>
+            <option value="America/Denver">Denver (MT)</option>
+            <option value="America/Los_Angeles">Los Angeles (PT)</option>
+            <option value="America/Mexico_City">Mexico City</option>
+            <option value="America/Bogota">Bogotá / Lima</option>
+            <option value="America/Sao_Paulo">São Paulo</option>
+            <option value="America/Argentina/Buenos_Aires">Buenos Aires</option>
+          </optgroup>
+          <optgroup label="Europe">
+            <option value="Europe/London">London</option>
+            <option value="Europe/Madrid">Madrid / Paris</option>
+            <option value="Europe/Berlin">Berlin / Amsterdam</option>
+            <option value="Europe/Istanbul">Istanbul</option>
+          </optgroup>
+          <optgroup label="Africa">
+            <option value="Africa/Lagos">Lagos / Accra</option>
+            <option value="Africa/Johannesburg">Johannesburg</option>
+          </optgroup>
+          <optgroup label="Middle East &amp; Asia">
+            <option value="Asia/Dubai">Dubai</option>
+            <option value="Asia/Karachi">Karachi / Islamabad</option>
+            <option value="Asia/Kolkata">Mumbai / Delhi</option>
+            <option value="Asia/Tokyo">Seoul / Tokyo</option>
+          </optgroup>
+          <optgroup label="Pacific">
+            <option value="Australia/Sydney">Sydney</option>
+          </optgroup>
+        </select>
       </div>
 
       <div class="modal-section-label">Resources</div>

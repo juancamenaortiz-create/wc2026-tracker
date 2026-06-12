@@ -1040,3 +1040,39 @@ img.emoji {
 }
 .modal-select option,
 .modal-select optgroup { background: var(--navy2); color: var(--white); }
+
+/* ── Match stats drawer ── */
+.stats-toggle {
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  margin: 8px 0 0; padding: 6px 10px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 11px; color: var(--muted); cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.stats-toggle:hover         { background: rgba(255,255,255,0.07); color: var(--white); }
+.stats-toggle.open          { color: var(--gold); border-color: rgba(212,175,55,0.3); }
+.sched-stats                { margin: 4px 0 0; }
+
+.match-stats-panel          { padding: 10px 0 2px; }
+.stat-row {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 9px;
+}
+.stat-val {
+  font-size: 12px; font-weight: 700; color: var(--white);
+  min-width: 36px; text-align: center;
+}
+.stat-val.r                 { text-align: right; }
+.stat-mid                   { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+.stat-bar {
+  height: 5px; border-radius: 3px;
+  background: var(--dim); overflow: hidden; display: flex;
+}
+.stat-bar-1 { height: 100%; background: var(--gold);   flex-shrink: 0; border-radius: 3px 0 0 3px; }
+.stat-bar-2 { height: 100%; background: var(--crimson); flex-shrink: 0; border-radius: 0 3px 3px 0; }
+.stat-label {
+  font-size: 9px; color: var(--muted); text-align: center;
+  text-transform: uppercase; letter-spacing: 0.05em;
+}

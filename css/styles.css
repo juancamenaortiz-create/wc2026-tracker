@@ -1025,3 +1025,18 @@ img.emoji {
                   background: var(--navy4); padding: 2px 5px; border-radius: 3px; }
 .upcoming-teams-txt { flex: 1; color: var(--white); }
 .upcoming-vs    { color: var(--muted); font-size: 10px; }
+
+/* Timezone select in settings */
+.modal-select {
+  background: var(--navy3);
+  color: var(--white);
+  border: 1px solid var(--dim);
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 11px;
+  cursor: pointer;
+  min-width: 130px;
+  max-width: 165px;
+}
+.modal-select option,
+.modal-select optgroup { background: var(--navy2); color: var(--white); }

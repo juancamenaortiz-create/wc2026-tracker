@@ -31,9 +31,9 @@ function renderSchedule(container) {
   }).join('');
 
   let html = `<div class="sched-header">
-    <div class="view-toggle">
-      <button class="toggle-btn${viewMode === 'date' ? ' active' : ''}" onclick="setScheduleView('date')">By Date</button>
-      <button class="toggle-btn${viewMode === 'group' ? ' active' : ''}" onclick="setScheduleView('group')">By Group</button>
+    <div class="sched-view-tabs">
+      <button class="sched-tab-btn${viewMode === 'date' ? ' active' : ''}" onclick="setScheduleView('date')">By Date</button>
+      <button class="sched-tab-btn${viewMode === 'group' ? ' active' : ''}" onclick="setScheduleView('group')">By Group</button>
     </div>
     <div class="pills-wrap">${pillsHtml}</div>
   </div>

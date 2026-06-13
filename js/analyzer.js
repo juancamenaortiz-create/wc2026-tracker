@@ -342,13 +342,13 @@ function renderBracketPredictor(container) {
         <div class="bp-ovr-banner">
           ⚡ Showing your group what-if scenario (${activeOvr.length} match${activeOvr.length>1?'es':''} overridden)
           <button class="reset-btn" onclick="resetAnalyzerOverrides()">Clear</button>
-        </div>` : (!isPost ? '<div style="font-size:11px;color:var(--amber);padding:0 0 8px">Available after Jun 27 · Previewing with projected qualifiers</div>' : '')}
+        </div>` : (!isPost ? '<div style="font-size:11px;color:var(--amber);padding:0 4px 8px">Available after Jun 27 · Previewing with projected qualifiers</div>' : '')}
       ${totalPicks > 0 ? `<button class="reset-btn" style="margin-bottom:8px" onclick="resetBracketPicks()">Reset Bracket Picks (${totalPicks})</button>` : ''}
     </div>`;
 
   roundDefs.forEach(({ label, dates, matches }) => {
     if (matches.length === 0) return;
-    html += `<div class="bp-round-label">${label} <span class="bp-round-dates">${dates}</span></div>`;
+    html += `<div class="bp-round-label" style="padding-left:4px">${label} <span class="bp-round-dates">${dates}</span></div>`;
     const isSingle = matches.length <= 1;
     html += `<div class="bp-grid${isSingle ? ' bp-single' : ''}">`;
     matches.forEach(m => { html += buildBracketPickCard(m); });

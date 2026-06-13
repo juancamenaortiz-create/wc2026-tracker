@@ -17,6 +17,7 @@ const STATE = {
 // ── Init ─────────────────────────────────────
 function init() {
   try { STATE.myTeams = JSON.parse(localStorage.getItem('wc2026_myteams') || '[]'); } catch(e) { STATE.myTeams = []; }
+  loadPreviewCache();
   try {
     const cached = JSON.parse(localStorage.getItem('wc2026_results') || 'null');
     if (cached && cached.results) { STATE.results = cached.results; STATE.lastUpdated = cached.timestamp ? new Date(cached.timestamp) : null; }
@@ -154,6 +155,8 @@ async function fetchFromESPN() {
             y:   !!(d.yellowCard),
             r:   !!(d.redCard),
             og:  !!(d.ownGoal),
+            pk:  !!(d.penaltyKick || d.scoringType?.abbreviation === 'PK' ||
+                    d.type?.text?.toLowerCase().includes('penalty')),
           }));
         // Extract per-team match statistics
         const parseStats = (competitor) => {
@@ -325,34 +328,15 @@ function calculateStandings(group, overrides = {}) {
   const stats = {};
   teams.forEach(t => { stats[normName(t)] = { name:t, P:0, W:0, D:0, L:0, GF:0, GA:0, GD:0, Pts:0 }; });
 
+  const playedMatches = [];
   SCHEDULE.filter(m => m.g === group).forEach(match => {
     const key = `${match.id}`;
     const ov  = overrides[key];
+    const t1k = normName(match.t1), t2k = normName(match.t2);
 
     if (ov) {
-      const t1k = normName(match.t1), t2k = normName(match.t2);
-      if (stats[t1k]) stats[t1k].P++;
-      if (stats[t2k]) stats[t2k].P++;
-      if (ov === 'home') {
-        if (stats[t1k]) { stats[t1k].W++; stats[t1k].Pts += 3; stats[t1k].GF++; }
-        if (stats[t2k]) { stats[t2k].L++; stats[t2k].GA++; }
-      } else if (ov === 'away') {
-        if (stats[t2k]) { stats[t2k].W++; stats[t2k].Pts += 3; stats[t2k].GF++; }
-        if (stats[t1k]) { stats[t1k].L++; stats[t1k].GA++; }
-      } else {
-        if (stats[t1k]) { stats[t1k].D++; stats[t1k].Pts++; }
-        if (stats[t2k]) { stats[t2k].D++; stats[t2k].Pts++; }
-      }
-      return;
-    }
-
-    const fetched = STATE.results.groupMatches.find(fm =>
-      normName(fm.team1) === normName(match.t1) && normName(fm.team2) === normName(match.t2) &&
-      (fm.status === 'FT' || fm.status === 'LIVE')
-    );
-    if (fetched) {
-      const s1 = parseInt(fetched.score1)||0, s2 = parseInt(fetched.score2)||0;
-      const t1k = normName(match.t1), t2k = normName(match.t2);
+      let s1 = 0, s2 = 0;
+      if (ov === 'home') { s1 = 1; } else if (ov === 'away') { s2 = 1; }
       if (stats[t1k]) { stats[t1k].P++; stats[t1k].GF += s1; stats[t1k].GA += s2; }
       if (stats[t2k]) { stats[t2k].P++; stats[t2k].GF += s2; stats[t2k].GA += s1; }
       if (s1 > s2) {
@@ -365,11 +349,76 @@ function calculateStandings(group, overrides = {}) {
         if (stats[t1k]) { stats[t1k].D++; stats[t1k].Pts++; }
         if (stats[t2k]) { stats[t2k].D++; stats[t2k].Pts++; }
       }
+      playedMatches.push({ t1: match.t1, t2: match.t2, s1, s2 });
+      return;
+    }
+
+    const fetched = STATE.results.groupMatches.find(fm =>
+      normName(fm.team1) === normName(match.t1) && normName(fm.team2) === normName(match.t2) &&
+      (fm.status === 'FT' || fm.status === 'LIVE')
+    );
+    if (fetched) {
+      const s1 = parseInt(fetched.score1)||0, s2 = parseInt(fetched.score2)||0;
+      if (stats[t1k]) { stats[t1k].P++; stats[t1k].GF += s1; stats[t1k].GA += s2; }
+      if (stats[t2k]) { stats[t2k].P++; stats[t2k].GF += s2; stats[t2k].GA += s1; }
+      if (s1 > s2) {
+        if (stats[t1k]) { stats[t1k].W++; stats[t1k].Pts += 3; }
+        if (stats[t2k])   stats[t2k].L++;
+      } else if (s1 < s2) {
+        if (stats[t2k]) { stats[t2k].W++; stats[t2k].Pts += 3; }
+        if (stats[t1k])   stats[t1k].L++;
+      } else {
+        if (stats[t1k]) { stats[t1k].D++; stats[t1k].Pts++; }
+        if (stats[t2k]) { stats[t2k].D++; stats[t2k].Pts++; }
+      }
+      playedMatches.push({ t1: match.t1, t2: match.t2, s1, s2 });
     }
   });
 
   Object.values(stats).forEach(s => { s.GD = s.GF - s.GA; });
-  return Object.values(stats).sort((a,b) => b.Pts-a.Pts || b.GD-a.GD || b.GF-a.GF || a.name.localeCompare(b.name));
+  return fifaSort(Object.values(stats), playedMatches);
+}
+
+// FIFA 2026 tiebreakers: Pts → GD → GF → H2H Pts → H2H GD → H2H GF → alphabetical
+function fifaSort(rows, matches) {
+  rows.sort((a, b) => b.Pts-a.Pts || b.GD-a.GD || b.GF-a.GF);
+  const result = [];
+  let i = 0;
+  while (i < rows.length) {
+    let j = i + 1;
+    while (j < rows.length &&
+           rows[j].Pts === rows[i].Pts &&
+           rows[j].GD  === rows[i].GD  &&
+           rows[j].GF  === rows[i].GF)  j++;
+    if (j - i === 1) {
+      result.push(rows[i]);
+    } else {
+      result.push(...applyH2H(rows.slice(i, j), matches));
+    }
+    i = j;
+  }
+  return result;
+}
+function applyH2H(teams, matches) {
+  const keys = new Set(teams.map(t => normName(t.name)));
+  const h2h  = {};
+  teams.forEach(t => { h2h[normName(t.name)] = { Pts:0, GD:0, GF:0 }; });
+  matches.forEach(m => {
+    const k1 = normName(m.t1), k2 = normName(m.t2);
+    if (!keys.has(k1) || !keys.has(k2)) return;
+    h2h[k1].GF += m.s1; h2h[k1].GD += m.s1 - m.s2;
+    h2h[k2].GF += m.s2; h2h[k2].GD += m.s2 - m.s1;
+    if (m.s1 > m.s2) h2h[k1].Pts += 3;
+    else if (m.s2 > m.s1) h2h[k2].Pts += 3;
+    else { h2h[k1].Pts++; h2h[k2].Pts++; }
+  });
+  const vals = teams.map(t => h2h[normName(t.name)]);
+  const allSame = vals.every(v => v.Pts===vals[0].Pts && v.GD===vals[0].GD && v.GF===vals[0].GF);
+  if (allSame) return [...teams].sort((a,b) => a.name.localeCompare(b.name));
+  return [...teams].sort((a,b) => {
+    const ha = h2h[normName(a.name)], hb = h2h[normName(b.name)];
+    return hb.Pts-ha.Pts || hb.GD-ha.GD || hb.GF-ha.GF || a.name.localeCompare(b.name);
+  });
 }
 
 function getMatchResult(match) {
@@ -523,6 +572,25 @@ function starBtn(team, onToggle) {
 
 // ── Demo Mode ─────────────────────────────────
 // ── AI Match Preview ─────────────────────────────────────────────────────
+function loadPreviewCache() {
+  try {
+    const cached = JSON.parse(localStorage.getItem('wc2026_previews') || '{}');
+    const today  = getTodayCT();
+    // Evict previews for past match days
+    const fresh  = {};
+    Object.entries(cached).forEach(([id, entry]) => { if (entry.matchDate >= today) fresh[id] = entry; });
+    STATE.aiPreviews = fresh;
+    localStorage.setItem('wc2026_previews', JSON.stringify(fresh));
+  } catch(e) { STATE.aiPreviews = {}; }
+}
+function savePreviewCache(matchId, entry, matchDate) {
+  try {
+    const cached = JSON.parse(localStorage.getItem('wc2026_previews') || '{}');
+    cached[matchId] = { ...entry, matchDate };
+    localStorage.setItem('wc2026_previews', JSON.stringify(cached));
+  } catch(e) {}
+}
+
 async function fetchMatchPreview(matchId) {
   const match = SCHEDULE.find(m => m.id === matchId)
              || R32_MATCHES.find(m => m.id === matchId);
@@ -530,7 +598,7 @@ async function fetchMatchPreview(matchId) {
 
   // Already fetched or loading — skip
   const existing = STATE.aiPreviews[matchId];
-  if (existing?.text || existing?.loading) return;
+  if (existing?.data || existing?.text || existing?.loading) return;
 
   STATE.aiPreviews[matchId] = { loading: true };
   renderActiveTab();
@@ -548,10 +616,14 @@ async function fetchMatchPreview(matchId) {
       }),
     });
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const data = await resp.json();
-    STATE.aiPreviews[matchId] = data.text
-      ? { text: data.text }
-      : { error: data.error || 'Preview unavailable' };
+    const respData = await resp.json();
+    const entry = respData.data
+      ? { data: respData.data }
+      : respData.text
+        ? { text: respData.text }
+        : { error: respData.error || 'Preview unavailable' };
+    STATE.aiPreviews[matchId] = entry;
+    if (entry.data || entry.text) savePreviewCache(matchId, entry, match.date);
   } catch(err) {
     STATE.aiPreviews[matchId] = { error: 'Could not load preview' };
   }
@@ -564,7 +636,19 @@ function loadDemoData() {
   STATE.lastUpdated = new Date();
   // Pre-populate a canned AI preview for Australia vs Türkiye (match 8, Jun 13)
   STATE.aiPreviews = {
-    8: { text: "Australia's Socceroos, energized by a passionate crowd at BC Place, face a Türkiye side powered by Real Madrid's Arda Güler in a must-watch Group D opener. Mathew Leckie's pace on the counter could trouble Türkiye's backline, while goalkeeper Mathew Ryan will be tested by Güler's creativity and Yılmaz's finishing. A tight, physical encounter with knockout stage implications for both sides." },
+    8: { data: {
+      team1: { name:"Australia", ranking:24, role:"The Underdogs",
+        form:"The Socceroos arrive at BC Place on the back of a resilient qualification campaign, led by manager Tony Popovic. They'll rely on their compact defensive shape and fast counter-attacks to trouble a technically superior Türkiye side.",
+        tactics:"Low-to-mid block with quick transitions — look for long balls to Leckie behind the Turkish backline.",
+        players:[{name:"Mathew Leckie",reason:"Explosive pace in behind; WC goal-scorer with big-moment experience."},{name:"Mathew Ryan",reason:"Crucial goalkeeper — his shot-stopping was key throughout qualification."}],
+        history:"Five World Cup appearances. Best finish: Round of 16 in Germany 2006 and Qatar 2022, their most celebrated tournament run." },
+      team2: { name:"Türkiye", ranking:26, role:"The Contenders",
+        form:"Türkiye arrive in Vancouver with momentum, powered by a golden generation featuring Arda Güler's breakout season at Real Madrid. Manager Vincenzo Montella has built a tactically flexible side that blends European-based talent with physical intensity.",
+        tactics:"High press in the first 20 minutes, then possession-based build-up through Güler and Çalhanoğlu. Will look to exploit wide areas.",
+        players:[{name:"Arda Güler",reason:"Real Madrid's 19-year-old star brings elite creativity and is capable of decisive moments from nowhere."},{name:"Hakan Çalhanoğlu",reason:"Inter Milan's deep-lying playmaker dictates tempo and is deadly from distance."}],
+        history:"Three World Cup appearances. Best finish: 3rd place in 2002 Korea/Japan — Türkiye's finest tournament, featuring Hakan Şükür's famous fastest-ever WC goal." },
+      context:"Both nations have genuine knockout ambitions in Group D. This match could define who controls their own destiny heading into the final group round — a win here dramatically simplifies the path forward."
+    }},
   };
   updateStatusUI();
   renderActiveTab();
@@ -705,18 +789,23 @@ function matchGoalsHtml(result, num) {
   const tid   = num === 1 ? result.tid1 : result.tid2;
   const goals = result.events.filter(e => e.g && e.tid === tid);
   if (!goals.length) return '';
-  const list = goals.map(g => `${g.min} ${g.p}${g.og ? ' (OG)' : ''}`).join(' · ');
-  return `<div class="mc-scorers">⚽ ${list}</div>`;
+  const spans = goals.map(g => {
+    const suffix = g.og ? ' <em>(OG)</em>' : g.pk ? ' <em>(P)</em>' : '';
+    return `<span class="mc-ev">⚽ ${g.min} ${g.p}${suffix}</span>`;
+  });
+  return `<div class="mc-scorers">${spans.join('')}</div>`;
 }
 
 function matchCardsHtml(result, num) {
   if (!result?.events?.length) return '';
   const tid = num === 1 ? result.tid1 : result.tid2;
   const evs = result.events.filter(e => e.tid === tid);
-  const y = evs.filter(e => e.y).length;
-  const r = evs.filter(e => e.r).length;
-  if (!y && !r) return '';
-  return `<span class="mc-cards">${'🟨'.repeat(y)}${'🟥'.repeat(r)}</span>`;
+  const cards = [];
+  evs.forEach(e => {
+    if (e.r) cards.push(`<span class="mc-ev">🟥 ${e.min} ${e.p}</span>`);
+    else if (e.y) cards.push(`<span class="mc-ev">🟨 ${e.min} ${e.p}</span>`);
+  });
+  return cards.length ? `<span class="mc-cards-wrap">${cards.join('')}</span>` : '';
 }
 
 // ── Match stats drawer ────────────────────────────────────────────────────

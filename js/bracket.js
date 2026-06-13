@@ -11,6 +11,7 @@ const COL_STRIDE = CARD_W + COL_GAP;
 const ROUNDS     = ['R32','R16','QF','SF','Final'];
 const NUM_COLS   = 5;
 const TOTAL_W    = NUM_COLS * COL_STRIDE;
+const LABEL_H    = 34;   // vertical offset so round labels never overlap first card
 
 // R32 match slot ordering (how they appear top-to-bottom in the bracket)
 // Pairs: R32[0]+R32[1] → R16[0], R32[2]+R32[3] → R16[1], etc.
@@ -21,7 +22,7 @@ const R32_ORDER = [74,77, 73,75, 83,84, 81,82, 76,78, 79,80, 86,88, 85,87];
 function renderBracket(container) {
   const numR32 = 16;
   const slotR32 = R32_SLOT;
-  const TOTAL_H = numR32 * slotR32 + 20;
+  const TOTAL_H = numR32 * slotR32 + LABEL_H + 20;
 
   // Compute card positions for each round
   // Round 0: R32 (16 cards)
@@ -103,7 +104,7 @@ function renderBracket(container) {
 function buildR32Cards(slotH) {
   return R32_ORDER.map((matchId, idx) => {
     const match = R32_MATCHES.find(m => m.id === matchId);
-    const y = idx * slotH + (slotH - CARD_H) / 2;
+    const y = idx * slotH + (slotH - CARD_H) / 2 + LABEL_H;
     return {
       matchId,
       slot1: match ? match.slot1 : '?',
@@ -121,7 +122,7 @@ function buildRoundCards(round, slotR32, slotsPerCard, infos = []) {
   const slotH = slotR32 * slotsPerCard;
   const count = 16 / slotsPerCard;
   return Array.from({ length: count }, (_, idx) => {
-    const y = idx * slotH + (slotH - CARD_H) / 2;
+    const y = idx * slotH + (slotH - CARD_H) / 2 + LABEL_H;
     const info = infos[idx] || {};
     return {
       matchId: info.matchId || null,

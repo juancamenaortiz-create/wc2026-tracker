@@ -7,10 +7,37 @@ function buildPreviewSection(matchId) {
   if (p.loading) {
     return `<div class="preview-loading"><span class="preview-spin">⟳</span> Generating preview…</div>`;
   }
-  if (p.text) {
-    return `<div class="preview-panel"><span class="preview-label">🤖 AI Preview</span>${p.text}</div>`;
-  }
-  return `<div class="preview-error">Preview unavailable — try again</div>`;
+  if (p.data) return buildDetailedPreview(p.data);
+  if (p.text) return `<div class="preview-panel"><span class="pv-label">🤖 AI Preview</span><p class="pv-text">${p.text}</p></div>`;
+  return `<button class="preview-btn preview-retry" onclick="delete STATE.aiPreviews[${matchId}]; fetchMatchPreview(${matchId})">⟳ Retry Preview</button>`;
+}
+
+function buildDetailedPreview(d) {
+  const teamBlock = (t) => {
+    if (!t) return '';
+    const players = (t.players||[]).map(pl =>
+      `<li><strong>${pl.name}</strong> — ${pl.reason}</li>`
+    ).join('');
+    return `<div class="pv-team">
+      <div class="pv-team-hdr">
+        <span class="pv-flag">${getFlag(t.name)}</span>
+        <span class="pv-tname">${displayName(t.name)}</span>
+        ${t.ranking ? `<span class="pv-rank">FIFA #${t.ranking}</span>` : ''}
+        ${t.role ? `<span class="pv-role">${t.role}</span>` : ''}
+      </div>
+      ${t.form    ? `<p class="pv-form">${t.form}</p>` : ''}
+      ${t.tactics ? `<div class="pv-row"><span class="pv-ico">⚙️</span><span class="pv-row-body"><span class="pv-row-lbl">Tactics</span> ${t.tactics}</span></div>` : ''}
+      ${players   ? `<div class="pv-row"><span class="pv-ico">⭐</span><span class="pv-row-body"><span class="pv-row-lbl">Watch</span><ul class="pv-players">${players}</ul></span></div>` : ''}
+      ${t.history ? `<div class="pv-row"><span class="pv-ico">🏆</span><span class="pv-row-body"><span class="pv-row-lbl">History</span> ${t.history}</span></div>` : ''}
+    </div>`;
+  };
+  return `<div class="preview-panel">
+    <div class="pv-header"><span class="pv-label">🤖 AI Preview</span></div>
+    ${teamBlock(d.team1)}
+    <div class="pv-vs-divider">vs</div>
+    ${teamBlock(d.team2)}
+    ${d.context ? `<div class="pv-context"><span class="pv-ico">📊</span><span class="pv-row-body"><span class="pv-row-lbl">Context</span> ${d.context}</span></div>` : ''}
+  </div>`;
 }
 
 
@@ -73,13 +100,7 @@ function renderToday(container) {
   }
   html += '</div></div>';
 
-  if (STATE.myTeams.length > 0) {
-    const myMatches = todayMatches.filter(m => STATE.myTeams.some(t => normName(t) === normName(m.t1) || normName(t) === normName(m.t2)));
-    html += '<div class="section-label">⭐ My Teams</div>';
-    if (myMatches.length > 0) { myMatches.forEach(m => { html += buildMatchCard(m, now); }); }
-    else html += '<div class="my-teams-empty">No matches for your pinned teams today</div>';
-    html += '<div class="section-label">All Matches</div>';
-  }
+
 
   if (todayMatches.length === 0) {
     html += '<div class="empty-state">🏆<br>No matches scheduled yet.<br><span>Tournament starts June 11, 2026</span></div>';

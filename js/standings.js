@@ -208,7 +208,6 @@ function build3rdPlaceHTML() {
 
   const anyPlayed = teams.some(t => t.P > 0);
 
-  // Header note
   const isFinalRound  = getTodayCT() >= '2026-06-24' && getTodayCT() <= '2026-06-27';
   const isAfterGroups = getTodayCT() >  '2026-06-27';
   const note = isAfterGroups
@@ -217,17 +216,21 @@ function build3rdPlaceHTML() {
     ? '🔥 Final group round — standings updating live!'
     : 'Top 8 of 12 third-place teams advance · Final places decided Jun 27.';
 
-  let html = `<div class="third-header">
-    <div class="third-title">3rd Place Race</div>
-    <div class="third-note">${note}</div>
+  let html = `
+  <div class="third-title">3rd Place Race</div>
+  <div class="third-note">${note}</div>
+  <div class="third-list">
     <div class="third-col-hdr">
-      <span></span><span></span><span class="th-name">Team</span>
-      <span class="th-stat">P</span><span class="th-stat">Pts</span>
-      <span class="th-stat">GD</span><span class="th-stat">GF</span>
       <span></span>
-    </div>
-  </div>
-  <div class="third-list">`;
+      <span></span>
+      <span></span>
+      <span class="th-name">Team</span>
+      <span class="th-stat">P</span>
+      <span class="th-stat">Pts</span>
+      <span class="th-stat">GD</span>
+      <span class="th-stat">GF</span>
+      <span></span>
+    </div>`;
 
   teams.forEach((t, i) => {
     const rank       = i + 1;
@@ -261,6 +264,6 @@ function build3rdPlaceHTML() {
     </div>`;
   }
 
-  html += '</div>';
+  html += '</div>'; // close .third-list
   return html;
 }

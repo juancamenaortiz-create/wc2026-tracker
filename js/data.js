@@ -249,6 +249,21 @@ const DEMO_RESULTS = {
         {min:"38'", tid:"t-KOR", p:"K. Lee",     g:false, y:true,  r:false, og:false},
         {min:"69'", tid:"t-CZE", p:"V. Coufal",  g:false, y:true,  r:false, og:false},
       ]},
+    // Group F
+    { matchId:10, team1:"Netherlands", team2:"Japan",       score1:2, score2:1, status:"FT", group:"F", date:"2026-06-14", clock:"FT", tid1:"t-NED", tid2:"t-JPN", events:[] },
+    { matchId:12, team1:"Tunisia",     team2:"Sweden",      score1:1, score2:1, status:"FT", group:"F", date:"2026-06-14", clock:"FT", tid1:"t-TUN", tid2:"t-SWE", events:[] },
+    // Group G
+    { matchId:14, team1:"Belgium",     team2:"Egypt",       score1:2, score2:0, status:"FT", group:"G", date:"2026-06-15", clock:"FT", tid1:"t-BEL", tid2:"t-EGY", events:[] },
+    { matchId:16, team1:"Iran",        team2:"New Zealand", score1:1, score2:0, status:"FT", group:"G", date:"2026-06-15", clock:"FT", tid1:"t-IRN", tid2:"t-NZL", events:[] },
+    // Group I — Norway draw gives them 1pt as 3rd
+    { matchId:17, team1:"France",      team2:"Senegal",     score1:3, score2:0, status:"FT", group:"I", date:"2026-06-16", clock:"FT", tid1:"t-FRA", tid2:"t-SEN", events:[] },
+    { matchId:18, team1:"Iraq",        team2:"Norway",      score1:2, score2:2, status:"FT", group:"I", date:"2026-06-16", clock:"FT", tid1:"t-IRQ", tid2:"t-NOR", events:[] },
+    // Group J — Jordan loses narrowly, Algeria crushed
+    { matchId:19, team1:"Argentina",   team2:"Algeria",     score1:4, score2:0, status:"FT", group:"J", date:"2026-06-16", clock:"FT", tid1:"t-ARG", tid2:"t-ALG", events:[] },
+    { matchId:20, team1:"Austria",     team2:"Jordan",      score1:2, score2:1, status:"FT", group:"J", date:"2026-06-16", clock:"FT", tid1:"t-AUT", tid2:"t-JOR", events:[] },
+    // Group K — Congo DR just edges the cutoff battle with 1 goal scored
+    { matchId:21, team1:"Portugal",    team2:"Congo DR",    score1:3, score2:1, status:"FT", group:"K", date:"2026-06-17", clock:"FT", tid1:"t-POR", tid2:"t-CGO", events:[] },
+    { matchId:24, team1:"Uzbekistan",  team2:"Colombia",    score1:0, score2:2, status:"FT", group:"K", date:"2026-06-17", clock:"FT", tid1:"t-UZB", tid2:"t-COL", events:[] },
     // Group A — Round 2
     { matchId:28, team1:"Mexico",     team2:"South Korea",          score1:1, score2:1, status:"FT",   group:"A", date:"2026-06-18",
       clock:"FT", tid1:"t-MEX", tid2:"t-KOR",

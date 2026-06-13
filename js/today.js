@@ -1,4 +1,19 @@
-// TODAY.JS — Today tab renderer
+// AI Preview section — shown on upcoming (NS) match cards
+function buildPreviewSection(matchId) {
+  const p = STATE.aiPreviews[matchId];
+  if (!p) {
+    return `<button class="preview-btn" onclick="fetchMatchPreview(${matchId})">🤖 AI Preview</button>`;
+  }
+  if (p.loading) {
+    return `<div class="preview-loading"><span class="preview-spin">⟳</span> Generating preview…</div>`;
+  }
+  if (p.text) {
+    return `<div class="preview-panel"><span class="preview-label">🤖 AI Preview</span>${p.text}</div>`;
+  }
+  return `<div class="preview-error">Preview unavailable — try again</div>`;
+}
+
+
 
 const TODAY_STATE = { showUpcoming: false };
 
@@ -181,6 +196,7 @@ function buildMatchCard(match, now) {
     ${hasEvents2 ? `<div class="mc-events">${goals2}${cards2}</div>` : ''}
     ${hasResult && result?.stats ? `<div class="stats-toggle${STATE.openStatsMatchId===match.id?' open':''}" onclick="toggleStats(${match.id})">${STATE.openStatsMatchId===match.id?'▲ Hide stats':'📊 Match stats'}</div>` : ''}
     ${STATE.openStatsMatchId===match.id ? buildStatsPanel(result) : ''}
+    ${!hasResult ? buildPreviewSection(match.id) : ''}
     <div class="mc-footer">
       <span class="mc-city">📍 ${match.city}</span>
       ${countdown ? `<span class="mc-countdown" data-kickoff="${kickoffUTC.getTime()}">${countdown}</span>` : ''}

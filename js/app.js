@@ -11,6 +11,7 @@ const STATE = {
   bracketPicks:     {},  // matchId → team name, for bracket predictor
   openStatsMatchId: null, // which match has the stats drawer open
   espnUnmatched:    [],   // ESPN team names that couldn't be matched — surfaced as a warning
+  aiPreviews:       {},   // matchId → { text, loading, error }
 };
 
 // ── Init ─────────────────────────────────────
@@ -521,10 +522,50 @@ function starBtn(team, onToggle) {
 }
 
 // ── Demo Mode ─────────────────────────────────
+// ── AI Match Preview ─────────────────────────────────────────────────────
+async function fetchMatchPreview(matchId) {
+  const match = SCHEDULE.find(m => m.id === matchId)
+             || R32_MATCHES.find(m => m.id === matchId);
+  if (!match) return;
+
+  // Already fetched or loading — skip
+  const existing = STATE.aiPreviews[matchId];
+  if (existing?.text || existing?.loading) return;
+
+  STATE.aiPreviews[matchId] = { loading: true };
+  renderActiveTab();
+
+  try {
+    const resp = await fetch('/api/preview', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        team1: match.t1 || match.slot1 || '',
+        team2: match.t2 || match.slot2 || '',
+        group: match.g || '',
+        city:  match.city || '',
+        date:  match.date || '',
+      }),
+    });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    STATE.aiPreviews[matchId] = data.text
+      ? { text: data.text }
+      : { error: data.error || 'Preview unavailable' };
+  } catch(err) {
+    STATE.aiPreviews[matchId] = { error: 'Could not load preview' };
+  }
+  renderActiveTab();
+}
+
 function loadDemoData() {
   STATE.results  = JSON.parse(JSON.stringify(DEMO_RESULTS));
   STATE.demoMode = true;
   STATE.lastUpdated = new Date();
+  // Pre-populate a canned AI preview for Australia vs Türkiye (match 8, Jun 13)
+  STATE.aiPreviews = {
+    8: { text: "Australia's Socceroos, energized by a passionate crowd at BC Place, face a Türkiye side powered by Real Madrid's Arda Güler in a must-watch Group D opener. Mathew Leckie's pace on the counter could trouble Türkiye's backline, while goalkeeper Mathew Ryan will be tested by Güler's creativity and Yılmaz's finishing. A tight, physical encounter with knockout stage implications for both sides." },
+  };
   updateStatusUI();
   renderActiveTab();
   showToast('Demo mode on \u2014 fake results loaded');

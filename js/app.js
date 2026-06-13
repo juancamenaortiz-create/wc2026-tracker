@@ -10,6 +10,7 @@ const STATE = {
   demoMode:    false,
   bracketPicks:     {},  // matchId → team name, for bracket predictor
   openStatsMatchId: null, // which match has the stats drawer open
+  espnUnmatched:    [],   // ESPN team names that couldn't be matched — surfaced as a warning
 };
 
 // ── Init ─────────────────────────────────────
@@ -64,27 +65,39 @@ function scheduleNextRefresh() {
 // ── ESPN free scores (primary source — $0) ────────────────────────────────
 // Maps ESPN's team display names to our internal names where they differ.
 const ESPN_NAMES = {
-  "United States":              "USA",          // ESPN uses full name, we use USA
+  // North America
+  "United States":              "USA",
   "United States of America":   "USA",
+  // Asia
   "Korea Republic":             "South Korea",
+  "Republic of Korea":          "South Korea",
+  "IR Iran":                    "Iran",
+  "Islamic Republic of Iran":   "Iran",
+  // Europe
   "Bosnia-Herzegovina":         "Bosnia & Herzegovina",
   "Bosnia and Herzegovina":     "Bosnia & Herzegovina",
-  "Curacao":                    "Curaçao",
   "Turkey":                     "Türkiye",
+  "Czech Republic":             "Czechia",
+  // Africa / Caribbean
   "Côte d'Ivoire":              "Ivory Coast",
   "Ivory Coast":                "Ivory Coast",
+  "Cabo Verde":                 "Cape Verde",     // ESPN uses Cabo Verde
+  "Cape Verde Islands":         "Cape Verde",
   "DR Congo":                   "Congo DR",
   "Congo, DR":                  "Congo DR",
   "Democratic Republic of Congo": "Congo DR",
-  "IR Iran":                    "Iran",
-  "Republic of Ireland":        "Ireland",
+  "Republic of Congo":          "Congo DR",
+  // Oceania / Other
+  "Curacao":                    "Curaçao",
+  "Curaçao":                    "Curaçao",
   "New Zealand":                "New Zealand",
-  "Czech Republic":             "Czechia",
+  "Republic of Ireland":        "Ireland",
 };
 function espnToApp(n) { return ESPN_NAMES[n] || n || ''; }
 
 async function fetchFromESPN() {
   const found = [];
+  const unmatched = []; // collect any ESPN teams we can't match
   // Fetch today + yesterday so we catch scores even if opened late
   for (let back = 0; back <= 3; back++) {
     const d = new Date();
@@ -120,7 +133,12 @@ async function fetchFromESPN() {
           (normName(m.t1)===normName(n1) && normName(m.t2)===normName(n2)) ||
           (normName(m.t1)===normName(n2) && normName(m.t2)===normName(n1))
         );
-        if (!m) continue;
+        if (!m) {
+          // Team name not in SCHEDULE — log it so it's visible
+          const label = `${n1} vs ${n2}`;
+          if (!unmatched.includes(label)) unmatched.push(label);
+          continue;
+        }
         const flip = normName(m.t1) === normName(n2);
         // Extract events (goals + cards) and live clock from ESPN
         const homeId = home.team?.id || '';
@@ -163,7 +181,7 @@ async function fetchFromESPN() {
     } catch(_) { /* skip date on network error */ }
   }
   // Return what we found — empty list is valid on non-match days
-  return { groupMatches: found, knockoutMatches: [] };
+  return { groupMatches: found, knockoutMatches: [], unmatched };
 }
 
 // Merge fresh results into cached ones (keeps history, updates changed scores)
@@ -201,9 +219,11 @@ async function fetchScores() {
 
     // Merge fresh data into existing cache so history isn't lost
     const merged = mergeResults(STATE.results.groupMatches, fresh.groupMatches);
-    STATE.results = { groupMatches: merged, knockoutMatches: fresh.knockoutMatches || [] };
-    STATE.lastUpdated = new Date();
-    STATE.lastSource  = source;
+    STATE.results       = { groupMatches: merged, knockoutMatches: fresh.knockoutMatches || [] };
+    STATE.lastUpdated   = new Date();
+    STATE.lastSource    = source;
+    STATE.espnUnmatched = fresh.unmatched || [];
+    if (STATE.espnUnmatched.length) console.warn('ESPN teams not matched:', STATE.espnUnmatched);
     localStorage.setItem('wc2026_results', JSON.stringify({
       results: STATE.results,
       timestamp: STATE.lastUpdated.toISOString(),
@@ -249,12 +269,16 @@ function updateStatusUI() {
   if (STATE.lastUpdated) {
     const time = STATE.lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const src  = STATE.lastSource;
-    const badge = src === 'Claude'
-      ? `<span class="src-badge src-claude" title="ESPN unavailable — using Claude API (may incur cost)">Claude ⚠</span>`
+    const srcBadge = src === 'Claude'
+      ? `<span class="src-badge src-claude" title="ESPN unavailable — using Claude API">Claude ⚠</span>`
       : src === 'ESPN'
       ? `<span class="src-badge src-espn" title="Live data from ESPN (free)">ESPN ✓</span>`
       : '';
-    msg.innerHTML = `Updated ${time} ${badge}`;
+    const unmatched = STATE.espnUnmatched || [];
+    const warnBadge = unmatched.length
+      ? `<span class="src-badge src-warn" title="ESPN returned unknown team names — tap ⚙ to see details">⚠ ${unmatched.length} unknown</span>`
+      : '';
+    msg.innerHTML = `Updated ${time} ${srcBadge}${warnBadge}`;
   } else {
     msg.innerHTML = 'Not yet refreshed';
   }
@@ -547,9 +571,11 @@ function openSettings() {
   }
   const sourceDetail = document.getElementById('setting-source-detail');
   if (sourceDetail) {
-    sourceDetail.textContent = onClaudeFallback
-      ? 'ESPN unavailable — using Claude AI (may incur cost)'
-      : 'Free live data from ESPN — no API cost';
+    const unmatched = STATE.espnUnmatched || [];
+    sourceDetail.textContent = unmatched.length
+      ? `⚠ ${unmatched.length} ESPN team name(s) not matched: ${unmatched.join(', ')}`
+      : (onClaudeFallback ? 'ESPN unavailable — using Claude AI (may incur cost)' : 'Free live data from ESPN — no API cost');
+    sourceDetail.style.color = unmatched.length ? 'var(--amber)' : '';
   }
   const sourceBadge = document.getElementById('setting-source-badge');
   if (sourceBadge) {

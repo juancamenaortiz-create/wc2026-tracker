@@ -64,25 +64,34 @@ function scheduleNextRefresh() {
 // ── ESPN free scores (primary source — $0) ────────────────────────────────
 // Maps ESPN's team display names to our internal names where they differ.
 const ESPN_NAMES = {
-  "Korea Republic":           "South Korea",
-  "Bosnia-Herzegovina":       "Bosnia & Herzegovina",
-  "Bosnia and Herzegovina":   "Bosnia & Herzegovina",
-  "Curacao":                  "Curaçao",
-  "Turkey":                   "Türkiye",
-  "Côte d'Ivoire":            "Ivory Coast",
-  "DR Congo":                 "Congo DR",
-  "Congo, DR":                "Congo DR",
-  "Republic of Ireland":      "Ireland",
+  "United States":              "USA",          // ESPN uses full name, we use USA
+  "United States of America":   "USA",
+  "Korea Republic":             "South Korea",
+  "Bosnia-Herzegovina":         "Bosnia & Herzegovina",
+  "Bosnia and Herzegovina":     "Bosnia & Herzegovina",
+  "Curacao":                    "Curaçao",
+  "Turkey":                     "Türkiye",
+  "Côte d'Ivoire":              "Ivory Coast",
+  "Ivory Coast":                "Ivory Coast",
+  "DR Congo":                   "Congo DR",
+  "Congo, DR":                  "Congo DR",
+  "Democratic Republic of Congo": "Congo DR",
+  "IR Iran":                    "Iran",
+  "Republic of Ireland":        "Ireland",
+  "New Zealand":                "New Zealand",
+  "Czech Republic":             "Czechia",
 };
 function espnToApp(n) { return ESPN_NAMES[n] || n || ''; }
 
 async function fetchFromESPN() {
   const found = [];
   // Fetch today + yesterday so we catch scores even if opened late
-  for (let back = 0; back <= 1; back++) {
+  for (let back = 0; back <= 3; back++) {
     const d = new Date();
     d.setDate(d.getDate() - back);
-    const ds = d.toISOString().split('T')[0].replace(/-/g, '');
+    // Use LOCAL date parts — toISOString() gives UTC which is the wrong day
+    // for evening CT times (e.g. 9 PM CDT = 2 AM UTC next day)
+    const ds = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
     try {
       const r = await fetch(
         `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=${ds}`,
@@ -679,6 +688,25 @@ function buildStatsPanel(result) {
     </div>`;
   }).filter(Boolean).join('');
   return rows ? `<div class="match-stats-panel">${rows}</div>` : '';
+}
+
+// ── Top Scorers ───────────────────────────────────────────────────────────
+// Aggregates goals from all fetched match events into a ranked leaderboard.
+function buildTopScorers() {
+  const map = {};
+  STATE.results.groupMatches.forEach(match => {
+    (match.events || []).forEach(ev => {
+      if (!ev.g || ev.og) return;          // goals only, skip own goals
+      const team = ev.tid === match.tid1 ? match.team1
+                 : ev.tid === match.tid2 ? match.team2 : '';
+      const key  = `${ev.p}||${ev.tid}`;  // player + team = unique scorer
+      if (!map[key]) map[key] = { name: ev.p, team, goals: 0 };
+      map[key].goals++;
+    });
+  });
+  return Object.values(map)
+    .sort((a, b) => b.goals - a.goals)
+    .slice(0, 30);
 }
 
 document.addEventListener('DOMContentLoaded', init);

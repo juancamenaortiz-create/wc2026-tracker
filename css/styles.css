@@ -1132,3 +1132,55 @@ img.emoji {
 }
 
 .src-warn { background: rgba(245,158,11,0.15); color: var(--amber); border: 1px solid rgba(245,158,11,0.4); }
+
+/* ── 3rd Place Race ── */
+.third-header     { margin-bottom: 8px; }
+.third-title      { font-size: 14px; font-weight: 800; color: var(--white); margin-bottom: 4px; }
+.third-note       { font-size: 11px; color: var(--muted); margin-bottom: 10px; line-height: 1.4; }
+.third-col-hdr    {
+  display: grid;
+  grid-template-columns: 22px 22px 20px 1fr 22px 30px 30px 28px 20px;
+  gap: 2px; padding: 2px 8px 6px;
+  font-size: 9px; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .06em;
+}
+.third-list       { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.third-row {
+  display: grid;
+  grid-template-columns: 22px 22px 20px 1fr 22px 30px 30px 28px 20px;
+  align-items: center; gap: 2px;
+  padding: 7px 8px;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+  border-left: 3px solid transparent;
+}
+.third-row:last-child { border-bottom: none; }
+.third-row.third-in   { border-left-color: var(--green); }
+.third-row.third-out  { border-left-color: var(--red); opacity: .85; }
+.third-row.third-idle { opacity: .5; }
+.third-rank       { font-size: 11px; color: var(--muted); font-weight: 700; }
+.third-grp-badge  {
+  font-size: 10px; font-weight: 800; color: var(--gold);
+  background: rgba(212,175,55,.12); border-radius: 3px;
+  text-align: center; padding: 1px 3px;
+}
+.third-name       { font-size: 12px; font-weight: 600; color: var(--white);
+                    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.th-name          { font-size: 9px; }
+.th-stat          { font-size: 11px; text-align: center; }
+.th-stat.bold     { color: var(--white); font-weight: 700; }
+.th-stat.dim      { color: var(--muted); }
+.th-stat.pos      { color: var(--green); font-weight: 600; }
+.th-stat.neg      { color: #f87171; font-weight: 600; }
+.third-status     { font-size: 12px; text-align: center; }
+.third-cutoff     {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 7px 8px; font-size: 10px; color: var(--muted);
+  background: rgba(239,68,68,.06); border-top: 1px solid rgba(239,68,68,.2);
+  border-bottom: 1px solid rgba(239,68,68,.2);
+}
+.third-cutoff-txt { font-weight: 600; letter-spacing: .04em; }
+
+/* Scrollable 3-item sub-nav */
+.groups-subnav { overflow-x: auto; scrollbar-width: none; }
+.groups-subnav::-webkit-scrollbar { display: none; }
+.subnav-btn { white-space: nowrap; flex-shrink: 0; }

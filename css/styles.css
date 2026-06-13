@@ -1076,3 +1076,59 @@ img.emoji {
   font-size: 9px; color: var(--muted); text-align: center;
   text-transform: uppercase; letter-spacing: 0.05em;
 }
+
+/* ── Groups sub-nav ── */
+.groups-subnav {
+  display: flex; gap: 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 12px;
+}
+.subnav-btn {
+  flex: 1; padding: 10px 0; border: none;
+  border-bottom: 2px solid transparent;
+  background: none; color: var(--muted);
+  font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all 0.15s;
+}
+.subnav-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+.subnav-btn:hover:not(.active) { color: var(--white); }
+
+/* ── Top Scorers list ── */
+.scorers-list {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.scorer-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.scorer-row:last-child { border-bottom: none; }
+.scorer-rank {
+  min-width: 26px; text-align: center; flex-shrink: 0;
+}
+.scorer-rank.medal { font-size: 16px; }
+.scorer-rank.num   { font-size: 11px; font-weight: 700; color: var(--muted); }
+.scorer-flag { font-size: 20px; flex-shrink: 0; }
+.scorer-info {
+  flex: 1; min-width: 0; display: flex;
+  flex-direction: column; gap: 1px;
+}
+.scorer-name {
+  font-size: 13px; font-weight: 600; color: var(--white);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.scorer-team { font-size: 10px; color: var(--muted); }
+.scorer-bar-wrap {
+  width: 56px; height: 4px; background: var(--dim);
+  border-radius: 2px; overflow: hidden; flex-shrink: 0;
+}
+.scorer-bar { height: 100%; background: var(--gold); border-radius: 2px; }
+.scorer-goals {
+  font-size: 16px; font-weight: 800; color: var(--gold);
+  min-width: 18px; text-align: right; flex-shrink: 0;
+}
+
+.src-warn { background: rgba(245,158,11,0.15); color: var(--amber); border: 1px solid rgba(245,158,11,0.4); }

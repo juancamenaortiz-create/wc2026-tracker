@@ -70,6 +70,24 @@ function renderToday(container) {
   let displayDate = todayStr, isNextDay = false;
   let todayMatches = SCHEDULE.filter(m => m.date === todayStr);
 
+  // ── Midnight carryover: keep late-night games visible after CT midnight ──
+  // Any match that kicked off within the last 3 hours belongs on Today
+  // even if its scheduled date is now "yesterday" in CT terms.
+  // Example: 11 PM CDT kicks off at T=0; at 00:05 CDT (65 min later) it
+  // should still appear here, not vanish because the date flipped.
+  const yesterdayCT = new Date(Date.now() - 5*60*60*1000 - 86400000)
+    .toISOString().split('T')[0];
+  SCHEDULE.forEach(m => {
+    if (m.date !== yesterdayCT) return;
+    if (todayMatches.some(x => x.id === m.id)) return; // already included
+    const kickoff = parseGameTimeCT(m.date, m.time);
+    const msSince = Date.now() - kickoff.getTime();
+    // Within 3 hours of kickoff = could still be in first/second half or extra time
+    if (msSince > 0 && msSince < 3 * 60 * 60 * 1000) {
+      todayMatches = [m, ...todayMatches]; // prepend so it appears first
+    }
+  });
+
   if (todayMatches.length === 0) {
     const futureDates = [...new Set(SCHEDULE.map(m => m.date))].filter(d => d >= todayStr).sort();
     if (futureDates.length > 0) { displayDate = futureDates[0]; todayMatches = SCHEDULE.filter(m => m.date === displayDate); isNextDay = true; }
@@ -227,7 +245,7 @@ function buildMatchCard(match, now) {
     <div class="mc-footer">
       <span class="mc-city">📍 ${match.city}</span>
       ${countdown ? `<span class="mc-countdown" data-kickoff="${kickoffUTC.getTime()}">${countdown}</span>` : ''}
-      ${(!hasResult && msUntil < -300000) ? '<span class="mc-espn-wait">⚡ Awaiting ESPN update…</span>' : ''}
+      ${(!hasResult && msUntil < -300000) ? '<span class="mc-espn-wait">⚡ Awaiting ESPN…</span>' : ''}
     </div>
   </div>
 </div>`;

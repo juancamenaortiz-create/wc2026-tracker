@@ -12,6 +12,7 @@ const STATE = {
   openStatsMatchId: null, // which match has the stats drawer open
   espnUnmatched:    [],   // ESPN team names that couldn't be matched — surfaced as a warning
   aiPreviews:       {},   // matchId → { text, loading, error }
+  nextRefreshAt:    null, // Date.now() + interval — for countdown display
 };
 
 // ── Init ─────────────────────────────────────
@@ -51,17 +52,52 @@ function init() {
 // Non-match days: 30 min (no live games to track).
 let _refreshTimer = null;
 
+function hasActiveMatches() {
+  // Returns true when there's a LIVE match or an overdue match (kickoff passed, no score yet)
+  if ((STATE.results.groupMatches||[]).some(m => m.status === 'LIVE')) return true;
+  if ((STATE.results.knockoutMatches||[]).some(m => m.status === 'LIVE')) return true;
+  const now = Date.now(), today = getTodayCT();
+  return SCHEDULE.some(m => {
+    if (m.date !== today) return false;
+    const msOver = now - parseGameTimeCT(m.date, m.time).getTime();
+    if (msOver < 300000) return false; // less than 5 min past kickoff
+    return !(STATE.results.groupMatches||[]).some(r =>
+      normName(r.team1) === normName(m.t1) && normName(r.team2) === normName(m.t2)
+    );
+  });
+}
+
 function getRefreshInterval() {
   if (!isMatchDay()) return 30 * 60 * 1000;
-  return STATE.lastSource === 'Claude' ? 60 * 60 * 1000 : 60 * 1000;
+  if (STATE.lastSource === 'Claude') return 60 * 60 * 1000;
+  return hasActiveMatches() ? 30 * 1000 : 60 * 1000; // 30s during live/overdue matches
+}
+
+let _countdownTicker = null;
+function startCountdownTicker() {
+  if (_countdownTicker) clearInterval(_countdownTicker);
+  _countdownTicker = setInterval(() => {
+    if (!STATE.nextRefreshAt) return;
+    const secs = Math.max(0, Math.ceil((STATE.nextRefreshAt - Date.now()) / 1000));
+    const secsStr = secs === 0 ? '…' : `${secs}s`;
+    // Update countdown in header status
+    const hdr = document.getElementById('refresh-countdown');
+    if (hdr) hdr.textContent = secsStr;
+    // Update countdown on all overdue cards
+    document.querySelectorAll('.overdue-secs').forEach(el => { el.textContent = secsStr; });
+  }, 1000);
 }
 
 function scheduleNextRefresh() {
   if (_refreshTimer) clearTimeout(_refreshTimer);
+  const interval = getRefreshInterval();
+  STATE.nextRefreshAt = Date.now() + interval;
   _refreshTimer = setTimeout(() => {
+    STATE.nextRefreshAt = null;
     if (!document.hidden && isMatchDay()) fetchScores();
     else scheduleNextRefresh(); // reschedule without fetching if tab is hidden
-  }, getRefreshInterval());
+  }, interval);
+  startCountdownTicker(); // keep the countdown display live
 }
 
 // ── ESPN free scores (primary source — $0) ────────────────────────────────
@@ -111,9 +147,11 @@ async function fetchFromESPN() {
     // Local date (handles evening CT games staying on the right local day)
     datesToFetch.add(`${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`);
   }
-  // Also fetch tomorrow's UTC date as a safety net for late-night CT games
-  const tmrUTC = new Date(Date.now() + 86400000);
-  datesToFetch.add(`${tmrUTC.getUTCFullYear()}${String(tmrUTC.getUTCMonth()+1).padStart(2,'0')}${String(tmrUTC.getUTCDate()).padStart(2,'0')}`);
+  // Also add the CURRENT UTC date — late CT games (e.g. 11 PM CDT = 4 AM UTC June 14)
+  // get filed under the *next* UTC date in ESPN, which differs from the local CT date.
+  // Bug that was here: we used Date.now()+86400000 (tomorrow UTC) instead of today UTC.
+  const utcNow = new Date();
+  datesToFetch.add(`${utcNow.getUTCFullYear()}${String(utcNow.getUTCMonth()+1).padStart(2,'0')}${String(utcNow.getUTCDate()).padStart(2,'0')}`);
 
   for (const ds of datesToFetch) {
     try {

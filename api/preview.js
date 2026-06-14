@@ -44,6 +44,13 @@ Return ONLY this JSON structure (fill in all fields based on real research):
     ],
     "history": "<WC history>"
   },
+  "h2h": {
+    "totalMeetings": <total competitive meetings or null if fewer than 3>,
+    "winsTeam1": <wins by team1>,
+    "draws": <draws>,
+    "winsTeam2": <wins by team2>,
+    "lastMeeting": "<e.g. Germany 2–0 France · Nov 2023 · UEFA Nations League>"
+  },
   "context": "<1–2 sentences on the broader stakes: group standings implications, rivalry history, or tournament context>"
 }
 

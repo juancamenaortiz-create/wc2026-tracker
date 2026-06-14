@@ -33,17 +33,29 @@ async function openTeamProfile(team) {
   modal.classList.add('open');
   document.body.style.overflow = 'hidden';
 
+  // 1. Static hand-curated data — instant, no API call
+  if (typeof TEAM_PROFILES !== 'undefined' && TEAM_PROFILES[team]) {
+    content.innerHTML = tpContent(team, TEAM_PROFILES[team]);
+    return;
+  }
+
+  // 2. localStorage cache from a previous API call
   if (_teamCache[team]?.data) {
     content.innerHTML = tpContent(team, _teamCache[team].data);
     return;
   }
 
+  // 3. Fall back to API (teams not yet in teamdata.js)
   try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 20000); // 20s client timeout
     const resp = await fetch('/api/team', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ team }),
+      signal: ctrl.signal,
     });
+    clearTimeout(timer);
     const json = resp.ok ? await resp.json() : { data: null };
     if (json.data) {
       _teamCache[team] = { data: json.data, fetchedAt: Date.now() };
@@ -52,7 +64,8 @@ async function openTeamProfile(team) {
     if (modal.classList.contains('open'))
       content.innerHTML = json.data ? tpContent(team, json.data) : tpError(team);
   } catch(err) {
-    if (modal.classList.contains('open')) content.innerHTML = tpError(team);
+    const isTimeout = err.name === 'AbortError';
+    if (modal.classList.contains('open')) content.innerHTML = tpError(team, isTimeout);
   }
 }
 
@@ -70,11 +83,15 @@ function tpLoading(team) {
     <div class="tp-spinner"><span class="preview-spin">⟳</span> Loading profile…</div>
   </div>`;
 }
-function tpError(team) {
+function tpError(team, isTimeout = false) {
+  const msg = isTimeout
+    ? 'Request timed out — try again on WiFi'
+    : 'Profile unavailable — tap to retry';
   return `<div class="tp-loading">
     <span class="tp-flag-lg">${getFlag(team)}</span>
     <div class="tp-team-name">${displayName(team)}</div>
-    <div class="tp-spinner" style="color:var(--muted)">Profile unavailable</div>
+    <div class="tp-spinner" style="color:var(--muted)">${msg}</div>
+    <button class="modal-btn" style="margin-top:12px" onclick="delete _teamCache['${team}'];openTeamProfile('${team}')">↻ Try Again</button>
   </div>`;
 }
 

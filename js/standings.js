@@ -73,7 +73,7 @@ function buildCompactCard(g, standings, hasPlayed) {
     rows += `<div class="group-row${isAdvancing ? ' advancing' : ''}${idx % 2 === 0 ? ' alt' : ''}">
       <div class="group-row-team">
         <span class="group-row-flag">${getFlag(team.name)}</span>
-        <span class="group-row-name">${team.name}</span>
+        <span class="group-row-name team-link" onclick="openTeamProfile('${team.name}')">${team.name}</span>
         <span data-star-team="${team.name}"></span>
       </div>
       <span class="group-row-p">${team.P}</span>
@@ -100,7 +100,7 @@ function buildExpandedCard(g, standings, matches, hasPlayed) {
       <td class="rank-cell">${idx+1}</td>
       <td class="team-cell">
         <span class="flag">${getFlag(team.name)}</span>
-        <span>${displayName(team.name)}</span>
+        <span class="team-link" onclick="openTeamProfile('${team.name}')">${displayName(team.name)}</span>
         <span data-star-team="${team.name}"></span>
       </td>
       <td>${team.P}</td><td>${team.W}</td><td>${team.D}</td><td>${team.L}</td>

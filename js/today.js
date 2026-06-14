@@ -36,6 +36,14 @@ function buildDetailedPreview(d) {
     ${teamBlock(d.team1)}
     <div class="pv-vs-divider">vs</div>
     ${teamBlock(d.team2)}
+    ${d.h2h && d.h2h.totalMeetings ? `<div class="pv-row pv-h2h-row">
+      <span class="pv-ico">📋</span>
+      <span class="pv-row-body">
+        <span class="pv-row-lbl">Head to Head</span>
+        ${d.h2h.totalMeetings} meetings · ${d.h2h.winsTeam1}W ${d.h2h.draws}D ${d.h2h.winsTeam2}W
+        ${d.h2h.lastMeeting ? `<br><span class="pv-h2h-last">${d.h2h.lastMeeting}</span>` : ''}
+      </span>
+    </div>` : ''}
     ${d.context ? `<div class="pv-context"><span class="pv-ico">📊</span><span class="pv-row-body"><span class="pv-row-lbl">Context</span> ${d.context}</span></div>` : ''}
   </div>`;
 }
@@ -172,9 +180,10 @@ function buildMatchCard(match, now) {
   const isFT     = status === 'FT';
   const hasResult= isLive || isFT;
 
-  const isDraw  = hasResult && score1 === score2;
-  const t1Wins  = hasResult && score1 > score2;
-  const t2Wins  = hasResult && score2 > score1;
+  const isPSO   = !!(result?.substatus === 'PSO');
+  const isDraw  = hasResult && !isPSO && score1 === score2;
+  const t1Wins  = hasResult && (isPSO ? (result.penScore1 ?? 0) > (result.penScore2 ?? 0) : score1 > score2);
+  const t2Wins  = hasResult && (isPSO ? (result.penScore2 ?? 0) > (result.penScore1 ?? 0) : score2 > score1);
 
   const kickoffUTC = parseGameTimeCT(match.date, match.time);
   const msUntil    = kickoffUTC - now;
@@ -185,7 +194,8 @@ function buildMatchCard(match, now) {
   let leftStatus = '', leftCls = 'ns-col';
   if (isFT) {
     leftCls = 'ft-col';
-    leftStatus = '<span class="mc-ft">FT</span>';
+    const sub = result?.substatus;
+    leftStatus = `<span class="mc-ft">FT</span>${sub ? `<span class="mc-sub">${sub}</span>` : ''}`;
   } else if (isLive) {
     leftCls = 'live-col';
     const clockStr = result?.clock ? ` ${result.clock}` : '';
@@ -226,15 +236,16 @@ function buildMatchCard(match, now) {
   <div class="mc-right">
     <div class="mc-team ${cls1}">
       <span class="mc-flag">${getFlag(match.t1)}</span>
-      <span class="mc-name">${displayName(match.t1)}</span>
+      <span class="mc-name team-link" onclick="openTeamProfile('${match.t1}')">${displayName(match.t1)}</span>
       <span data-star-team="${match.t1}"></span>
       ${s1html}
     </div>
     ${hasEvents1 ? `<div class="mc-events">${goals1}${cards1}</div>` : ''}
     <div class="mc-divider"></div>
+    ${isFT && isPSO && result.penScore1 !== null ? `<div class="mc-pso-score">Pens · ${result.penScore1}–${result.penScore2}</div>` : ''}
     <div class="mc-team ${cls2}">
       <span class="mc-flag">${getFlag(match.t2)}</span>
-      <span class="mc-name">${displayName(match.t2)}</span>
+      <span class="mc-name team-link" onclick="openTeamProfile('${match.t2}')">${displayName(match.t2)}</span>
       <span data-star-team="${match.t2}"></span>
       ${s2html}
     </div>

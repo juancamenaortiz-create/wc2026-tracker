@@ -143,7 +143,11 @@ function checkForChanges(freshGroupMatches, freshKnockoutMatches) {
 
       // Full time
       if (prev.status === 'LIVE' && st === 'FT') {
-        sendNotif(`🏁 ${t1} ${score} ${t2}`, '', `ft-${id}`);
+        const sub = result.substatus;
+        const psoStr = sub === 'PSO' && result.penScore1 !== null
+          ? ` (${result.penScore1}–${result.penScore2} pens)` : '';
+        const aetStr = sub === 'AET' ? ' AET' : '';
+        sendNotif(`🏁 ${t1} ${score} ${t2}${aetStr}${psoStr}`, '', `ft-${id}`);
       }
 
       // Goals (only when LIVE, check each team separately)

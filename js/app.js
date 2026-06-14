@@ -166,10 +166,18 @@ async function fetchFromESPN() {
         if (!comp) continue;
         const st = comp.status?.type || ev.status?.type || {};
         const sn = (st.name || '').toUpperCase();
-        let status;
-        if (st.completed || sn.includes('FINAL'))               status = 'FT';
-        else if (sn.includes('PROGRESS') || sn.includes('HALF')) status = 'LIVE';
-        else continue; // not started yet
+        let status, substatus = '';
+        if (st.completed || sn.includes('FINAL')) {
+          status = 'FT';
+          if      (sn.includes('PENALT') || sn.includes('SHOOTOUT')) substatus = 'PSO';
+          else if (sn.includes('AET')    || sn.includes('EXTRA'))    substatus = 'AET';
+        } else if (sn.includes('SHOOTOUT') || (sn.includes('PENALT') && !sn.includes('KICK'))) {
+          status = 'LIVE'; substatus = 'PSO';
+        } else if (sn.includes('EXTRA') || sn.includes('OVERTIME')) {
+          status = 'LIVE'; substatus = 'ET';
+        } else if (sn.includes('PROGRESS') || sn.includes('HALF')) {
+          status = 'LIVE';
+        } else continue; // not started yet
         const cs = comp.competitors || [];
         const home = cs.find(c => c.homeAway === 'home') || cs[0];
         const away = cs.find(c => c.homeAway === 'away') || cs[1];
@@ -216,13 +224,18 @@ async function fetchFromESPN() {
         };
         const homeStats = parseStats(home);
         const awayStats = parseStats(away);
+        // Penalty shootout scores (ESPN uses shootoutScore on the competitor)
+        const homePen = parseInt(home.shootoutScore ?? home.penaltyAggregateScore ?? null);
+        const awayPen = parseInt(away.shootoutScore ?? away.penaltyAggregateScore ?? null);
         found.push({ matchId:m.id, team1:m.t1, team2:m.t2,
           score1: flip ? s2 : s1, score2: flip ? s1 : s2,
-          status, group:m.g, date:m.date,
+          status, substatus, group:m.g, date:m.date,
           clock:  comp.status?.displayClock || '',
           events,
           tid1: flip ? awayId : homeId,
           tid2: flip ? homeId : awayId,
+          penScore1: isNaN(homePen) ? null : (flip ? awayPen : homePen),
+          penScore2: isNaN(awayPen) ? null : (flip ? homePen : awayPen),
           stats: {
             t1: flip ? awayStats : homeStats,
             t2: flip ? homeStats : awayStats,

@@ -158,11 +158,13 @@ function buildBracketCard(card, round) {
 
   let score1 = result ? result.score1 : '';
   let score2 = result ? result.score2 : '';
+  const isPSO = !!(result?.substatus === 'PSO');
   let w1 = '', w2 = '';
   if (isFT && score1 !== '' && score2 !== '') {
-    if (score1 > score2)      { w1 = 'winner'; w2 = 'loser'; }
-    else if (score2 > score1) { w1 = 'loser';  w2 = 'winner'; }
-    else                       { w1 = 'draw';   w2 = 'draw'; }
+    const pen1 = result?.penScore1 ?? 0, pen2 = result?.penScore2 ?? 0;
+    if (isPSO ? pen1 > pen2 : score1 > score2) { w1 = 'winner'; w2 = 'loser'; }
+    else if (isPSO ? pen2 > pen1 : score2 > score1) { w1 = 'loser'; w2 = 'winner'; }
+    else { w1 = 'draw'; w2 = 'draw'; }
   }
 
   const isMy1 = t1 ? isMyTeam(t1) : false;
@@ -172,9 +174,13 @@ function buildBracketCard(card, round) {
   let statusBadge = '';
   if (isLive) {
     const clockStr = result?.clock ? ` ${result.clock}` : '';
-    statusBadge = `<span class="live-badge xs"><span class="pulse-dot"></span>LIVE${clockStr}</span>`;
+    const liveLabel = result?.substatus === 'ET' ? 'ET' : result?.substatus === 'PSO' ? 'PSO' : 'LIVE';
+    statusBadge = `<span class="live-badge xs"><span class="pulse-dot"></span>${liveLabel}${clockStr}</span>`;
   } else if (isFT) {
-    statusBadge = `<span class="ft-badge xs">FT</span>`;
+    const sub = result?.substatus || '';
+    const penLine = isPSO && result?.penScore1 !== null
+      ? `<span class="bc-pso"> (${result.penScore1}–${result.penScore2}p)</span>` : '';
+    statusBadge = `<span class="ft-badge xs">FT${sub ? ` ${sub}` : ''}</span>${penLine}`;
   } else {
     const dd = card.date ? (card.date.includes('-') ? formatPillDate(card.date) : card.date) : '';
     const dt = card.time && card.time !== 'TBD' ? formatGameTime(card.date || '', card.time) : '';
@@ -189,13 +195,13 @@ function buildBracketCard(card, round) {
     <div class="bc-status">${statusBadge}</div>
     <div class="bc-team ${w1} ${isMy1 ? 'my-t' : ''}">
       <span class="flag sm">${flag1}</span>
-      <span class="bc-name">${displayName(label1)}</span>
+      <span class="bc-name${t1 ? ' team-link' : ''}" ${t1 ? `onclick="openTeamProfile('${t1}')"` : ''}>${displayName(label1)}</span>
       <span class="bc-score">${isFT || isLive ? score1 : ''}</span>
     </div>
     <div class="bc-divider"></div>
     <div class="bc-team ${w2} ${isMy2 ? 'my-t' : ''}">
       <span class="flag sm">${flag2}</span>
-      <span class="bc-name">${displayName(label2)}</span>
+      <span class="bc-name${t2 ? ' team-link' : ''}" ${t2 ? `onclick="openTeamProfile('${t2}')"` : ''}>${displayName(label2)}</span>
       <span class="bc-score">${isFT || isLive ? score2 : ''}</span>
     </div>
   </div>`;

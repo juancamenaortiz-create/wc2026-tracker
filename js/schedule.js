@@ -70,10 +70,12 @@ function buildScheduleRow(match) {
   const score2 = result ? result.score2 : null;
   const isLive = status === 'LIVE', isFT = status === 'FT';
 
+  const isPSO = !!(result?.substatus === 'PSO');
   let w1 = '', w2 = '';
   if (isFT && score1 !== null) {
-    if (score1 > score2)      { w1 = 'winner'; w2 = 'loser'; }
-    else if (score2 > score1) { w1 = 'loser';  w2 = 'winner'; }
+    const pen1 = result?.penScore1 ?? 0, pen2 = result?.penScore2 ?? 0;
+    if (isPSO ? pen1 > pen2 : score1 > score2)      { w1 = 'winner'; w2 = 'loser'; }
+    else if (isPSO ? pen2 > pen1 : score2 > score1) { w1 = 'loser';  w2 = 'winner'; }
     else                      { w1 = 'draw';   w2 = 'draw'; }
   }
 
@@ -97,7 +99,10 @@ function buildScheduleRow(match) {
 
   let centerHtml = '';
   if ((isLive || isFT) && score1 !== null) {
-    centerHtml = `<div class="sched-score"><span class="${w1}">${score1}</span>–<span class="${w2}">${score2}</span></div>`;
+    const sub = result?.substatus || '';
+    const penLine = isFT && isPSO && result?.penScore1 !== null
+      ? `<div class="row-pso">${result.penScore1}–${result.penScore2}p</div>` : '';
+    centerHtml = `<div class="sched-score-wrap"><div class="sched-score"><span class="${w1}">${score1}</span>–<span class="${w2}">${score2}</span>${sub?`<span class="row-sub">${sub}</span>`:''}</div>${penLine}</div>`;
   } else {
     centerHtml = '<div class="sched-score vs">vs</div>';
   }
@@ -127,13 +132,13 @@ function buildScheduleRow(match) {
   <div class="sched-teams">
     <div class="sched-team ${w1}${isMyT1 ? ' my-t' : ''}">
       <span class="flag">${t1Flag}</span>
-      <span class="sched-name">${displayName(t1Name)}</span>
+      <span class="sched-name${match.t1?' team-link':''}" ${match.t1?`onclick="openTeamProfile('${match.t1}')"`:''}>${displayName(t1Name)}</span>
       ${match.t1 ? `<span data-star-team="${match.t1}"></span>` : ''}
     </div>
     ${centerHtml}
     <div class="sched-team right ${w2}${isMyT2 ? ' my-t' : ''}">
       ${match.t2 ? `<span data-star-team="${match.t2}"></span>` : ''}
-      <span class="sched-name r">${displayName(t2Name)}</span>
+      <span class="sched-name r${match.t2?' team-link':''}" ${match.t2?`onclick="openTeamProfile('${match.t2}')"`:''}>${displayName(t2Name)}</span>
       <span class="flag">${t2Flag}</span>
     </div>
   </div>

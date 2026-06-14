@@ -1290,3 +1290,21 @@ img.emoji {
   margin: 8px 0 0; padding: 6px 10px;
   font-size: 11px; color: var(--muted); text-align: center;
 }
+
+/* ── Overdue match (kickoff passed, no ESPN data yet) ── */
+.overdue-col {
+  background: rgba(245,158,11,.06) !important;
+  border-right-color: rgba(245,158,11,.2) !important;
+}
+.mc-overdue {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; font-weight: 800;
+  color: var(--amber); letter-spacing: .05em;
+}
+.mc-espn-wait {
+  font-size: 10px; color: var(--amber); opacity: .8;
+}
+.sched-overdue {
+  font-size: 10px; font-weight: 700; color: var(--amber);
+  display: inline-flex; align-items: center; gap: 3px;
+}

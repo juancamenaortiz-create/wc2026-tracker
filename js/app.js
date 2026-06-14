@@ -268,6 +268,9 @@ async function fetchScores() {
       fresh = data;
     }
 
+    // Fire notifications before merging (need old state vs new state)
+    checkForChanges(fresh.groupMatches, fresh.knockoutMatches || []);
+
     // Merge fresh data into existing cache so history isn't lost
     const merged = mergeResults(STATE.results.groupMatches, fresh.groupMatches);
     STATE.results       = { groupMatches: merged, knockoutMatches: fresh.knockoutMatches || [] };
@@ -723,6 +726,7 @@ function showToast(msg) {
 
 // ── Settings ──────────────────────────────────
 function openSettings() {
+  renderNotifSetting();
   const m = document.getElementById('settings-modal');
   if (!m) return;
 

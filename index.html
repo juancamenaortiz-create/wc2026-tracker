@@ -177,6 +177,7 @@
 
   <!-- Scripts -->
   <script src="js/data.js"></script>
+  <script src="js/teamprofile.js"></script>
   <script src="js/notifications.js"></script>
   <script src="js/app.js"></script>
   <script src="js/today.js"></script>
@@ -184,6 +185,16 @@
   <script src="js/standings.js"></script>
   <script src="js/bracket.js"></script>
   <script src="js/analyzer.js"></script>
+
+  <!-- Team Profile Modal -->
+  <div class="modal-overlay" id="team-profile-modal" onclick="closeTeamProfile()">
+    <div class="tp-sheet" onclick="event.stopPropagation()">
+      <div class="tp-sheet-bar">
+        <button class="tp-close" onclick="closeTeamProfile()">✕ Close</button>
+      </div>
+      <div id="team-profile-content" class="tp-content"></div>
+    </div>
+  </div>
 
 </body>
 </html>

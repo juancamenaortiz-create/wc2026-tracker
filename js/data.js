@@ -341,5 +341,7 @@ const DEMO_RESULTS = {
 };
 
 function normName(name) {
-  return (name || '').trim().toLowerCase();
+  // Strip diacritics so "Türkiye"/"Turkiye", "Curaçao"/"Curacao" etc all match
+  return (name || '').trim().toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '');
 }

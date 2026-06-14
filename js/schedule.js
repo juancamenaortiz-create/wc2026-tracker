@@ -87,7 +87,13 @@ function buildScheduleRow(match) {
     const clockStr = result?.clock ? ` ${result.clock}` : '';
     statusHtml = `<span class="live-badge sm"><span class="pulse-dot"></span>LIVE${clockStr}</span>`;
   } else if (isFT)  statusHtml = '<span class="ft-badge sm">FT</span>';
-  else            statusHtml = `<span class="sched-time">${formatGameTime(match.date, match.time)} ${getTZAbbr()}</span>`;
+  else {
+    const kickoff = match.date && match.time ? parseGameTimeCT(match.date, match.time) : null;
+    const overdue  = kickoff && (Date.now() - kickoff.getTime() > 300000);
+    statusHtml = overdue
+      ? `<span class="sched-overdue">⏱ LIVE?</span>`
+      : `<span class="sched-time">${formatGameTime(match.date, match.time)} ${getTZAbbr()}</span>`;
+  }
 
   let centerHtml = '';
   if ((isLive || isFT) && score1 !== null) {

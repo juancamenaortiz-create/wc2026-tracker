@@ -79,6 +79,7 @@ const ESPN_NAMES = {
   "Bosnia-Herzegovina":         "Bosnia & Herzegovina",
   "Bosnia and Herzegovina":     "Bosnia & Herzegovina",
   "Turkey":                     "Türkiye",
+  "Turkiye":                    "Türkiye",   // ESPN sometimes omits the ü
   "Czech Republic":             "Czechia",
   // Africa / Caribbean
   "Côte d'Ivoire":              "Ivory Coast",
@@ -101,12 +102,20 @@ async function fetchFromESPN() {
   const found = [];
   const unmatched = []; // collect any ESPN teams we can't match
   // Fetch today + yesterday so we catch scores even if opened late
+  // Build date list: yesterday–3 days ago (local) + today's UTC date
+  // Late CT games (e.g. 11 PM CDT = 4 AM UTC next day) may appear under the next UTC date in ESPN
+  const datesToFetch = new Set();
   for (let back = 0; back <= 3; back++) {
     const d = new Date();
     d.setDate(d.getDate() - back);
-    // Use LOCAL date parts — toISOString() gives UTC which is the wrong day
-    // for evening CT times (e.g. 9 PM CDT = 2 AM UTC next day)
-    const ds = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+    // Local date (handles evening CT games staying on the right local day)
+    datesToFetch.add(`${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`);
+  }
+  // Also fetch tomorrow's UTC date as a safety net for late-night CT games
+  const tmrUTC = new Date(Date.now() + 86400000);
+  datesToFetch.add(`${tmrUTC.getUTCFullYear()}${String(tmrUTC.getUTCMonth()+1).padStart(2,'0')}${String(tmrUTC.getUTCDate()).padStart(2,'0')}`);
+
+  for (const ds of datesToFetch) {
     try {
       const r = await fetch(
         `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=${ds}`,

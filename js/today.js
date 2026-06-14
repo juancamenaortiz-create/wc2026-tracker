@@ -173,10 +173,16 @@ function buildMatchCard(match, now) {
     const clockStr = result?.clock ? ` ${result.clock}` : '';
     leftStatus = `<span class="mc-live"><span class="pulse-dot"></span>LIVE${clockStr}</span>`;
   } else {
-    // Two-line time display matching artifact
+    // Two-line time display — or "overdue" if kickoff has passed with no ESPN data yet
     const t = match.time;
     const tzAbbr = getTZAbbr();
-    leftStatus = `<span class="mc-time">${formatGameTime(match.date, t)}</span><span class="mc-tz">${tzAbbr}</span>`;
+    const isOverdue = msUntil < -300000; // 5+ min past kickoff, still no result
+    if (isOverdue) {
+      leftCls = 'overdue-col';
+      leftStatus = `<span class="mc-overdue"><span class="pulse-dot" style="background:var(--amber)"></span>LIVE?</span>`;
+    } else {
+      leftStatus = `<span class="mc-time">${formatGameTime(match.date, t)}</span><span class="mc-tz">${tzAbbr}</span>`;
+    }
   }
   const grpLabel = match.g ? `GRP ${match.g}` : 'R32';
 
@@ -217,10 +223,11 @@ function buildMatchCard(match, now) {
     ${hasEvents2 ? `<div class="mc-events">${goals2}${cards2}</div>` : ''}
     ${hasResult && result?.stats ? `<div class="stats-toggle${STATE.openStatsMatchId===match.id?' open':''}" onclick="toggleStats(${match.id})">${STATE.openStatsMatchId===match.id?'▲ Hide stats':'📊 Match stats'}</div>` : ''}
     ${STATE.openStatsMatchId===match.id ? buildStatsPanel(result) : ''}
-    ${!hasResult ? buildPreviewSection(match.id) : ''}
+    ${(!hasResult && msUntil >= -300000) ? buildPreviewSection(match.id) : ''}
     <div class="mc-footer">
       <span class="mc-city">📍 ${match.city}</span>
       ${countdown ? `<span class="mc-countdown" data-kickoff="${kickoffUTC.getTime()}">${countdown}</span>` : ''}
+      ${(!hasResult && msUntil < -300000) ? '<span class="mc-espn-wait">⚡ Awaiting ESPN update…</span>' : ''}
     </div>
   </div>
 </div>`;

@@ -86,8 +86,13 @@ function buildScheduleRow(match) {
 
   let statusHtml = '';
   if (isLive) {
-    const clockStr = result?.clock ? ` ${result.clock}` : '';
-    statusHtml = `<span class="live-badge sm"><span class="pulse-dot"></span>LIVE${clockStr}</span>`;
+    const sub = result?.substatus || '';
+    if (sub === 'HT') {
+      statusHtml = '<span class="ht-badge">HT</span>';
+    } else {
+      const clockStr = result?.clock ? ` ${result.clock}` : '';
+      statusHtml = `<span class="live-badge sm"><span class="pulse-dot"></span>LIVE${clockStr}</span>`;
+    }
   } else if (isFT)  statusHtml = '<span class="ft-badge sm">FT</span>';
   else {
     const kickoff = match.date && match.time ? parseGameTimeCT(match.date, match.time) : null;
@@ -116,9 +121,15 @@ function buildScheduleRow(match) {
       const y     = result.events.filter(e => e.y && e.tid === tid).length;
       const r     = result.events.filter(e => e.r && e.tid === tid).length;
       if (!goals.length && !y && !r) return '';
-      const gTxt  = goals.length ? '⚽ ' + goals.map(g => `${g.min} ${g.p}${g.og?' (OG)':''}`).join(' · ') : '';
-      const cTxt  = '🟨'.repeat(y) + '🟥'.repeat(r);
-      return `<div class="sched-ev-row">${flag} ${[gTxt, cTxt].filter(Boolean).join(' ')}</div>`;
+      const gSpans = goals.map(g =>
+        `<span class="sched-ev">⚽ ${g.min} ${g.p}${g.og?' (OG)':g.pk?' (P)':''}</span>`
+      );
+      const cSpans = [];
+      result.events.filter(e => (e.y || e.r) && e.tid === tid && !e.g).forEach(e =>
+        cSpans.push(`<span class="sched-ev">${e.r?'🟥':'🟨'} ${e.min} ${e.p}</span>`)
+      );
+      const allSpans = [...gSpans, ...cSpans];
+      return allSpans.length ? `<div class="sched-ev-row">${flag} ${allSpans.join('')}</div>` : '';
     };
     const l1 = teamLine(1, t1Flag), l2 = teamLine(2, t2Flag);
     if (l1 || l2) eventsRow = `<div class="sched-events">${l1}${l2}</div>`;

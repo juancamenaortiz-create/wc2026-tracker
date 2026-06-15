@@ -197,9 +197,14 @@ function buildMatchCard(match, now) {
     const sub = result?.substatus;
     leftStatus = `<span class="mc-ft">FT</span>${sub ? `<span class="mc-sub">${sub}</span>` : ''}`;
   } else if (isLive) {
-    leftCls = 'live-col';
-    const clockStr = result?.clock ? ` ${result.clock}` : '';
-    leftStatus = `<span class="mc-live"><span class="pulse-dot"></span>LIVE${clockStr}</span>`;
+    if (result?.substatus === 'HT') {
+      leftCls = 'ht-col';
+      leftStatus = '<span class="mc-ht">HT</span>';
+    } else {
+      leftCls = 'live-col';
+      const clockStr = result?.clock ? ` ${result.clock}` : '';
+      leftStatus = `<span class="mc-live"><span class="pulse-dot"></span>LIVE${clockStr}</span>`;
+    }
   } else {
     // Two-line time display — or "overdue" if kickoff has passed with no ESPN data yet
     const t = match.time;

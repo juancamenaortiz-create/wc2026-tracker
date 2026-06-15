@@ -175,7 +175,9 @@ async function fetchFromESPN() {
           status = 'LIVE'; substatus = 'PSO';
         } else if (sn.includes('EXTRA') || sn.includes('OVERTIME')) {
           status = 'LIVE'; substatus = 'ET';
-        } else if (sn.includes('PROGRESS') || sn.includes('HALF')) {
+        } else if (sn.includes('HALF')) {
+          status = 'LIVE'; substatus = 'HT';   // halftime
+        } else if (sn.includes('PROGRESS')) {
           status = 'LIVE';
         } else continue; // not started yet
         const cs = comp.competitors || [];

@@ -4,7 +4,7 @@
 
 // Paste your VAPID public key here after running: npx web-push generate-vapid-keys
 // Leave empty to disable server-side push (local SW notifications only)
-const VAPID_PUBLIC_KEY = '';
+const VAPID_PUBLIC_KEY = 'BLYzsn5sdlN4lsEEZBa9s-Ev0fGnPQMJP9ZVbXzPXeU5s2EHjqKFLlayr9X2HLZrS4zv59x4MRaCq7gnfuYkkWc';
 
 // Standard helper: converts VAPID URL-safe base64 → Uint8Array for pushManager.subscribe
 function urlBase64ToUint8Array(b64) {
@@ -55,25 +55,36 @@ async function enableNotifications(mode = 'all') {
   }
   setNotifMode(mode);
 
-  // Register Service Worker
+  // Register Service Worker and subscribe to Web Push
   const swReg = await registerSW();
 
-  // Subscribe to Web Push (sends notifications even when app is closed)
   if (swReg && VAPID_PUBLIC_KEY) {
     try {
+      if (!swReg.pushManager) throw new Error('pushManager unavailable');
+
+      // Always clear any old subscription first — avoids VAPID key mismatch errors
+      const existing = await swReg.pushManager.getSubscription();
+      if (existing) await existing.unsubscribe();
+
+      // Create fresh subscription
       const sub = await swReg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
       });
-      await fetch('/api/subscribe', {
+
+      // Register with server so cron can push to this device
+      const resp = await fetch('/api/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ subscription: sub.toJSON(), action: 'subscribe' }),
       });
+      if (!resp.ok) throw new Error(`Server ${resp.status}`);
+
       showToast('Notifications enabled ✓ (works when app is closed)');
     } catch(e) {
-      console.warn('Web Push subscription failed:', e.message);
-      showToast('Notifications enabled ✓');
+      console.error('Push setup failed:', e.name, e.message);
+      // Show the actual error so we can diagnose it
+      showToast(`Push failed: ${e.message.slice(0, 55)}`);
     }
   } else {
     showToast('Notifications enabled ✓');
@@ -103,27 +114,22 @@ async function disableNotifications() {
   showToast('Notifications off');
 }
 
-// Register the service worker and return the registration (needed for pushManager)
+// Register the service worker and return the registration
 async function registerSW() {
   if (!('serviceWorker' in navigator)) return null;
   try {
-    // Reuse existing registration if available
     let reg = await navigator.serviceWorker.getRegistration('/');
     if (!reg) reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
-
-    // Wait for the SW to become active before returning
-    // (pushManager.subscribe requires an active SW)
+    // Wait for SW to activate if needed (pushManager requires active SW)
     if (reg.installing || reg.waiting) {
       await new Promise(resolve => {
         const sw = reg.installing || reg.waiting;
         if (!sw) { resolve(); return; }
-        sw.addEventListener('statechange', () => {
-          if (sw.state === 'activated') resolve();
-        });
-        setTimeout(resolve, 3000); // safety timeout
+        sw.addEventListener('statechange', () => { if (sw.state === 'activated') resolve(); });
+        setTimeout(resolve, 3000);
       });
     }
-    return reg; // ← THIS is what was missing
+    return reg;
   } catch(e) {
     console.warn('SW registration failed:', e.message);
     return null;

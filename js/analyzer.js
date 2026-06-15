@@ -134,10 +134,6 @@ function renderAnalyzer(container) {
   const isPostGroup = isGroupStageOver();
   groupsWrap.innerHTML = `
     <div class="az-header">
-      <div class="view-toggle" style="margin-bottom:8px">
-        <button class="toggle-btn active" onclick="setAnalyzerMode('group')">📊 Groups</button>
-        <button class="toggle-btn${isPostGroup ? '' : ''}" onclick="setAnalyzerMode('bracket')">🏆 Bracket${isPostGroup ? '' : ' (preview)'}</button>
-      </div>
       <div class="pills-scroll">${groupPills}</div>
     </div>
 
@@ -364,10 +360,6 @@ function renderBracketPredictor(container) {
 
   let html = `
     <div class="az-header">
-      <div class="view-toggle" style="margin-bottom:8px">
-        <button class="toggle-btn" onclick="setAnalyzerMode('group')">📊 Groups</button>
-        <button class="toggle-btn active" onclick="setAnalyzerMode('bracket')">🏆 Bracket</button>
-      </div>
       ${hasGroupOvr ? `
         <div class="bp-ovr-banner">
           ⚡ Showing your group what-if scenario (${activeOvr.length} match${activeOvr.length>1?'es':''} overridden)

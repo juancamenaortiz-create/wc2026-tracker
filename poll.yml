@@ -1,0 +1,32 @@
+name: WC 2026 Score Poller
+
+on:
+  schedule:
+    # Every 5 minutes during match hours (UTC):
+    # 15:00–23:59 UTC = 10:00 AM–6:59 PM CDT  (afternoon matches)
+    - cron: '*/5 15-23 * * *'
+    # 00:00–08:00 UTC = 7:00 PM–3:00 AM CDT   (evening/late matches)
+    - cron: '*/5 0-8 * * *'
+  workflow_dispatch: # Manual trigger for testing
+
+jobs:
+  poll:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+
+    steps:
+      - name: Trigger score poll
+        run: |
+          HTTP_STATUS=$(curl -s -o /tmp/cron_response.json -w "%{http_code}" \
+            -X POST \
+            -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            "${{ secrets.VERCEL_APP_URL }}/api/cron")
+
+          echo "HTTP status: $HTTP_STATUS"
+          cat /tmp/cron_response.json
+
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "Cron endpoint returned $HTTP_STATUS"
+            exit 1
+          fi

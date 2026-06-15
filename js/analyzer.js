@@ -4,8 +4,9 @@
 
 const ANALYZER_STATE = {
   selectedGroup: 'A',
-  overrides: {},
-  mode: 'auto', // 'auto'|'group'|'bracket'
+  overrides:     {},
+  mode:          'auto', // kept for backward compat
+  tab:           'groups', // 'groups'|'bracket'|'calculator'
 };
 
 function isGroupStageOver() { return getTodayCT() > '2026-06-27'; }
@@ -15,14 +16,43 @@ function setAnalyzerMode(mode) {
   const content = document.getElementById('tab-content');
   if (content) renderAnalyzer(STATE.demoMode ? document.getElementById('tab-inner') || content : content);
 }
+function setAnalyzerTab(tab) {
+  ANALYZER_STATE.tab = tab;
+  const content = document.getElementById('tab-content');
+  if (content) renderAnalyzer(STATE.demoMode ? document.getElementById('tab-inner') || content : content);
+}
 
 function renderAnalyzer(container) {
-  const effectiveMode = ANALYZER_STATE.mode === 'auto'
-    ? (isGroupStageOver() ? 'bracket' : 'group')
-    : ANALYZER_STATE.mode;
-  if (effectiveMode === 'bracket') { renderBracketPredictor(container); return; }
+  // Sub-tab nav (looks identical to Groups tab sub-nav)
+  const tab = ANALYZER_STATE.tab;
+  const subnav = `<div class="groups-subnav">
+    <button class="subnav-btn ${tab==='groups'     ?'active':''}" onclick="setAnalyzerTab('groups')">Groups</button>
+    <button class="subnav-btn ${tab==='bracket'    ?'active':''}" onclick="setAnalyzerTab('bracket')">Bracket</button>
+    <button class="subnav-btn ${tab==='calculator' ?'active':''}" onclick="setAnalyzerTab('calculator')">Calculator</button>
+  </div>`;
+
+  if (tab === 'bracket') {
+    container.innerHTML = subnav;
+    const wrap = document.createElement('div');
+    container.appendChild(wrap);
+    renderBracketPredictor(wrap);
+    return;
+  }
+  if (tab === 'calculator') {
+    container.innerHTML = subnav + buildCalculatorHTML();
+    return;
+  }
+
+  // Default: groups what-if mode
+  const effectiveMode = 'group';
   const g = ANALYZER_STATE.selectedGroup;
   const overrides = ANALYZER_STATE.overrides;
+
+  // Groups what-if: inject subnav first, then the existing groups UI
+  container.innerHTML = subnav;
+  const groupsWrap = document.createElement('div');
+  container.appendChild(groupsWrap);
+  // Render into groupsWrap below (replaces container usage)
 
   // Group selector pills
   const groupPills = Object.keys(GROUP_TEAMS).map(grpKey =>
@@ -102,7 +132,7 @@ function renderAnalyzer(container) {
   const thisGroupWhatIf    = thisGroupOverrides > 0;
 
   const isPostGroup = isGroupStageOver();
-  container.innerHTML = `
+  groupsWrap.innerHTML = `
     <div class="az-header">
       <div class="view-toggle" style="margin-bottom:8px">
         <button class="toggle-btn active" onclick="setAnalyzerMode('group')">📊 Groups</button>
@@ -146,13 +176,13 @@ function renderAnalyzer(container) {
     </div>`;
 
   // Attach star buttons
-  container.querySelectorAll('[data-star-team]').forEach(slot => {
+  groupsWrap.querySelectorAll('[data-star-team]').forEach(slot => {
     const team = slot.dataset.starTeam;
     const btn = starBtn(team, () => renderAnalyzer(container));
     slot.appendChild(btn);
   });
+  if (typeof twemoji !== 'undefined') twemoji.parse(groupsWrap);
 }
-  if (typeof twemoji !== 'undefined') twemoji.parse(container);
 
 
 function buildMatchToggle(match, key, override) {
@@ -402,4 +432,121 @@ function resetBracketPicks() {
   STATE.bracketPicks = {};
   const content = document.getElementById('tab-content');
   if (content) renderAnalyzer(STATE.demoMode ? document.getElementById('tab-inner') || content : content);
+}
+
+// ── Calculator: mathematical qualification/elimination ───────────────────────
+
+function getRemainingMatches(group) {
+  return SCHEDULE.filter(m => {
+    if (m.g !== group) return false;
+    const res = (STATE.results.groupMatches || []).find(r =>
+      normName(r.team1) === normName(m.t1) && normName(r.team2) === normName(m.t2)
+    );
+    return !res || (res.status !== 'FT' && res.status !== 'LIVE');
+  });
+}
+
+// Enumerate all 3^N outcome combinations for remaining matches,
+// track best and worst possible rank for each team.
+function calcQualStatus(group) {
+  const teams    = GROUP_TEAMS[group];
+  const rem      = getRemainingMatches(group);
+  const numRem   = rem.length;
+
+  // If group is fully played, read standings directly
+  if (numRem === 0) {
+    const st = calculateStandings(group);
+    const status = {};
+    st.forEach((t, i) => { status[t.name] = i < 2 ? 'qualified' : 'eliminated'; });
+    return status;
+  }
+
+  // bestPossible: lowest (best) rank the team can achieve
+  // worstPossible: highest (worst) rank the team can achieve
+  const best  = {}, worst = {};
+  teams.forEach(t => { best[t] = 4; worst[t] = 1; });
+
+  const outcomes = ['home', 'draw', 'away'];
+  const total    = Math.pow(3, numRem);
+
+  for (let i = 0; i < total; i++) {
+    let n = i;
+    const overrides = {};
+    rem.forEach(m => { overrides[String(m.id)] = outcomes[n % 3]; n = Math.floor(n / 3); });
+
+    const standings = calculateStandings(group, overrides);
+    standings.forEach((t, idx) => {
+      const rank = idx + 1;
+      if (rank < best[t.name])  best[t.name]  = rank;
+      if (rank > worst[t.name]) worst[t.name] = rank;
+    });
+  }
+
+  const status = {};
+  teams.forEach(t => {
+    if (worst[t] <= 2)  status[t] = 'qualified';   // top 2 in every scenario
+    else if (best[t] > 2) status[t] = 'eliminated'; // never top 2 in any scenario
+    else                   status[t] = 'alive';      // possible either way
+  });
+  return status;
+}
+
+function buildCalculatorHTML() {
+  const groups  = Object.keys(GROUP_TEAMS);
+  let qualified = 0, eliminated = 0, alive = 0;
+
+  // Pre-compute all group statuses
+  const allStatus = {};
+  groups.forEach(g => {
+    allStatus[g] = calcQualStatus(g);
+    Object.values(allStatus[g]).forEach(s => {
+      if (s === 'qualified')  qualified++;
+      else if (s === 'eliminated') eliminated++;
+      else alive++;
+    });
+  });
+
+  // Summary bar
+  let html = `<div class="calc-summary">
+    <span class="calc-sum-pill calc-q">${qualified} qualified</span>
+    <span class="calc-sum-pill calc-e">${eliminated} eliminated</span>
+    <span class="calc-sum-pill calc-a">${alive} in contention</span>
+  </div>
+  <div class="calc-grid">`;
+
+  groups.forEach(g => {
+    const st       = allStatus[g];
+    const rem      = getRemainingMatches(g).length;
+    const played   = 6 - rem; // total group matches = 6 (C(4,2))
+    const round    = played <= 2 ? 1 : played <= 4 ? 2 : 3;
+    const standings = calculateStandings(g);
+
+    html += `<div class="calc-card">
+      <div class="calc-card-hdr">
+        <span class="calc-grp-lbl">Group ${g}</span>
+        <span class="calc-round-lbl">R${round} · ${played}/6 played</span>
+      </div>`;
+
+    standings.forEach((team, idx) => {
+      const s = st[team.name] || 'alive';
+      const rowCls = s === 'qualified' ? 'calc-row-q' : s === 'eliminated' ? 'calc-row-e' : '';
+      const badge  = s === 'qualified'
+        ? '<span class="calc-badge calc-bq">Q</span>'
+        : s === 'eliminated'
+          ? '<span class="calc-badge calc-be">✕</span>'
+          : `<span class="calc-badge calc-ba">${team.Pts}p</span>`;
+
+      html += `<div class="calc-row ${rowCls}">
+        <span class="calc-rank">${idx+1}</span>
+        <span class="flag" style="font-size:15px">${getFlag(team.name)}</span>
+        <span class="calc-name">${displayName(team.name)}</span>
+        ${badge}
+      </div>`;
+    });
+
+    html += `</div>`; // calc-card
+  });
+
+  html += `</div>`; // calc-grid
+  return html;
 }

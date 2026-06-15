@@ -225,14 +225,6 @@ function buildMatchCard(match, now) {
   const s1html = hasResult ? `<span class="mc-score">${score1}</span>` : '';
   const s2html = hasResult ? `<span class="mc-score">${score2}</span>` : '';
 
-  // Goals and cards (only when result exists)
-  const goals1 = hasResult ? matchGoalsHtml(result, 1) : '';
-  const goals2 = hasResult ? matchGoalsHtml(result, 2) : '';
-  const cards1 = hasResult ? matchCardsHtml(result, 1) : '';
-  const cards2 = hasResult ? matchCardsHtml(result, 2) : '';
-  const hasEvents1 = goals1 || cards1;
-  const hasEvents2 = goals2 || cards2;
-
   return `<div class="mc-wrap${isMyCard ? ' my-team-card' : ''}">
   <div class="mc-left ${leftCls}">
     ${leftStatus}
@@ -245,7 +237,6 @@ function buildMatchCard(match, now) {
       <span data-star-team="${match.t1}"></span>
       ${s1html}
     </div>
-    ${hasEvents1 ? `<div class="mc-events">${goals1}${cards1}</div>` : ''}
     <div class="mc-divider"></div>
     ${isFT && isPSO && result.penScore1 !== null ? `<div class="mc-pso-score">Pens · ${result.penScore1}–${result.penScore2}</div>` : ''}
     <div class="mc-team ${cls2}">
@@ -254,8 +245,7 @@ function buildMatchCard(match, now) {
       <span data-star-team="${match.t2}"></span>
       ${s2html}
     </div>
-    ${hasEvents2 ? `<div class="mc-events">${goals2}${cards2}</div>` : ''}
-    ${hasResult && result?.stats ? `<div class="stats-toggle${STATE.openStatsMatchId===match.id?' open':''}" onclick="toggleStats(${match.id})">${STATE.openStatsMatchId===match.id?'▲ Hide stats':'📊 Match stats'}</div>` : ''}
+    ${hasResult && (result?.stats || result?.events?.length) ? `<div class="stats-toggle${STATE.openStatsMatchId===match.id?' open':''}" onclick="toggleStats(${match.id})">${STATE.openStatsMatchId===match.id?'▲ Hide summary':'📊 Match Summary'}</div>` : ''}
     ${STATE.openStatsMatchId===match.id ? buildStatsPanel(result) : ''}
     ${(!hasResult && msUntil >= -300000) ? buildPreviewSection(match.id) : ''}
     <div class="mc-footer">

@@ -888,28 +888,77 @@ function toggleStats(matchId) {
   renderActiveTab();
 }
 
+// Parse "45'+5'" → 45.05 for chronological sort
+function parseEventMin(s) {
+  const m = (s || '0').replace(/'/g, '').split('+');
+  return parseInt(m[0] || 0, 10) + (m[1] ? parseInt(m[1], 10) / 100 : 0);
+}
+
+function buildTimeline(result) {
+  if (!result?.events?.length) return '';
+  const evs = [...result.events].sort((a, b) => parseEventMin(a.min) - parseEventMin(b.min));
+  const t1 = displayName(result.team1 || ''), t2 = displayName(result.team2 || '');
+  const f1 = getFlag(result.team1), f2 = getFlag(result.team2);
+
+  const rows = evs.map(ev => {
+    const isT1 = ev.tid === result.tid1;
+    let icon = ev.g ? (ev.og ? '⚽ OG' : ev.pk ? '⚽ P' : '⚽') : ev.r ? '🟥' : '🟨';
+    const name = ev.p || '';
+    if (isT1) {
+      return `<div class="tl-row">
+        <div class="tl-side tl-left"><span class="tl-name">${name}</span><span class="tl-icon">${icon}</span></div>
+        <div class="tl-min">${ev.min}</div>
+        <div class="tl-side tl-right"></div>
+      </div>`;
+    } else {
+      return `<div class="tl-row">
+        <div class="tl-side tl-left"></div>
+        <div class="tl-min">${ev.min}</div>
+        <div class="tl-side tl-right"><span class="tl-icon">${icon}</span><span class="tl-name">${name}</span></div>
+      </div>`;
+    }
+  }).join('');
+
+  return `<div class="tl-wrap">
+    <div class="tl-header">
+      <span class="tl-th">${f1} ${t1}</span>
+      <span class="tl-th-center">⏱</span>
+      <span class="tl-th tl-th-r">${t2} ${f2}</span>
+    </div>
+    ${rows}
+  </div>`;
+}
+
 function buildStatsPanel(result) {
-  if (!result?.stats) return '';
-  const s1 = result.stats.t1 || {}, s2 = result.stats.t2 || {};
-  const rows = STAT_ROWS.map(({ key, label, fmt, isPct }) => {
-    const v1 = s1[key], v2 = s2[key];
-    if (v1 == null || v2 == null) return '';
-    const total  = isPct ? 100 : (v1 + v2 || 1);
-    const pct1   = Math.round((v1 / total) * 100);
-    const disp   = fmt || (v => v);
-    return `<div class="stat-row">
-      <span class="stat-val">${disp(v1)}</span>
-      <div class="stat-mid">
-        <div class="stat-bar">
-          <div class="stat-bar-1" style="width:${pct1}%"></div>
-          <div class="stat-bar-2" style="width:${100 - pct1}%"></div>
+  const timeline = buildTimeline(result);
+  let statsHtml = '';
+  if (result?.stats) {
+    const s1 = result.stats.t1 || {}, s2 = result.stats.t2 || {};
+    const rows = STAT_ROWS.map(({ key, label, fmt, isPct }) => {
+      const v1 = s1[key], v2 = s2[key];
+      if (v1 == null || v2 == null) return '';
+      const total = isPct ? 100 : (v1 + v2 || 1);
+      const pct1  = Math.round((v1 / total) * 100);
+      const disp  = fmt || (v => v);
+      return `<div class="stat-row">
+        <span class="stat-val">${disp(v1)}</span>
+        <div class="stat-mid">
+          <div class="stat-bar">
+            <div class="stat-bar-1" style="width:${pct1}%"></div>
+            <div class="stat-bar-2" style="width:${100 - pct1}%"></div>
+          </div>
+          <span class="stat-label">${label}</span>
         </div>
-        <span class="stat-label">${label}</span>
-      </div>
-      <span class="stat-val r">${disp(v2)}</span>
-    </div>`;
-  }).filter(Boolean).join('');
-  return rows ? `<div class="match-stats-panel">${rows}</div>` : '';
+        <span class="stat-val r">${disp(v2)}</span>
+      </div>`;
+    }).filter(Boolean).join('');
+    if (rows) statsHtml = `<div class="match-stats-panel">${rows}</div>`;
+  }
+  if (!timeline && !statsHtml) return '';
+  return `<div class="match-summary-wrap">
+    ${timeline}
+    ${statsHtml}
+  </div>`;
 }
 
 // ── Top Scorers ───────────────────────────────────────────────────────────

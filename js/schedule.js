@@ -112,29 +112,6 @@ function buildScheduleRow(match) {
     centerHtml = '<div class="sched-score vs">vs</div>';
   }
 
-  // Events: one line per team, flag-prefixed so attribution is clear
-  let eventsRow = '';
-  if ((isLive || isFT) && result?.events?.length) {
-    const teamLine = (num, flag) => {
-      const tid   = num === 1 ? result.tid1 : result.tid2;
-      const goals = result.events.filter(e => e.g && e.tid === tid);
-      const y     = result.events.filter(e => e.y && e.tid === tid).length;
-      const r     = result.events.filter(e => e.r && e.tid === tid).length;
-      if (!goals.length && !y && !r) return '';
-      const gSpans = goals.map(g =>
-        `<span class="sched-ev">⚽ ${g.min} ${g.p}${g.og?' (OG)':g.pk?' (P)':''}</span>`
-      );
-      const cSpans = [];
-      result.events.filter(e => (e.y || e.r) && e.tid === tid && !e.g).forEach(e =>
-        cSpans.push(`<span class="sched-ev">${e.r?'🟥':'🟨'} ${e.min} ${e.p}</span>`)
-      );
-      const allSpans = [...gSpans, ...cSpans];
-      return allSpans.length ? `<div class="sched-ev-row">${flag} ${allSpans.join('')}</div>` : '';
-    };
-    const l1 = teamLine(1, t1Flag), l2 = teamLine(2, t2Flag);
-    if (l1 || l2) eventsRow = `<div class="sched-events">${l1}${l2}</div>`;
-  }
-
   return `<div class="schedule-row${isMyT1 || isMyT2 ? ' my-team-row' : ''}">
   <div class="sched-meta">
     <span class="sched-round">${roundLabel}</span>
@@ -153,8 +130,7 @@ function buildScheduleRow(match) {
       <span class="flag">${t2Flag}</span>
     </div>
   </div>
-  ${eventsRow}
-  ${(isLive || isFT) && result?.stats ? `<div class="stats-toggle sched-stats${STATE.openStatsMatchId===match.id?' open':''}" onclick="toggleStats(${match.id})">${STATE.openStatsMatchId===match.id?'▲ Hide stats':'📊 Match stats'}</div>` : ''}
+  ${(isLive || isFT) && (result?.stats || result?.events?.length) ? `<div class="stats-toggle sched-stats${STATE.openStatsMatchId===match.id?' open':''}" onclick="toggleStats(${match.id})">${STATE.openStatsMatchId===match.id?'▲ Hide summary':'📊 Match Summary'}</div>` : ''}
   ${STATE.openStatsMatchId===match.id ? buildStatsPanel(result) : ''}
   <div class="sched-city">📍 ${match.city}</div>
 </div>`;

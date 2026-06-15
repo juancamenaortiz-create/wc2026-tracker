@@ -2,6 +2,17 @@
 // NOTIFICATIONS.JS — Goal / kickoff / FT alerts
 // ═══════════════════════════════════════════
 
+// Paste your VAPID public key here after running: npx web-push generate-vapid-keys
+// Leave empty to disable server-side push (local SW notifications only)
+const VAPID_PUBLIC_KEY = 'BLYzsn5sdlN4lsEEZBa9s-Ev0fGnPQMJP9ZVbXzPXeU5s2EHjqKFLlayr9X2HLZrS4zv59x4MRaCq7gnfuYkkWc';
+
+// Standard helper: converts VAPID URL-safe base64 → Uint8Array for pushManager.subscribe
+function urlBase64ToUint8Array(b64) {
+  const pad = '='.repeat((4 - b64.length % 4) % 4);
+  const str = atob((b64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
+  return Uint8Array.from(str, c => c.charCodeAt(0));
+}
+
 // Previous match snapshot — compared on every ESPN fetch to detect changes
 let _prevSnapshot = {}; // matchId → { score1, score2, status }
 
@@ -43,14 +54,52 @@ async function enableNotifications(mode = 'all') {
     return false;
   }
   setNotifMode(mode);
-  // Register Service Worker if not already
-  await registerSW();
-  showToast('Notifications enabled ✓');
+
+  // Register Service Worker
+  const swReg = await registerSW();
+
+  // Subscribe to Web Push (sends notifications even when app is closed)
+  if (swReg && VAPID_PUBLIC_KEY) {
+    try {
+      const sub = await swReg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+      });
+      await fetch('/api/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subscription: sub.toJSON(), action: 'subscribe' }),
+      });
+      showToast('Notifications enabled ✓ (works when app is closed)');
+    } catch(e) {
+      console.warn('Web Push subscription failed:', e.message);
+      showToast('Notifications enabled ✓');
+    }
+  } else {
+    showToast('Notifications enabled ✓');
+  }
   return true;
 }
 
-function disableNotifications() {
+async function disableNotifications() {
   setNotifMode('off');
+  // Unsubscribe from Web Push server-side
+  if ('serviceWorker' in navigator) {
+    try {
+      const swReg = await navigator.serviceWorker.getRegistration('/');
+      if (swReg) {
+        const sub = await swReg.pushManager.getSubscription();
+        if (sub) {
+          await fetch('/api/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ subscription: sub.toJSON(), action: 'unsubscribe' }),
+          });
+          await sub.unsubscribe();
+        }
+      }
+    } catch(e) { console.warn('Push unsubscribe error:', e.message); }
+  }
   showToast('Notifications off');
 }
 

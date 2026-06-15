@@ -4,7 +4,7 @@
 
 // Paste your VAPID public key here after running: npx web-push generate-vapid-keys
 // Leave empty to disable server-side push (local SW notifications only)
-const VAPID_PUBLIC_KEY = 'BLYzsn5sdlN4lsEEZBa9s-Ev0fGnPQMJP9ZVbXzPXeU5s2EHjqKFLlayr9X2HLZrS4zv59x4MRaCq7gnfuYkkWc';
+const VAPID_PUBLIC_KEY = '';
 
 // Standard helper: converts VAPID URL-safe base64 → Uint8Array for pushManager.subscribe
 function urlBase64ToUint8Array(b64) {
@@ -103,13 +103,30 @@ async function disableNotifications() {
   showToast('Notifications off');
 }
 
-// Register the service worker (idempotent — safe to call multiple times)
+// Register the service worker and return the registration (needed for pushManager)
 async function registerSW() {
-  if (!('serviceWorker' in navigator)) return;
+  if (!('serviceWorker' in navigator)) return null;
   try {
-    await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+    // Reuse existing registration if available
+    let reg = await navigator.serviceWorker.getRegistration('/');
+    if (!reg) reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+
+    // Wait for the SW to become active before returning
+    // (pushManager.subscribe requires an active SW)
+    if (reg.installing || reg.waiting) {
+      await new Promise(resolve => {
+        const sw = reg.installing || reg.waiting;
+        if (!sw) { resolve(); return; }
+        sw.addEventListener('statechange', () => {
+          if (sw.state === 'activated') resolve();
+        });
+        setTimeout(resolve, 3000); // safety timeout
+      });
+    }
+    return reg; // ← THIS is what was missing
   } catch(e) {
     console.warn('SW registration failed:', e.message);
+    return null;
   }
 }
 

@@ -1491,3 +1491,59 @@ img.emoji {
 .sched-ev { white-space: nowrap; }
 .sched-ev::after { content: ' ·'; color: var(--dim); margin-left: 2px; }
 .sched-ev:last-child::after { content: ''; }
+
+/* ── Calculator tab ── */
+.calc-summary {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  padding: 12px 16px 4px;
+}
+.calc-sum-pill {
+  font-size: 12px; font-weight: 700;
+  padding: 4px 12px; border-radius: 20px;
+  letter-spacing: .04em;
+}
+.calc-sum-pill.calc-q  { background: rgba(34,197,94,.18);  color: #4ade80; }
+.calc-sum-pill.calc-e  { background: rgba(239,68,68,.15);  color: #f87171; }
+.calc-sum-pill.calc-a  { background: rgba(245,158,11,.15); color: var(--amber); }
+
+.calc-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 10px 12px 24px;
+}
+.calc-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.calc-card-hdr {
+  display: flex; justify-content: space-between; align-items: center;
+  background: var(--crimson);
+  padding: 5px 10px;
+}
+.calc-grp-lbl  { font-size: 11px; font-weight: 800; color: #fff; letter-spacing: .07em; }
+.calc-round-lbl { font-size: 9px; color: rgba(255,255,255,.7); }
+
+.calc-row {
+  display: flex; align-items: center; gap: 5px;
+  padding: 5px 9px;
+  border-bottom: 1px solid var(--border);
+  transition: background .15s;
+}
+.calc-row:last-child { border-bottom: none; }
+.calc-row-q { background: rgba(34,197,94,.07); }
+.calc-row-e { opacity: .45; }
+
+.calc-rank { font-size: 10px; color: var(--dim); width: 10px; flex-shrink: 0; }
+.calc-name { font-size: 12px; font-weight: 600; flex: 1; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.calc-badge {
+  font-size: 10px; font-weight: 800;
+  padding: 2px 6px; border-radius: 4px;
+  flex-shrink: 0; letter-spacing: .05em;
+}
+.calc-bq { background: rgba(34,197,94,.25);  color: #4ade80; }
+.calc-be { background: rgba(239,68,68,.15);  color: #f87171; }
+.calc-ba { background: var(--surface);        color: var(--muted); }

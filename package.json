@@ -1,0 +1,9 @@
+{
+  "name": "wc2026-tracker",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "@upstash/redis": "^1.28.4",
+    "web-push": "^3.6.7"
+  }
+}

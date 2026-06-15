@@ -1,7 +1,9 @@
 {
   "functions": {
-    "api/preview.js": { "maxDuration": 25 },
-    "api/team.js":    { "maxDuration": 25 }
+    "api/preview.js":   { "maxDuration": 25 },
+    "api/team.js":      { "maxDuration": 25 },
+    "api/subscribe.js": { "maxDuration": 10 },
+    "api/cron.js":      { "maxDuration": 30 }
   },
   "headers": [
     {

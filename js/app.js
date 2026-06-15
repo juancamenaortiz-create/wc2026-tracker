@@ -175,9 +175,10 @@ async function fetchFromESPN() {
           status = 'LIVE'; substatus = 'PSO';
         } else if (sn.includes('EXTRA') || sn.includes('OVERTIME')) {
           status = 'LIVE'; substatus = 'ET';
-        } else if (sn.includes('HALF')) {
-          status = 'LIVE'; substatus = 'HT';   // halftime
-        } else if (sn.includes('PROGRESS')) {
+        } else if (sn.includes('HALF') || sn.includes('PROGRESS')) {
+          // STATUS_FIRST_HALF, STATUS_SECOND_HALF, STATUS_IN_PROGRESS → all LIVE
+          // Only STATUS_HALFTIME (exact break between halves) gets HT badge
+          if (sn === 'STATUS_HALFTIME') substatus = 'HT';
           status = 'LIVE';
         } else continue; // not started yet
         const cs = comp.competitors || [];

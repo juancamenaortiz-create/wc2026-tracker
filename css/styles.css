@@ -1547,3 +1547,35 @@ img.emoji {
 .calc-bq { background: rgba(34,197,94,.25);  color: #4ade80; }
 .calc-be { background: rgba(239,68,68,.15);  color: #f87171; }
 .calc-ba { background: var(--surface);        color: var(--muted); }
+
+/* ── Match Summary: Timeline ── */
+.match-summary-wrap { border-top: 1px solid var(--border); }
+
+.tl-wrap { padding: 8px 10px 4px; }
+.tl-header {
+  display: grid; grid-template-columns: 1fr 44px 1fr;
+  align-items: center;
+  padding: 0 0 6px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2px;
+  font-size: 10px; font-weight: 700; color: var(--muted);
+  gap: 2px;
+}
+.tl-th { display: flex; align-items: center; gap: 4px; overflow: hidden; white-space: nowrap; }
+.tl-th-r { flex-direction: row-reverse; text-align: right; }
+.tl-th-center { text-align: center; font-size: 12px; }
+
+.tl-row {
+  display: grid; grid-template-columns: 1fr 44px 1fr;
+  min-height: 22px; align-items: center; gap: 2px;
+  border-bottom: 1px solid rgba(255,255,255,.03);
+}
+.tl-row:last-child { border-bottom: none; }
+
+.tl-side { display: flex; align-items: center; gap: 4px; overflow: hidden; }
+.tl-left  { justify-content: flex-end; }
+.tl-right { justify-content: flex-start; }
+
+.tl-name { font-size: 11px; color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tl-icon { font-size: 13px; flex-shrink: 0; }
+.tl-min  { font-size: 10px; color: var(--muted); font-weight: 700; text-align: center; white-space: nowrap; }

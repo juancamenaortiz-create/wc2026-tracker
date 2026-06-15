@@ -1467,3 +1467,27 @@ img.emoji {
 /* ── H2H preview row ── */
 .pv-h2h-row { border-top: 1px solid rgba(255,255,255,.05); padding-top: 8px !important; }
 .pv-h2h-last { font-style: italic; color: var(--dim); font-size: 10px; margin-top: 2px; display: block; }
+
+/* ── Halftime badge ── */
+.mc-ht {
+  font-size: 11px; font-weight: 800;
+  color: var(--amber);
+  background: rgba(245,158,11,.18);
+  border-radius: 4px; padding: 2px 6px;
+  letter-spacing: .06em; display: block; text-align: center;
+}
+.ht-col { background: rgba(245,158,11,.06) !important; }
+.ht-badge {
+  display: inline-block;
+  font-size: 10px; font-weight: 800;
+  color: var(--amber);
+  background: rgba(245,158,11,.15);
+  border-radius: 3px; padding: 2px 7px;
+  letter-spacing: .05em;
+}
+
+/* ── Schedule events: wrappable spans ── */
+.sched-ev-row { display: flex; flex-wrap: wrap; gap: 0 2px; align-items: center; font-size: 11px; color: var(--muted); }
+.sched-ev { white-space: nowrap; }
+.sched-ev::after { content: ' ·'; color: var(--dim); margin-left: 2px; }
+.sched-ev:last-child::after { content: ''; }

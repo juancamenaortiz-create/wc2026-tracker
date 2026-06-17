@@ -177,14 +177,22 @@ function buildMDRichSections(data, result, sched) {
     .find(o => (o.position?.name || o.position?.displayName || '').toLowerCase().includes('ref'))
     ?.displayName || '';
 
-  // Match summary teams to result.team1/team2
-  const boxTeams = data.boxscore?.teams || [];
-  const findTeam = (name) => boxTeams.find(t => {
-    const n = espnToApp(t.team?.displayName || '');
-    return normName(n) === normName(name);
-  });
-  const t1Sum = findTeam(result.team1) || boxTeams[0];
-  const t2Sum = findTeam(result.team2) || boxTeams[1];
+  // boxscore.teams → team-level stats
+  // boxscore.players → per-player lineup/athlete data (separate parallel array)
+  const boxTeams   = data.boxscore?.teams   || [];
+  const boxPlayers = data.boxscore?.players || [];
+
+  const findIn = (arr, name) =>
+    arr.find(t => normName(espnToApp(t.team?.displayName || '')) === normName(name));
+
+  const t1Stats   = findIn(boxTeams,   result.team1) || boxTeams[0]   || {};
+  const t2Stats   = findIn(boxTeams,   result.team2) || boxTeams[1]   || {};
+  const t1Players = findIn(boxPlayers, result.team1) || boxPlayers[0] || {};
+  const t2Players = findIn(boxPlayers, result.team2) || boxPlayers[1] || {};
+
+  // Formation can live on the players entry or the teams entry
+  t1Players.formation = t1Players.formation || t1Stats.formation || '';
+  t2Players.formation = t2Players.formation || t2Stats.formation || '';
 
   let html = '';
 
@@ -196,8 +204,8 @@ function buildMDRichSections(data, result, sched) {
     </div>`;
   }
 
-  // Enhanced stats (adds passing accuracy, tackles from summary)
-  const enhanced = buildMDEnhancedStats(t1Sum, t2Sum, result.stats);
+  // Enhanced stats (passes t1Stats/t2Stats which have statistics[])
+  const enhanced = buildMDEnhancedStats(t1Stats, t2Stats, result.stats);
   if (enhanced) {
     html += `<div class="md-section">
       <div class="md-section-title">📊 Match Stats</div>
@@ -205,8 +213,8 @@ function buildMDRichSections(data, result, sched) {
     </div>`;
   }
 
-  // Substitutions
-  const subs = buildMDSubs(t1Sum, t2Sum, result);
+  // Substitutions (uses t1Players/t2Players which have athletes[])
+  const subs = buildMDSubs(t1Players, t2Players, result);
   if (subs) {
     html += `<div class="md-section">
       <div class="md-section-title">🔄 Substitutions</div>
@@ -215,7 +223,7 @@ function buildMDRichSections(data, result, sched) {
   }
 
   // Lineups
-  const lineups = buildMDLineups(t1Sum, t2Sum, result);
+  const lineups = buildMDLineups(t1Players, t2Players, result);
   if (lineups) {
     html += `<div class="md-section">
       <div class="md-section-title">📋 Lineups</div>
@@ -224,7 +232,7 @@ function buildMDRichSections(data, result, sched) {
   }
 
   // Player stats
-  const pstats = buildMDPlayerStats(t1Sum, t2Sum, result);
+  const pstats = buildMDPlayerStats(t1Players, t2Players, result);
   if (pstats) {
     html += `<div class="md-section">
       <div class="md-section-title">👤 Player Stats</div>
@@ -284,8 +292,12 @@ function buildMDEnhancedStats(t1, t2, existing) {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function mdGetAthletes(teamData) {
+  if (!teamData) return [];
+  // Flat athletes array directly on the object
+  if (Array.isArray(teamData.athletes)) return teamData.athletes;
+  // Nested in players groups
   const list = [];
-  for (const pg of (teamData?.players || [])) {
+  for (const pg of (teamData.players || [])) {
     for (const ath of (pg.athletes || [])) list.push(ath);
   }
   return list;
@@ -412,14 +424,22 @@ function buildMDLineups(t1, t2, result) {
 
 function buildMDPlayerStats(t1, t2, result) {
   const parseTeam = (teamData, teamName) => {
-    // Collect stat key names from all player groups
+    // Collect stat key names — may be on teamData.statistics[] or on teamData itself
     const statKeys = [];
-    for (const pg of (teamData?.players || [])) {
-      for (const s of (pg.statistics || [])) {
-        if (Array.isArray(s.keys)) statKeys.push(...s.keys);
-        else if (s.name) statKeys.push(s.name);
+    const statsArr = Array.isArray(teamData?.statistics) ? teamData.statistics : [];
+    for (const s of statsArr) {
+      if (Array.isArray(s.keys)) statKeys.push(...s.keys);
+      else if (s.name) statKeys.push(s.name);
+    }
+    // Fallback: check nested players groups
+    if (!statKeys.length) {
+      for (const pg of (teamData?.players || [])) {
+        for (const s of (pg.statistics || [])) {
+          if (Array.isArray(s.keys)) statKeys.push(...s.keys);
+          else if (s.name) statKeys.push(s.name);
+        }
+        if (statKeys.length) break;
       }
-      if (statKeys.length) break;
     }
     const players = [];
     mdGetAthletes(teamData).forEach(a => {

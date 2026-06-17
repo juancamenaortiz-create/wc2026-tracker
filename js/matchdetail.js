@@ -315,19 +315,55 @@ function mdGetAthletes(teamData) {
 // ── Substitutions (from scoreboard events — accurate, no roster guesswork) ───────
 
 function buildMDSubs(t1, t2, result) {
-  // Use sub events captured by app.js fetchFromESPN — they have real minutes + both players
+  // Primary: use sub events from ESPN scoreboard (if captured)
   const subEvents = (result.events || []).filter(e => e.sub);
-  if (!subEvents.length) return '';
+  if (subEvents.length) {
+    return subEvents.map(e => {
+      const isT1 = e.tid === result.tid1;
+      const line = `<span class="sub-out">↓ ${e.p}</span><span class="sub-in"> ↑ ${e.pIn}</span>`;
+      return `<div class="tl-row">
+        <div class="tl-side tl-left">${isT1 ? line : ''}</div>
+        <div class="tl-min">${e.min}</div>
+        <div class="tl-side tl-right">${!isT1 ? line : ''}</div>
+      </div>`;
+    }).join('');
+  }
 
-  return subEvents.map(e => {
-    const isT1 = e.tid === result.tid1;
-    const pOut = e.p   || '';   // player going off (athletesInvolved[0])
-    const pIn  = e.pIn || '';   // player coming on (athletesInvolved[1])
-    const line = `<span class="sub-out">↓ ${pOut}</span><span class="sub-in"> ↑ ${pIn}</span>`;
+  // Fallback: derive subs from roster data
+  // Players who actually came on have formationPlace set (they took a slot on the pitch)
+  // Unused bench players have formationPlace null or 0
+  const parseSubs = (teamData, isT1) => {
+    const athletes = mdGetAthletes(teamData);
+    return athletes
+      .filter(a => !a.starter && a.formationPlace) // only players who took a formation spot
+      .map(a => {
+        const min = typeof a.subbedIn === 'object' && a.subbedIn
+                  ? (a.subbedIn.displayValue || '?') : '?';
+        const out = athletes.find(x =>
+          x.starter && x.subbedOut && x.formationPlace === a.formationPlace
+        );
+        return {
+          min,
+          playerIn:  a.athlete?.shortName || a.athlete?.displayName || '?',
+          playerOut: out?.athlete?.shortName || out?.athlete?.displayName || '',
+          isT1,
+        };
+      });
+  };
+
+  const allSubs = [
+    ...parseSubs(t1, true),
+    ...parseSubs(t2, false),
+  ];
+
+  if (!allSubs.length) return '';
+
+  return allSubs.map(s => {
+    const line = `<span class="sub-out">↓ ${s.playerOut}</span><span class="sub-in"> ↑ ${s.playerIn}</span>`;
     return `<div class="tl-row">
-      <div class="tl-side tl-left">${isT1 ? line : ''}</div>
-      <div class="tl-min">${e.min}</div>
-      <div class="tl-side tl-right">${!isT1 ? line : ''}</div>
+      <div class="tl-side tl-left">${s.isT1 ? line : ''}</div>
+      <div class="tl-min">${s.min}</div>
+      <div class="tl-side tl-right">${!s.isT1 ? line : ''}</div>
     </div>`;
   }).join('');
 }
@@ -402,73 +438,28 @@ function buildMDLineups(t1, t2, result) {
 
 // ── Player Stats ──────────────────────────────────────────────────────────────
 
-function buildMDPlayerStats(t1, t2, result) {
-  const parseTeam = (teamData, teamName) => {
-    // Collect stat key names — may be on teamData.statistics[] or on teamData itself
-    const statKeys = [];
-    const statsArr = Array.isArray(teamData?.statistics) ? teamData.statistics : [];
-    for (const s of statsArr) {
-      if (Array.isArray(s.keys)) statKeys.push(...s.keys);
-      else if (s.name) statKeys.push(s.name);
-    }
-    // Fallback: check nested players groups
-    if (!statKeys.length) {
-      for (const pg of (teamData?.players || [])) {
-        for (const s of (pg.statistics || [])) {
-          if (Array.isArray(s.keys)) statKeys.push(...s.keys);
-          else if (s.name) statKeys.push(s.name);
-        }
-        if (statKeys.length) break;
-      }
-    }
-    const players = [];
-    mdGetAthletes(teamData).forEach(a => {
-      if (!a.starter && !a.subbedIn && !a.didSubIn) return;
-      const raw = {};
-      if (a.stats && statKeys.length) {
-        statKeys.forEach((k, i) => { if (a.stats[i] != null && a.stats[i] !== '--') raw[k] = a.stats[i]; });
-      }
-      players.push({
-        name: a.athlete?.shortName || a.athlete?.displayName || '?',
-        pos:  a.athlete?.position?.abbreviation || '',
-        min:  raw.minutesPlayed || raw.minsPlayed || '--',
-        shots:raw.shots || raw.totalShots || '--',
-        passPct: raw.passPct || raw.passingAccuracy || '--',
-        tackles: raw.tackles || raw.totalTackles || '--',
-        saves:   raw.saves || '--',
-        goals:   raw.goals || '--',
-      });
-    });
-    return { team: teamName, players };
-  };
+function buildMDPlayerStats(t1, t2, result, summaryData) {
+  // ESPN soccer roster stats are always empty — use leaders[] instead
+  const leaders = summaryData?.leaders || [];
+  if (!leaders.length) return '';
 
-  const d1 = parseTeam(t1, result.team1);
-  const d2 = parseTeam(t2, result.team2);
-  if (!d1.players.length && !d2.players.length) return '';
+  const rows = leaders.map(cat => {
+    const catLeaders = (cat.leaders || []).slice(0, 3);
+    if (!catLeaders.length) return '';
+    const items = catLeaders.map(l => {
+      const name = l.athlete?.shortName || l.athlete?.displayName || '?';
+      const teamName = espnToApp(l.team?.displayName || '');
+      return `<div class="ldr-item">
+        ${getFlag(teamName)}
+        <span class="ldr-name">${name}</span>
+        <span class="ldr-val">${l.displayValue || l.value || ''}</span>
+      </div>`;
+    }).join('');
+    return `<div class="ldr-cat">
+      <div class="ldr-cat-title">${cat.displayName || cat.name || ''}</div>
+      ${items}
+    </div>`;
+  }).filter(Boolean).join('');
 
-  const hasGoals = [...d1.players, ...d2.players].some(p => p.goals !== '--' && p.goals !== '0');
-  const hasSaves = [...d1.players, ...d2.players].some(p => p.saves !== '--' && p.saves !== '0');
-
-  const tableFor = (data) => {
-    if (!data.players.length) return '';
-    const rows = data.players.map(p => `<tr>
-      <td class="ps-name">${p.name} <span class="ps-pos">${p.pos}</span></td>
-      <td>${p.min}</td>
-      ${hasGoals ? `<td>${p.goals}</td>` : ''}
-      <td>${p.shots}</td>
-      <td>${p.passPct !== '--' ? p.passPct+'%' : '--'}</td>
-      <td>${p.pos && ['GK','G'].includes(p.pos.toUpperCase()) ? p.saves : p.tackles}</td>
-    </tr>`).join('');
-    return `<div class="ps-team-hdr">${getFlag(data.team)} ${displayName(data.team)}</div>
-    <table class="ps-table">
-      <thead><tr>
-        <th class="ps-name">Player</th><th>Min</th>
-        ${hasGoals ? '<th>G</th>' : ''}
-        <th>Sh</th><th>Pass%</th><th>${hasSaves ? 'Sv/Tk' : 'Tackles'}</th>
-      </tr></thead>
-      <tbody>${rows}</tbody>
-    </table>`;
-  };
-
-  return tableFor(d1) + tableFor(d2);
+  return rows;
 }

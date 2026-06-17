@@ -67,8 +67,9 @@ async function renderMatchDetail(scheduleMatchId) {
 
 async function fetchMatchSummary(espnId) {
   if (MD_CACHE[espnId]) return MD_CACHE[espnId];
+  // site.web.api.espn.com returns richer soccer data (lineups, rosters) than site.api
   const resp = await fetch(
-    `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/summary?event=${espnId}`,
+    `https://site.web.api.espn.com/apis/site/v2/sports/soccer/fifa.world/summary?event=${espnId}&region=us&lang=en&contentorigin=espn`,
     { signal: AbortSignal.timeout(9000) }
   );
   if (!resp.ok) throw new Error(`ESPN ${resp.status}`);
@@ -177,24 +178,47 @@ function buildMDRichSections(data, result, sched) {
     .find(o => (o.position?.name || o.position?.displayName || '').toLowerCase().includes('ref'))
     ?.displayName || '';
 
-  // boxscore.teams → team-level stats
-  // boxscore.players → per-player lineup/athlete data (separate parallel array)
-  const boxTeams   = data.boxscore?.teams   || [];
-  const boxPlayers = data.boxscore?.players || [];
+  // ESPN soccer summary structure:
+  //   boxscore.teams[i].statistics → team-level stats (possession, shots, etc.)
+  //   rosters[i].athletes[]        → player lineups, formations, subs (TOP-LEVEL key)
+  const boxTeams = data.boxscore?.teams || [];
+
+  // Rosters are at data.rosters[], not data.boxscore.players
+  const rosters = data.rosters || data.boxscore?.players || [];
 
   const findIn = (arr, name) =>
-    arr.find(t => normName(espnToApp(t.team?.displayName || '')) === normName(name));
+    arr.find(t => {
+      const n = espnToApp(t.team?.displayName || t.displayName || t.name || '');
+      return normName(n) === normName(name);
+    });
 
-  const t1Stats   = findIn(boxTeams,   result.team1) || boxTeams[0]   || {};
-  const t2Stats   = findIn(boxTeams,   result.team2) || boxTeams[1]   || {};
-  const t1Players = findIn(boxPlayers, result.team1) || boxPlayers[0] || {};
-  const t2Players = findIn(boxPlayers, result.team2) || boxPlayers[1] || {};
+  const t1Stats   = findIn(boxTeams, result.team1) || boxTeams[0] || {};
+  const t2Stats   = findIn(boxTeams, result.team2) || boxTeams[1] || {};
+  const t1Players = findIn(rosters,  result.team1) || rosters[0]  || {};
+  const t2Players = findIn(rosters,  result.team2) || rosters[1]  || {};
 
-  // Formation can live on the players entry or the teams entry
-  t1Players.formation = t1Players.formation || t1Stats.formation || '';
-  t2Players.formation = t2Players.formation || t2Stats.formation || '';
+  // Formation may be on roster entry or team entry
+  if (!t1Players.formation) t1Players.formation = t1Stats.formation || '';
+  if (!t2Players.formation) t2Players.formation = t2Stats.formation || '';
 
-  let html = '';
+  // Visible debug section — helps diagnose ESPN structure issues
+  const _dbgTopKeys  = Object.keys(data).join(', ');
+  const _dbgBsKeys   = Object.keys(data.boxscore || {}).join(', ');
+  const _dbgRosters  = rosters.length;
+  const _dbgAth0     = rosters[0] ? Object.keys(rosters[0]).join(', ') : 'none';
+  const _dbgAthCount = rosters[0]?.athletes?.length ?? (rosters[0]?.roster?.length ?? '?');
+  const _dbgAth1Keys = (rosters[0]?.athletes?.[0] || rosters[0]?.roster?.[0])
+                       ? Object.keys(rosters[0]?.athletes?.[0] || rosters[0]?.roster?.[0]).join(', ') : 'n/a';
+
+  let html = `<details class="md-debug-wrap" style="font-size:9px;color:var(--dim);padding:4px 8px">
+    <summary style="cursor:pointer;color:var(--muted)">🔍 Debug (tap to expand)</summary>
+    <pre style="white-space:pre-wrap;margin:4px 0">Top keys: ${_dbgTopKeys}
+Boxscore keys: ${_dbgBsKeys}
+Rosters entries: ${_dbgRosters}
+Roster[0] keys: ${_dbgAth0}
+Athlete count: ${_dbgAthCount}
+Athlete[0] keys: ${_dbgAth1Keys}</pre>
+  </details>`;
 
   // Game info pill
   if (attendance || ref) {
@@ -293,9 +317,11 @@ function buildMDEnhancedStats(t1, t2, existing) {
 
 function mdGetAthletes(teamData) {
   if (!teamData) return [];
-  // Flat athletes array directly on the object
+  // Flat athletes array (soccer rosters[] style)
   if (Array.isArray(teamData.athletes)) return teamData.athletes;
-  // Nested in players groups
+  // roster[] key
+  if (Array.isArray(teamData.roster)) return teamData.roster;
+  // Nested in players groups (american sports style)
   const list = [];
   for (const pg of (teamData.players || [])) {
     for (const ath of (pg.athletes || [])) list.push(ath);

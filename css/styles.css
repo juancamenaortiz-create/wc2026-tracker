@@ -1679,3 +1679,12 @@ img.emoji {
 th.ps-name, td.ps-name { text-align: left; padding-left: 12px; }
 td.ps-name { color: var(--white); font-weight: 600; }
 .ps-pos { font-size: 9px; color: var(--dim); margin-left: 3px; }
+
+/* ── Match Leaders ── */
+.md-leaders { padding: 6px 10px 10px; }
+.ldr-cat { margin-bottom: 10px; }
+.ldr-cat-title { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 5px; }
+.ldr-item { display: flex; align-items: center; gap: 6px; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,.04); font-size: 12px; }
+.ldr-item:last-child { border-bottom: none; }
+.ldr-name { flex: 1; color: var(--white); font-weight: 600; }
+.ldr-val { font-size: 13px; font-weight: 800; color: var(--gold); }

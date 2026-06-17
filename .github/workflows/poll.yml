@@ -1,30 +1,18 @@
-name: WC 2026 Score Poller
+# Score poller disabled — notifications removed from app
+# To re-enable, uncomment the content below and redeploy
 
-on:
-  schedule:
-    - cron: '*/5 15-23 * * *'
-    - cron: '*/5 0-8 * * *'
-  workflow_dispatch:
-
-jobs:
-  poll:
-    runs-on: ubuntu-latest
-    timeout-minutes: 2
-
-    steps:
-      - name: Trigger score poll
-        run: |
-          HTTP_STATUS=$(curl -s -o /tmp/cron_response.json -w "%{http_code}" \
-            -L \
-            -X POST \
-            -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
-            -H "Content-Type: application/json" \
-            "${{ secrets.VERCEL_APP_URL }}/api/cron")
-
-          echo "HTTP status: $HTTP_STATUS"
-          cat /tmp/cron_response.json
-
-          if [ "$HTTP_STATUS" != "200" ]; then
-            echo "Cron endpoint returned $HTTP_STATUS"
-            exit 1
-          fi
+# name: WC 2026 Score Poller
+# on:
+#   schedule:
+#     - cron: '*/5 15-23 * * *'
+#     - cron: '*/5 0-8 * * *'
+#   workflow_dispatch:
+# jobs:
+#   poll:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Trigger score poll
+#         run: |
+#           curl -s -L -X POST \
+#             -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
+#             "${{ secrets.VERCEL_APP_URL }}/api/cron"

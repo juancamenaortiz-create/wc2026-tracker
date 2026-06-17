@@ -130,8 +130,7 @@ function buildScheduleRow(match) {
       <span class="flag">${t2Flag}</span>
     </div>
   </div>
-  ${(isLive || isFT) && (result?.stats || result?.events?.length) ? `<div class="stats-toggle sched-stats${STATE.openStatsMatchId===match.id?' open':''}" onclick="toggleStats(${match.id})">${STATE.openStatsMatchId===match.id?'▲ Hide summary':'📊 Match Summary'}</div>` : ''}
-  ${STATE.openStatsMatchId===match.id ? buildStatsPanel(result) : ''}
+  ${(isLive || isFT) ? `<button class="md-trigger-btn" onclick="openMatchDetail(${match.id})">📋 Match Details</button>` : ''}
   <div class="sched-city">📍 ${match.city}</div>
 </div>`;
 }

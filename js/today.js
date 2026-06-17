@@ -245,8 +245,7 @@ function buildMatchCard(match, now) {
       <span data-star-team="${match.t2}"></span>
       ${s2html}
     </div>
-    ${hasResult && (result?.stats || result?.events?.length) ? `<div class="stats-toggle${STATE.openStatsMatchId===match.id?' open':''}" onclick="toggleStats(${match.id})">${STATE.openStatsMatchId===match.id?'▲ Hide summary':'📊 Match Summary'}</div>` : ''}
-    ${STATE.openStatsMatchId===match.id ? buildStatsPanel(result) : ''}
+    ${hasResult ? `<button class="md-trigger-btn" onclick="openMatchDetail(${match.id})">📋 Match Details</button>` : ''}
     ${(!hasResult && msUntil >= -300000) ? buildPreviewSection(match.id) : ''}
     <div class="mc-footer">
       <span class="mc-city">📍 ${match.city}</span>

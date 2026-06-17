@@ -9,7 +9,6 @@ const STATE = {
   isLoading:   false,
   demoMode:    false,
   bracketPicks:     {},  // matchId → team name, for bracket predictor
-  openStatsMatchId: null, // which match has the stats drawer open
   espnUnmatched:    [],   // ESPN team names that couldn't be matched — surfaced as a warning
   aiPreviews:       {},   // matchId → { text, loading, error }
   nextRefreshAt:    null, // Date.now() + interval — for countdown display
@@ -230,8 +229,15 @@ async function fetchFromESPN() {
         // Penalty shootout scores (ESPN uses shootoutScore on the competitor)
         const homePen = parseInt(home.shootoutScore ?? home.penaltyAggregateScore ?? null);
         const awayPen = parseInt(away.shootoutScore ?? away.penaltyAggregateScore ?? null);
-        found.push({ matchId:m.id, team1:m.t1, team2:m.t2,
-          score1: flip ? s2 : s1, score2: flip ? s1 : s2,
+        // Score lag fix: derive score from events in case ESPN's counter lags behind
+        const derivedHome = events.filter(e=>e.g&&!e.og&&e.tid===homeId).length
+                           + events.filter(e=>e.g&&e.og&&e.tid===awayId).length;
+        const derivedAway = events.filter(e=>e.g&&!e.og&&e.tid===awayId).length
+                           + events.filter(e=>e.g&&e.og&&e.tid===homeId).length;
+        const fs1 = Math.max(s1, derivedHome);
+        const fs2 = Math.max(s2, derivedAway);
+        found.push({ matchId:m.id, team1:m.t1, team2:m.t2, espnId:ev.id,
+          score1: flip ? fs2 : fs1, score2: flip ? fs1 : fs2,
           status, substatus, group:m.g, date:m.date,
           clock:  comp.status?.displayClock || '',
           events,
@@ -285,7 +291,6 @@ async function fetchScores() {
     }
 
     // Fire notifications before merging (need old state vs new state)
-    checkForChanges(fresh.groupMatches, fresh.knockoutMatches || []);
 
     // Merge fresh data into existing cache so history isn't lost
     const merged = mergeResults(STATE.results.groupMatches, fresh.groupMatches);
@@ -792,6 +797,73 @@ function isMatchDay() {
 
 // ── Bracket resolution helpers (used by bracket.js + analyzer.js) ─────────
 // Resolve any slot label to a team name using live standings + picks/results.
+// ── 3rd-place bipartite assignment ───────────────────────────────────────────
+// Slot-string → match ID for the 8 third-place R32 slots
+const THIRD_SLOT_MATCH = {
+  'ABCDF': 74, 'CDFGH': 77, 'CEFHI': 79, 'EHIJK': 80,
+  'BEFIJ': 81, 'AEHIJ': 82, 'EFGIJ': 85, 'DEIJL': 87
+};
+// Match ID → eligible group letters (inverted from above)
+const MATCH_ELIGIBLE = {
+  74: 'ABCDF', 77: 'CDFGH', 79: 'CEFHI', 80: 'EHIJK',
+  81: 'BEFIJ', 82: 'AEHIJ', 85: 'EFGIJ', 87: 'DEIJL'
+};
+
+let _3rdCache = { key: null, result: null };
+
+// Returns { [slotGroups]: teamName } e.g. { 'CEFHI': 'Mexico', ... }
+function getThirdPlaceAssignments(ovr) {
+  const key = JSON.stringify(ovr || {});
+  if (_3rdCache.key === key) return _3rdCache.result;
+
+  // 1. Rank all 12 third-place teams by Pts → GD → GF
+  const thirds = Object.keys(GROUP_TEAMS).map(g => {
+    const s  = calculateStandings(g, ovr);
+    const t  = s[2];
+    return t && t.P > 0 ? { group: g, team: t.name, pts: t.Pts, gd: t.GD, gf: t.GF } : null;
+  }).filter(Boolean).sort((a,b) => b.pts-a.pts || b.gd-a.gd || b.gf-a.gf);
+
+  // 2. Take best 8 (or however many have played)
+  const best8 = thirds.slice(0, 8);
+
+  // 3. Bipartite matching: assign each team to exactly one slot
+  //    Process slots in "most constrained first" order (fewest eligible candidates).
+  const matchIds = [74, 77, 79, 80, 81, 82, 85, 87];
+  const sorted = [...matchIds].sort((a, b) => {
+    const ca = best8.filter(t => MATCH_ELIGIBLE[a].includes(t.group)).length;
+    const cb = best8.filter(t => MATCH_ELIGIBLE[b].includes(t.group)).length;
+    return ca - cb;
+  });
+
+  const assigned = {};  // matchId → teamName
+  const used    = new Set();
+
+  function backtrack(i) {
+    if (i === sorted.length) return true;
+    const mid  = sorted[i];
+    const elig = MATCH_ELIGIBLE[mid];
+    for (const { group, team } of best8) {
+      if (!used.has(team) && elig.includes(group)) {
+        assigned[mid] = team;
+        used.add(team);
+        if (backtrack(i + 1)) return true;
+        used.delete(team);
+        delete assigned[mid];
+      }
+    }
+    return false;
+  }
+  backtrack(0);
+
+  // 4. Convert to slot-string keyed result { 'CEFHI': 'Mexico', ... }
+  const result = {};
+  for (const [mid, team] of Object.entries(assigned)) {
+    result[MATCH_ELIGIBLE[mid]] = team;
+  }
+  _3rdCache = { key, result };
+  return result;
+}
+
 function resolveKOSlot(slot) {
   // Pass any active what-if overrides from the group analyzer through to standings.
   // ANALYZER_STATE is defined in analyzer.js (loads after app.js) but is always
@@ -809,12 +881,9 @@ function resolveKOSlot(slot) {
   // Best 3rd from pool: "3rd-ABCDF"
   const third = slot.match(/^3rd-([A-L]+)$/);
   if (third) {
-    const best = third[1].split('').map(g => {
-      const s = calculateStandings(g, ovr);
-      const t = s[2];
-      return { team: t?.name||null, pts: t?.Pts??0, gd: t?.GD??0, p: t?.P??0 };
-    }).filter(c => c.p > 0 && c.team).sort((a,b) => b.pts-a.pts||b.gd-a.gd);
-    return best[0]?.team || null;
+    // Use global bipartite assignment so no team appears in two slots
+    const assignments = getThirdPlaceAssignments(ovr);
+    return assignments[third[1]] ?? null;
   }
   // Winner of previous match: "W-M89"
   const wm = slot.match(/^W-M(\d+)$/);
@@ -876,19 +945,6 @@ function matchCardsHtml(result, num) {
 }
 
 // ── Match stats drawer ────────────────────────────────────────────────────
-const STAT_ROWS = [
-  { key:'possessionPct',  label:'Possession',      fmt: v => v + '%', isPct: true },
-  { key:'totalShots',     label:'Shots' },
-  { key:'shotsOnTarget',  label:'Shots on Target' },
-  { key:'wonCorners',     label:'Corners' },
-  { key:'foulsCommitted', label:'Fouls' },
-];
-
-function toggleStats(matchId) {
-  STATE.openStatsMatchId = STATE.openStatsMatchId === matchId ? null : matchId;
-  renderActiveTab();
-}
-
 // Parse "45'+5'" → 45.05 for chronological sort
 function parseEventMin(s) {
   const m = (s || '0').replace(/'/g, '').split('+');
@@ -927,38 +983,6 @@ function buildTimeline(result) {
       <span class="tl-th tl-th-r">${t2} ${f2}</span>
     </div>
     ${rows}
-  </div>`;
-}
-
-function buildStatsPanel(result) {
-  const timeline = buildTimeline(result);
-  let statsHtml = '';
-  if (result?.stats) {
-    const s1 = result.stats.t1 || {}, s2 = result.stats.t2 || {};
-    const rows = STAT_ROWS.map(({ key, label, fmt, isPct }) => {
-      const v1 = s1[key], v2 = s2[key];
-      if (v1 == null || v2 == null) return '';
-      const total = isPct ? 100 : (v1 + v2 || 1);
-      const pct1  = Math.round((v1 / total) * 100);
-      const disp  = fmt || (v => v);
-      return `<div class="stat-row">
-        <span class="stat-val">${disp(v1)}</span>
-        <div class="stat-mid">
-          <div class="stat-bar">
-            <div class="stat-bar-1" style="width:${pct1}%"></div>
-            <div class="stat-bar-2" style="width:${100 - pct1}%"></div>
-          </div>
-          <span class="stat-label">${label}</span>
-        </div>
-        <span class="stat-val r">${disp(v2)}</span>
-      </div>`;
-    }).filter(Boolean).join('');
-    if (rows) statsHtml = `<div class="match-stats-panel">${rows}</div>`;
-  }
-  if (!timeline && !statsHtml) return '';
-  return `<div class="match-summary-wrap">
-    ${timeline}
-    ${statsHtml}
   </div>`;
 }
 

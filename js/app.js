@@ -203,18 +203,28 @@ async function fetchFromESPN() {
         const homeId = home.team?.id || '';
         const awayId = away.team?.id || '';
         const events = (comp.details || [])
-          .filter(d => d.scoringPlay || d.yellowCard || d.redCard)
-          .map(d => ({
-            min: d.clock?.displayValue || '',
-            tid: d.team?.id || '',
-            p:   d.athletesInvolved?.[0]?.shortName || '',
-            g:   !!(d.scoringPlay),
-            y:   !!(d.yellowCard),
-            r:   !!(d.redCard),
-            og:  !!(d.ownGoal),
-            pk:  !!(d.penaltyKick || d.scoringType?.abbreviation === 'PK' ||
-                    d.type?.text?.toLowerCase().includes('penalty')),
-          }));
+          .filter(d => {
+            if (d.scoringPlay || d.yellowCard || d.redCard) return true;
+            // Capture substitution events (type text = "Substitution")
+            const t = (d.type?.text || d.type?.abbreviation || '').toLowerCase();
+            return t.includes('sub') || t === 's';
+          })
+          .map(d => {
+            const isSub = !d.scoringPlay && !d.yellowCard && !d.redCard;
+            return {
+              min: d.clock?.displayValue || '',
+              tid: d.team?.id || '',
+              p:   d.athletesInvolved?.[0]?.shortName || '',   // scorer / player going off
+              pIn: isSub ? (d.athletesInvolved?.[1]?.shortName || '') : '', // player coming on
+              g:   !!(d.scoringPlay),
+              y:   !!(d.yellowCard),
+              r:   !!(d.redCard),
+              sub: isSub,
+              og:  !!(d.ownGoal),
+              pk:  !!(d.penaltyKick || d.scoringType?.abbreviation === 'PK' ||
+                      d.type?.text?.toLowerCase().includes('penalty')),
+            };
+          });
         // Extract per-team match statistics
         const parseStats = (competitor) => {
           const s = {};
@@ -953,7 +963,8 @@ function parseEventMin(s) {
 
 function buildTimeline(result) {
   if (!result?.events?.length) return '';
-  const evs = [...result.events].sort((a, b) => parseEventMin(a.min) - parseEventMin(b.min));
+  // Filter out sub events — those are shown in the Substitutions section
+  const evs = [...result.events].filter(e => !e.sub).sort((a, b) => parseEventMin(a.min) - parseEventMin(b.min));
   const t1 = displayName(result.team1 || ''), t2 = displayName(result.team2 || '');
   const f1 = getFlag(result.team1), f2 = getFlag(result.team2);
 

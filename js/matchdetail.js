@@ -201,24 +201,7 @@ function buildMDRichSections(data, result, sched) {
   if (!t1Players.formation) t1Players.formation = t1Stats.formation || '';
   if (!t2Players.formation) t2Players.formation = t2Stats.formation || '';
 
-  // Visible debug section — helps diagnose ESPN structure issues
-  const _dbgTopKeys  = Object.keys(data).join(', ');
-  const _dbgBsKeys   = Object.keys(data.boxscore || {}).join(', ');
-  const _dbgRosters  = rosters.length;
-  const _dbgAth0     = rosters[0] ? Object.keys(rosters[0]).join(', ') : 'none';
-  const _dbgAthCount = rosters[0]?.athletes?.length ?? (rosters[0]?.roster?.length ?? '?');
-  const _dbgAth1Keys = (rosters[0]?.athletes?.[0] || rosters[0]?.roster?.[0])
-                       ? Object.keys(rosters[0]?.athletes?.[0] || rosters[0]?.roster?.[0]).join(', ') : 'n/a';
-
-  let html = `<details class="md-debug-wrap" style="font-size:9px;color:var(--dim);padding:4px 8px">
-    <summary style="cursor:pointer;color:var(--muted)">🔍 Debug (tap to expand)</summary>
-    <pre style="white-space:pre-wrap;margin:4px 0">Top keys: ${_dbgTopKeys}
-Boxscore keys: ${_dbgBsKeys}
-Rosters entries: ${_dbgRosters}
-Roster[0] keys: ${_dbgAth0}
-Athlete count: ${_dbgAthCount}
-Athlete[0] keys: ${_dbgAth1Keys}</pre>
-  </details>`;
+  let html = '';
 
   // Game info pill
   if (attendance || ref) {
@@ -255,12 +238,12 @@ Athlete[0] keys: ${_dbgAth1Keys}</pre>
     </div>`;
   }
 
-  // Player stats
-  const pstats = buildMDPlayerStats(t1Players, t2Players, result);
+  // Match leaders
+  const pstats = buildMDPlayerStats(t1Players, t2Players, result, data);
   if (pstats) {
     html += `<div class="md-section">
-      <div class="md-section-title">👤 Player Stats</div>
-      ${pstats}
+      <div class="md-section-title">⭐ Match Leaders</div>
+      <div class="md-leaders">${pstats}</div>
     </div>`;
   }
 
@@ -329,51 +312,22 @@ function mdGetAthletes(teamData) {
   return list;
 }
 
-// ── Substitutions ─────────────────────────────────────────────────────────────
+// ── Substitutions (from scoreboard events — accurate, no roster guesswork) ───────
 
 function buildMDSubs(t1, t2, result) {
-  const subs = [];
+  // Use sub events captured by app.js fetchFromESPN — they have real minutes + both players
+  const subEvents = (result.events || []).filter(e => e.sub);
+  if (!subEvents.length) return '';
 
-  const extractSubs = (teamData, isT1) => {
-    const athletes = mdGetAthletes(teamData);
-    athletes.forEach(a => {
-      // Various ESPN field names for subs
-      const wasSubbedIn  = !!(a.subbedIn || a.didSubIn  || (a.active && !a.starter && a.stats));
-      const wasSubbedOut = !!(a.subbedOut || a.didSubOut);
-      if (!wasSubbedIn && !wasSubbedOut) return;
-
-      // Try several possible minute fields
-      const minIn  = a.subbedIn?.displayValue  || a.subbedInTime?.displayValue
-                  || a.substitutionMinute      || '';
-      const minOut = a.subbedOut?.displayValue || a.subbedOutTime?.displayValue || '';
-
-      if (wasSubbedIn) {
-        // Find who came out (linked by similar timing or explicit out marker)
-        const out = athletes.find(x =>
-          x !== a && (x.subbedOut || x.didSubOut) &&
-          (!minIn || (x.subbedOut?.displayValue || x.subbedOutTime?.displayValue) === minIn)
-        );
-        subs.push({
-          min: minIn || minOut || '?',
-          playerIn:  a.athlete?.shortName   || a.athlete?.displayName   || '',
-          playerOut: out?.athlete?.shortName || out?.athlete?.displayName || '',
-          isT1,
-        });
-      }
-    });
-  };
-
-  extractSubs(t1, true);
-  extractSubs(t2, false);
-
-  if (!subs.length) return '';
-
-  return subs.map(s => {
-    const line = `<span class="sub-out">↓${s.playerOut ? ' '+s.playerOut : ''}</span> <span class="sub-in">↑ ${s.playerIn}</span>`;
+  return subEvents.map(e => {
+    const isT1 = e.tid === result.tid1;
+    const pOut = e.p   || '';   // player going off (athletesInvolved[0])
+    const pIn  = e.pIn || '';   // player coming on (athletesInvolved[1])
+    const line = `<span class="sub-out">↓ ${pOut}</span><span class="sub-in"> ↑ ${pIn}</span>`;
     return `<div class="tl-row">
-      <div class="tl-side tl-left">${s.isT1 ? line : ''}</div>
-      <div class="tl-min">${s.min}</div>
-      <div class="tl-side tl-right">${!s.isT1 ? line : ''}</div>
+      <div class="tl-side tl-left">${isT1 ? line : ''}</div>
+      <div class="tl-min">${e.min}</div>
+      <div class="tl-side tl-right">${!isT1 ? line : ''}</div>
     </div>`;
   }).join('');
 }
@@ -394,9 +348,9 @@ function buildMDLineups(t1, t2, result) {
     const formation = teamData?.formation || '';
     mdGetAthletes(teamData).forEach(a => {
       const p = {
-        name: a.athlete?.shortName || a.athlete?.displayName || '?',
-        jersey: a.athlete?.jersey || '',
-        pos: a.athlete?.position?.abbreviation || '',
+        name:      a.athlete?.shortName || a.athlete?.displayName || '?',
+        jersey:    a.jersey || '',              // direct on athlete (not a.athlete.jersey)
+        pos:       a.position?.abbreviation || '', // direct on athlete
         subbedOut: !!(a.subbedOut || a.didSubOut),
       };
       (a.starter ? starters : bench).push(p);

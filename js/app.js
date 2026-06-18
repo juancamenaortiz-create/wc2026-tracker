@@ -375,7 +375,6 @@ async function fetchScores() {
     }
     console.log(`Scores updated via ${source}: ${merged.filter(m=>m.status==='FT').length} FT, ${merged.filter(m=>m.status==='LIVE').length} LIVE`);
     updateStatusUI();
-    renderActiveTab();
 
   } catch(err) {
     console.error('fetchScores:', err.message);
@@ -384,7 +383,8 @@ async function fetchScores() {
   } finally {
     STATE.isLoading = false;
     setRefreshUI(false);
-    scheduleNextRefresh(); // reschedule with the correct interval for next source
+    renderActiveTab(); // always re-render so Loading spinner clears even on errors
+    scheduleNextRefresh();
   }
 }
 

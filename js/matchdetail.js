@@ -1,435 +1,471 @@
 // ═══════════════════════════════════════════
-// MATCHDETAIL.JS — Full match detail modal
+// MATCHDETAIL.JS — 3-tab match detail modal
+// Facts | Lineup | Stats
 // ═══════════════════════════════════════════
 
-const MD_CACHE = {}; // espnId → raw summary data
+const MD_CACHE = {};
+let MD = { tab:'facts', schedId:null, result:null, sched:null, summary:null };
 
-// ── Open / close ──────────────────────────────────────────────────────────────
+// ── Open / Close / Tab ────────────────────────────────────────────────────────
 
 function openMatchDetail(scheduleMatchId) {
   const modal = document.getElementById('match-detail-modal');
   if (!modal) return;
+  MD.tab = 'facts';
+  MD.schedId = scheduleMatchId;
   modal.classList.add('open');
   document.body.style.overflow = 'hidden';
   renderMatchDetail(scheduleMatchId);
 }
 
 function closeMatchDetail() {
-  const modal = document.getElementById('match-detail-modal');
-  if (!modal) return;
-  modal.classList.remove('open');
-  document.body.style.overflow = '';
+  const m = document.getElementById('match-detail-modal');
+  if (m) { m.classList.remove('open'); document.body.style.overflow = ''; }
 }
 
-// ── Main renderer ─────────────────────────────────────────────────────────────
+function setMDTab(tab) {
+  MD.tab = tab;
+  document.querySelectorAll('.md-tab-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.tab === tab));
+  const c = document.getElementById('md-tab-content');
+  if (c) { c.innerHTML = renderTab(tab); if (typeof twemoji !== 'undefined') twemoji.parse(c); }
+}
+
+// ── Main render ───────────────────────────────────────────────────────────────
 
 async function renderMatchDetail(scheduleMatchId) {
-  const content = document.getElementById('match-detail-content');
-  if (!content) return;
+  const el = document.getElementById('match-detail-content');
+  if (!el) return;
 
-  const result = [
-    ...(STATE.results.groupMatches   || []),
-    ...(STATE.results.knockoutMatches || []),
-  ].find(r => r.matchId === scheduleMatchId);
+  const result = [...(STATE.results.groupMatches||[]), ...(STATE.results.knockoutMatches||[])]
+                   .find(r => r.matchId === scheduleMatchId);
+  const sched  = SCHEDULE.find(m => m.id === scheduleMatchId)
+              || R32_MATCHES.find(m => m.id === scheduleMatchId);
+  if (!sched) { el.innerHTML = `<div class="md-empty">Match not found.</div>`; return; }
 
-  const sched = SCHEDULE.find(m => m.id === scheduleMatchId)
-             || R32_MATCHES.find(m => m.id === scheduleMatchId);
+  MD.result = result; MD.sched = sched; MD.summary = null;
 
-  if (!sched) { content.innerHTML = `<div class="md-empty">Match not found.</div>`; return; }
+  el.innerHTML = buildShell(result, sched);
+  const tc = document.getElementById('md-tab-content');
+  if (tc) { tc.innerHTML = renderTab(MD.tab); if (typeof twemoji !== 'undefined') twemoji.parse(el); }
 
-  const isFT   = result?.status === 'FT';
-  const isLive = result?.status === 'LIVE';
-
-  // Show basic info right away (no wait)
-  content.innerHTML = buildMDHeader(result, sched)
-    + (result ? buildMDTimeline(result) : '')
-    + (result ? buildMDBasicStats(result.stats) : '')
-    + `<div id="md-rich"></div>`;
-
-  // Fetch ESPN summary for rich data (lineups, player stats, etc.)
   const espnId = result?.espnId;
-  const richEl = document.getElementById('md-rich');
-  if (espnId && (isFT || isLive)) {
-    richEl.innerHTML = `<div class="md-loading"><div class="md-spinner"></div><span>Loading lineup &amp; player stats…</span></div>`;
+  if (espnId && (result?.status === 'FT' || result?.status === 'LIVE')) {
     try {
-      const summary = await fetchMatchSummary(espnId);
-      richEl.innerHTML = buildMDRichSections(summary, result, sched);
-      if (typeof twemoji !== 'undefined') twemoji.parse(content);
-    } catch(e) {
-      richEl.innerHTML = `<div class="md-empty" style="margin-top:8px">Detailed stats unavailable right now.</div>`;
-    }
-  } else if (isFT || isLive) {
-    richEl.innerHTML = `<div class="md-empty">Lineups will appear shortly.</div>`;
+      MD.summary = await fetchMatchSummary(espnId);
+      if (tc) { tc.innerHTML = renderTab(MD.tab); if (typeof twemoji !== 'undefined') twemoji.parse(el); }
+    } catch(e) { console.warn('[MD] summary failed:', e.message); }
   }
-
-  if (typeof twemoji !== 'undefined') twemoji.parse(content);
 }
 
 async function fetchMatchSummary(espnId) {
   if (MD_CACHE[espnId]) return MD_CACHE[espnId];
-  // site.web.api.espn.com returns richer soccer data (lineups, rosters) than site.api
-  const resp = await fetch(
+  const r = await fetch(
     `https://site.web.api.espn.com/apis/site/v2/sports/soccer/fifa.world/summary?event=${espnId}&region=us&lang=en&contentorigin=espn`,
     { signal: AbortSignal.timeout(9000) }
   );
-  if (!resp.ok) throw new Error(`ESPN ${resp.status}`);
-  const data = await resp.json();
+  if (!r.ok) throw new Error(`${r.status}`);
+  const data = await r.json();
   MD_CACHE[espnId] = data;
   return data;
 }
 
-// ── Header ────────────────────────────────────────────────────────────────────
+// ── Shell (header + tabs) ─────────────────────────────────────────────────────
 
-function buildMDHeader(result, sched) {
-  const t1Name = result?.team1 || sched.t1;
-  const t2Name = result?.team2 || sched.t2;
-  const score  = (result && result.status !== 'NS')
-    ? `${result.score1}<span class="md-score-sep">–</span>${result.score2}` : 'vs';
+function buildShell(result, sched) {
+  const t1 = result?.team1 || sched.t1, t2 = result?.team2 || sched.t2;
+  const hasResult = result && result.status !== 'NS';
+  const score = hasResult ? `${result.score1}<span class="md-score-sep">–</span>${result.score2}` : 'vs';
 
-  let statusStr = sched.time + ' CT';
+  let status = sched.time + ' CT';
   if (result?.status === 'FT') {
-    const sub = result.substatus;
-    statusStr = 'Full Time'
-      + (sub === 'AET' ? ' (AET)' : '')
-      + (sub === 'PSO' && result.penScore1 != null ? ` · Pens ${result.penScore1}–${result.penScore2}` : '');
+    const s = result.substatus;
+    status = s === 'AET' ? 'Full Time (AET)'
+           : s === 'PSO' ? `Full Time · Pens ${result.penScore1}–${result.penScore2}`
+           : 'Full Time';
   } else if (result?.status === 'LIVE') {
-    statusStr = `${result.substatus === 'HT' ? 'Half Time' : (result.clock || 'Live')}`;
+    status = result.substatus === 'HT' ? 'Half Time' : (result.clock || 'Live');
   }
 
-  const round = sched.g ? `Group ${sched.g}` : (sched.round || 'Knockout');
+  // Compact scorer lines (like SofaScore header)
+  let scorers = '';
+  if (hasResult && result.events?.length) {
+    const goals = result.events.filter(e => e.g);
+    const hg = goals.filter(e => (!e.og && e.tid===result.tid1) || (e.og && e.tid===result.tid2))
+                    .map(e => `${e.p} ${e.min}`).join(', ');
+    const ag = goals.filter(e => (!e.og && e.tid===result.tid2) || (e.og && e.tid===result.tid1))
+                    .map(e => `${e.p} ${e.min}`).join(', ');
+    if (hg || ag) scorers = `<div class="md-scorers-row"><span>${hg}</span><span>${ag}</span></div>`;
+  }
 
+  const tabs = ['facts','lineup','stats'].map(t =>
+    `<button class="md-tab-btn${MD.tab===t?' active':''}" data-tab="${t}" onclick="setMDTab('${t}')">${t[0].toUpperCase()+t.slice(1)}</button>`
+  ).join('');
+
+  const round = sched.g ? `Group ${sched.g}` : (sched.round || 'Knockout');
   return `<div class="md-header">
     <div class="md-round-label">${round} · ${formatDate(sched.date)}</div>
     <div class="md-teams">
-      <div class="md-team">
-        <span class="md-flag">${getFlag(t1Name)}</span>
-        <span class="md-tname">${displayName(t1Name)}</span>
-      </div>
-      <div class="md-score-block">
-        <div class="md-score">${score}</div>
-        <div class="md-status-str">${statusStr}</div>
-      </div>
-      <div class="md-team md-team-r">
-        <span class="md-tname">${displayName(t2Name)}</span>
-        <span class="md-flag">${getFlag(t2Name)}</span>
-      </div>
+      <div class="md-team"><span class="md-flag">${getFlag(t1)}</span><span class="md-tname">${displayName(t1)}</span></div>
+      <div class="md-score-block"><div class="md-score">${score}</div><div class="md-status-str">${status}</div></div>
+      <div class="md-team md-team-r"><span class="md-tname">${displayName(t2)}</span><span class="md-flag">${getFlag(t2)}</span></div>
     </div>
+    ${scorers}
     <div class="md-city">📍 ${sched.city}</div>
-  </div>`;
+  </div>
+  <div class="md-tabs">${tabs}</div>
+  <div id="md-tab-content"></div>`;
 }
 
-// ── Timeline (from scoreboard events) ────────────────────────────────────────
-
-function buildMDTimeline(result) {
-  if (!result?.events?.length) return '';
-  const html = buildTimeline(result); // from app.js
-  if (!html) return '';
-  return `<div class="md-section">
-    <div class="md-section-title">⏱ Timeline</div>
-    ${html}
-  </div>`;
+function renderTab(tab) {
+  const { result, sched, summary } = MD;
+  switch(tab) {
+    case 'facts':  return buildFactsTab(result, summary);
+    case 'lineup': return buildLineupTab(result, summary);
+    case 'stats':  return buildStatsTab(result, summary);
+    default: return '';
+  }
 }
 
-// ── Basic stats (from scoreboard data) ───────────────────────────────────────
+// ── FACTS TAB ─────────────────────────────────────────────────────────────────
 
-const MD_STAT_DEFS = [
-  { key:'possessionPct',  label:'Possession',  fmt: v=>v+'%', isPct:true },
-  { key:'totalShots',     label:'Shots' },
-  { key:'shotsOnTarget',  label:'On Target' },
-  { key:'saves',          label:'Saves' },
-  { key:'wonCorners',     label:'Corners' },
-  { key:'foulsCommitted', label:'Fouls' },
-  { key:'offsides',       label:'Offsides' },
-];
+function buildFactsTab(result, summary) {
+  if (!result || result.status === 'NS')
+    return `<div class="md-empty">Match hasn't started yet.</div>`;
 
-function buildMDBasicStats(stats) {
-  if (!stats) return '';
-  const s1 = stats.t1 || {}, s2 = stats.t2 || {};
-  const rows = MD_STAT_DEFS.map(({ key, label, fmt, isPct }) => {
-    const v1 = s1[key], v2 = s2[key];
-    if (v1 == null && v2 == null) return '';
-    const a = v1 ?? 0, b = v2 ?? 0;
-    const total = isPct ? 100 : (a + b || 1);
-    const pct1  = Math.round((a / total) * 100);
-    const disp  = fmt || (v => v);
-    return `<div class="stat-row">
-      <span class="stat-val">${disp(a)}</span>
-      <div class="stat-mid">
-        <div class="stat-bar"><div class="stat-bar-1" style="width:${pct1}%"></div><div class="stat-bar-2" style="width:${100-pct1}%"></div></div>
-        <span class="stat-label">${label}</span>
-      </div>
-      <span class="stat-val r">${disp(b)}</span>
+  const events = result.events || [];
+
+  // Game info row
+  const gi = summary?.gameInfo;
+  const att = gi?.attendance;
+  const ref = (gi?.officials||[]).find(o => (o.position?.name||'').toLowerCase().includes('ref'))?.displayName || '';
+  const infoRow = (att||ref) ? `<div class="md-gameinfo">
+    ${att ? `<span>👥 ${att.toLocaleString()}</span>` : ''}
+    ${ref ? `<span>🟡 ${ref}</span>` : ''}
+  </div>` : '';
+
+  if (!events.length) return `${infoRow}<div class="md-empty">No events data yet.</div>`;
+
+  // Sort and compute running scores
+  const sorted = [...events].sort((a,b) => parseEventMin(a.min)-parseEventMin(b.min));
+  let s1=0, s2=0, htDone=false, htS1=0, htS2=0;
+  const rows = [];
+
+  for (const ev of sorted) {
+    const min = parseEventMin(ev.min);
+
+    // Insert HT divider before first 2nd-half event
+    if (!htDone && min >= 45.5) {
+      rows.push({ _ht:true, s1:htS1, s2:htS2 });
+      htDone = true;
+    }
+
+    // Update running score
+    if (ev.g) {
+      const ownGoal = ev.og;
+      const benefitsT1 = (!ownGoal && ev.tid===result.tid1) || (ownGoal && ev.tid===result.tid2);
+      if (benefitsT1) s1++; else s2++;
+      if (!htDone) { htS1=s1; htS2=s2; }
+    }
+    rows.push({ ...ev, rs1:s1, rs2:s2 });
+  }
+
+  const rowHtml = rows.map(ev => {
+    // HT divider
+    if (ev._ht) return `<div class="facts-ht">
+      <div class="facts-ht-line"></div>
+      <div class="facts-ht-pill">HT <span class="facts-ht-score">${ev.s1}–${ev.s2}</span></div>
+      <div class="facts-ht-line"></div>
     </div>`;
-  }).filter(Boolean).join('');
 
-  if (!rows) return '';
-  return `<div class="md-section">
-    <div class="md-section-title">📊 Match Stats</div>
-    <div class="match-stats-panel">${rows}</div>
-  </div>`;
+    const isT1 = ev.tid === result.tid1;
+    let content = '';
+
+    if (ev.sub) {
+      content = `<span class="facts-sub-in">↑ ${ev.pIn||''}</span><br><span class="facts-sub-out">↓ ${ev.p||''}</span>`;
+    } else if (ev.g) {
+      const tag  = ev.og ? ' <span class="facts-og">OG</span>' : ev.pk ? ' <span class="facts-pk">P</span>' : '';
+      const curr = isT1 ? `${ev.rs1}-${ev.rs2}` : `${ev.rs2}-${ev.rs1}`; // local perspective
+      content = `<span class="facts-scorer">⚽ ${ev.p}${tag}</span> <span class="facts-rscore">(${ev.rs1}-${ev.rs2})</span>`;
+    } else if (ev.r) {
+      content = `<span class="facts-card facts-red">🟥 ${ev.p}</span>`;
+    } else if (ev.y) {
+      content = `<span class="facts-card">🟨 ${ev.p}</span>`;
+    }
+
+    return isT1
+      ? `<div class="facts-row"><div class="facts-home">${content}</div><div class="facts-min">${ev.min}</div><div class="facts-away"></div></div>`
+      : `<div class="facts-row"><div class="facts-home"></div><div class="facts-min">${ev.min}</div><div class="facts-away">${content}</div></div>`;
+  }).join('');
+
+  return `${infoRow}<div class="facts-timeline">${rowHtml}</div>`;
 }
 
-// ── Rich sections (ESPN summary) ─────────────────────────────────────────────
+// ── LINEUP TAB ────────────────────────────────────────────────────────────────
 
-function buildMDRichSections(data, result, sched) {
-  const gameInfo = data.gameInfo || {};
-  const attendance = gameInfo.attendance;
-  const ref = (gameInfo.officials || [])
-    .find(o => (o.position?.name || o.position?.displayName || '').toLowerCase().includes('ref'))
-    ?.displayName || '';
+function buildLineupTab(result, summary) {
+  if (!result) return `<div class="md-empty">No match data.</div>`;
+  if (!summary) return `<div class="md-loading"><div class="md-spinner"></div><span>Loading lineups…</span></div>`;
 
-  // ESPN soccer summary structure:
-  //   boxscore.teams[i].statistics → team-level stats (possession, shots, etc.)
-  //   rosters[i].athletes[]        → player lineups, formations, subs (TOP-LEVEL key)
-  const boxTeams = data.boxscore?.teams || [];
-
-  // Rosters are at data.rosters[], not data.boxscore.players
-  const rosters = data.rosters || data.boxscore?.players || [];
-
+  const boxTeams   = summary.boxscore?.teams || [];
+  const boxPlayers = summary.rosters || summary.boxscore?.players || [];
   const findIn = (arr, name) =>
-    arr.find(t => {
-      const n = espnToApp(t.team?.displayName || t.displayName || t.name || '');
-      return normName(n) === normName(name);
-    });
+    arr.find(t => normName(espnToApp(t.team?.displayName || t.displayName || '')) === normName(name));
 
-  const t1Stats   = findIn(boxTeams, result.team1) || boxTeams[0] || {};
-  const t2Stats   = findIn(boxTeams, result.team2) || boxTeams[1] || {};
-  const t1Players = findIn(rosters,  result.team1) || rosters[0]  || {};
-  const t2Players = findIn(rosters,  result.team2) || rosters[1]  || {};
+  const t1S = findIn(boxTeams,   result.team1) || boxTeams[0]   || {};
+  const t2S = findIn(boxTeams,   result.team2) || boxTeams[1]   || {};
+  const t1P = findIn(boxPlayers, result.team1) || boxPlayers[0] || {};
+  const t2P = findIn(boxPlayers, result.team2) || boxPlayers[1] || {};
 
-  // Formation may be on roster entry or team entry
-  if (!t1Players.formation) t1Players.formation = t1Stats.formation || '';
-  if (!t2Players.formation) t2Players.formation = t2Stats.formation || '';
+  t1P.formation = t1P.formation || t1S.formation || '';
+  t2P.formation = t2P.formation || t2S.formation || '';
 
-  let html = '';
+  const t1Ath = mdGetAthletes(t1P), t2Ath = mdGetAthletes(t2P);
+  const t1Start = t1Ath.filter(a => a.starter);
+  const t2Start = t2Ath.filter(a => a.starter);
 
-  // Game info pill
-  if (attendance || ref) {
-    html += `<div class="md-gameinfo">
-      ${attendance ? `<span>👥 ${attendance.toLocaleString()} fans</span>` : ''}
-      ${ref        ? `<span>🟡 ${ref}</span>` : ''}
-    </div>`;
-  }
+  if (!t1Start.length && !t2Start.length)
+    return `<div class="md-empty">Lineup not available for this match.</div>`;
 
-  // Enhanced stats (passes t1Stats/t2Stats which have statistics[])
-  const enhanced = buildMDEnhancedStats(t1Stats, t2Stats, result.stats);
-  if (enhanced) {
-    html += `<div class="md-section">
-      <div class="md-section-title">📊 Match Stats</div>
-      <div class="match-stats-panel">${enhanced}</div>
-    </div>`;
-  }
+  const svg    = buildPitchSVG(t1Start, t2Start, t1P.formation, t2P.formation, result);
+  const bench1 = t1Ath.filter(a => !a.starter);
+  const bench2 = t2Ath.filter(a => !a.starter);
 
-  // Substitutions (uses t1Players/t2Players which have athletes[])
-  const subs = buildMDSubs(t1Players, t2Players, result);
-  if (subs) {
-    html += `<div class="md-section">
-      <div class="md-section-title">🔄 Substitutions</div>
-      <div class="tl-wrap">${subs}</div>
-    </div>`;
-  }
+  const pill = a => {
+    const n = a.athlete?.shortName || a.athlete?.displayName || '?';
+    return `<span class="lu-bench-pill">${a.jersey ? a.jersey+' ' : ''}${n}</span>`;
+  };
 
-  // Lineups
-  const lineups = buildMDLineups(t1Players, t2Players, result);
-  if (lineups) {
-    html += `<div class="md-section">
-      <div class="md-section-title">📋 Lineups</div>
-      ${lineups}
-    </div>`;
-  }
+  const bench = (bench1.length || bench2.length) ? `<div class="lu-bench-wrap">
+    <div class="lu-bench-title">Bench</div>
+    <div class="lu-bench-cols">
+      <div>${bench1.map(pill).join('')}</div>
+      <div class="lu-bench-col-r">${bench2.map(pill).join('')}</div>
+    </div>
+  </div>` : '';
 
-  // Match leaders
-  const pstats = buildMDPlayerStats(t1Players, t2Players, result, data);
-  if (pstats) {
-    html += `<div class="md-section">
-      <div class="md-section-title">⭐ Match Leaders</div>
-      <div class="md-leaders">${pstats}</div>
-    </div>`;
-  }
-
-  return html;
+  return `<div class="pitch-wrap">${svg}</div>${bench}`;
 }
 
-// ── Enhanced stats (summary adds passing accuracy + tackles) ──────────────────
+function mdGetAthletes(t) {
+  if (!t) return [];
+  if (Array.isArray(t.athletes)) return t.athletes;
+  if (Array.isArray(t.roster))   return t.roster;
+  const list = [];
+  for (const pg of (t.players||[])) for (const a of (pg.athletes||[])) list.push(a);
+  return list;
+}
 
-const MD_ENHANCED_DEFS = [
-  { key:'possessionPct',   label:'Possession',     fmt:v=>v+'%', isPct:true },
+function buildPitchSVG(homeAth, awayAth, homeFm, awayFm, result) {
+  const W=260, H=390, half=H/2;
+  const getRows = fm => fm ? [1,...fm.split('-').map(Number)] : [1,4,3,3];
+
+  const positions = (athletes, rows, isHome) => {
+    const sorted = [...athletes].filter(a=>a.formationPlace)
+                   .sort((a,b)=>(a.formationPlace||0)-(b.formationPlace||0));
+    const list = sorted.length ? sorted : athletes;
+    const pos=[], n=rows.length;
+    let idx=0;
+    rows.forEach((cnt,ri) => {
+      const t = n>1 ? ri/(n-1) : 0.5;
+      const y = isHome ? 338-t*(338-212) : 48+t*(155-48);
+      for(let i=0;i<cnt;i++){
+        if(idx>=list.length) break;
+        pos.push({ a:list[idx], x:(W/(cnt+1))*(i+1), y });
+        idx++;
+      }
+    });
+    return pos;
+  };
+
+  const player = ({ a, x, y }, fill) => {
+    const last  = (a.athlete?.shortName||a.athlete?.displayName||'?').split(' ').pop().slice(0,8);
+    const num   = a.jersey||'';
+    const faded = (a.subbedOut||a.didSubOut) ? ' opacity=".55"' : '';
+    return `<g${faded}>
+      <circle cx="${x}" cy="${y}" r="15" fill="${fill}" stroke="rgba(255,255,255,.75)" stroke-width="1.5"/>
+      <text x="${x}" y="${y+5}" text-anchor="middle" fill="white" font-size="10" font-weight="bold">${num}</text>
+      <text x="${x}" y="${y+26}" text-anchor="middle" fill="rgba(255,255,255,.9)" font-size="8">${last}</text>
+    </g>`;
+  };
+
+  const hp = positions(homeAth, getRows(homeFm), true);
+  const ap = positions(awayAth, getRows(awayFm), false);
+
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:280px;display:block;margin:8px auto 0">
+    <rect width="${W}" height="${H}" fill="#2a5c1a" rx="6"/>
+    <rect x="14" y="8" width="${W-28}" height="${H-16}" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="1"/>
+    <line x1="14" y1="${half}" x2="${W-14}" y2="${half}" stroke="rgba(255,255,255,.3)" stroke-width="1"/>
+    <circle cx="${W/2}" cy="${half}" r="28" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="1"/>
+    <circle cx="${W/2}" cy="${half}" r="2" fill="rgba(255,255,255,.4)"/>
+    <rect x="${W/2-44}" y="8" width="88" height="46" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="1"/>
+    <rect x="${W/2-44}" y="${H-54}" width="88" height="46" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="1"/>
+    <rect x="${W/2-20}" y="8" width="40" height="16" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="1"/>
+    <rect x="${W/2-20}" y="${H-24}" width="40" height="16" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="1"/>
+    <text x="${W/2}" y="${half-10}" text-anchor="middle" fill="rgba(255,255,255,.3)" font-size="9">${awayFm}</text>
+    <text x="${W/2}" y="${half+18}" text-anchor="middle" fill="rgba(255,255,255,.3)" font-size="9">${homeFm}</text>
+    ${ap.map(p=>player(p,'#a72020')).join('')}
+    ${hp.map(p=>player(p,'#1d4cb0')).join('')}
+  </svg>`;
+}
+
+// ── STATS TAB ─────────────────────────────────────────────────────────────────
+
+function buildStatsTab(result, summary) {
+  if (!result || result.status === 'NS')
+    return `<div class="md-empty">Stats available after the match starts.</div>`;
+
+  const boxTeams = summary?.boxscore?.teams || [];
+  const findIn   = (arr, name) =>
+    arr.find(t => normName(espnToApp(t.team?.displayName||'')) === normName(name));
+  const t1S = findIn(boxTeams, result?.team1) || boxTeams[0] || {};
+  const t2S = findIn(boxTeams, result?.team2) || boxTeams[1] || {};
+
+  return buildMDMotM(result, summary)
+       + buildMDStatBars(t1S, t2S, result?.stats)
+       + buildLeadersSection(summary)
+       + buildUserMotM(result, summary);
+}
+
+// MotM from ESPN leaders
+function buildMDMotM(result, summary) {
+  const leaders = summary?.leaders || [];
+  const cat = leaders.find(c => {
+    const n = (c.name||c.displayName||'').toLowerCase();
+    return n.includes('player')||n.includes('match')||n.includes('rating');
+  });
+  const l = cat?.leaders?.[0];
+  if (!l) return '';
+  const name = l.athlete?.shortName || l.athlete?.displayName || '';
+  const team = l.team?.displayName ? espnToApp(l.team.displayName) : '';
+  if (!name && !team) return '';
+  return `<div class="md-section md-motm-box">
+    <div class="md-section-title">⭐ Player of the Match</div>
+    <div class="md-motm-inner">
+      ${getFlag(team)}
+      <div><div class="md-motm-name">${name||team}</div><div class="md-motm-team">${team}</div></div>
+      ${l.displayValue ? `<div class="md-motm-val">${l.displayValue}</div>` : ''}
+    </div>
+  </div>`;
+}
+
+// Enhanced stats bars
+const STAT_DEFS2 = [
+  { key:'possessionPct',   label:'Possession',    fmt:v=>v+'%', isPct:true },
   { key:'totalShots',      label:'Shots' },
   { key:'shotsOnTarget',   label:'On Target' },
   { key:'saves',           label:'Saves' },
-  { key:'passingAccuracy', label:'Pass Accuracy',  fmt:v=>v+'%', isPct:true },
+  { key:'passingAccuracy', label:'Pass Accuracy', fmt:v=>v+'%', isPct:true },
   { key:'totalTackles',    label:'Tackles' },
   { key:'yellowCards',     label:'Yellow Cards' },
   { key:'wonCorners',      label:'Corners' },
   { key:'foulsCommitted',  label:'Fouls' },
   { key:'offsides',        label:'Offsides' },
 ];
-
-function getSummaryStat(teamData, key) {
-  const st = (teamData?.statistics || []).find(s =>
-    s.name === key || s.label?.toLowerCase() === key.toLowerCase()
-  );
-  if (!st) return null;
-  const v = parseFloat(st.displayValue);
-  return isNaN(v) ? st.displayValue : v;
+function getStat2(td, key) {
+  const s = (td?.statistics||[]).find(s=>s.name===key||s.label?.toLowerCase()===key.toLowerCase());
+  if(!s) return null;
+  const v=parseFloat(s.displayValue);
+  return isNaN(v)?null:v;
 }
-
-function buildMDEnhancedStats(t1, t2, existing) {
-  const s1e = existing?.t1 || {}, s2e = existing?.t2 || {};
-  const rows = MD_ENHANCED_DEFS.map(({ key, label, fmt, isPct }) => {
-    const v1 = getSummaryStat(t1, key) ?? s1e[key];
-    const v2 = getSummaryStat(t2, key) ?? s2e[key];
-    if (v1 == null && v2 == null) return '';
-    const a = parseFloat(v1) || 0, b = parseFloat(v2) || 0;
-    const total = isPct ? 100 : (a + b || 1);
-    const pct1  = Math.round((a / total) * 100);
-    const disp  = fmt || (v => Math.round(v));
+function buildMDStatBars(t1S, t2S, existing) {
+  const s1e=existing?.t1||{}, s2e=existing?.t2||{};
+  const rows = STAT_DEFS2.map(({key,label,fmt,isPct})=>{
+    const v1=getStat2(t1S,key)??s1e[key], v2=getStat2(t2S,key)??s2e[key];
+    if(v1==null&&v2==null) return '';
+    const a=parseFloat(v1)||0, b=parseFloat(v2)||0;
+    const total=isPct?100:(a+b||1), pct1=Math.round((a/total)*100);
+    const d=fmt||(v=>Math.round(v));
     return `<div class="stat-row">
-      <span class="stat-val">${disp(a)}</span>
-      <div class="stat-mid">
-        <div class="stat-bar"><div class="stat-bar-1" style="width:${pct1}%"></div><div class="stat-bar-2" style="width:${100-pct1}%"></div></div>
-        <span class="stat-label">${label}</span>
-      </div>
-      <span class="stat-val r">${disp(b)}</span>
+      <span class="stat-val">${d(a)}</span>
+      <div class="stat-mid"><div class="stat-bar"><div class="stat-bar-1" style="width:${pct1}%"></div><div class="stat-bar-2" style="width:${100-pct1}%"></div></div><span class="stat-label">${label}</span></div>
+      <span class="stat-val r">${d(b)}</span>
     </div>`;
   }).filter(Boolean).join('');
-  return rows;
+  if(!rows) return '';
+  return `<div class="md-section"><div class="md-section-title">📊 Match Stats</div><div class="match-stats-panel">${rows}</div></div>`;
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function mdGetAthletes(teamData) {
-  if (!teamData) return [];
-  // Flat athletes array (soccer rosters[] style)
-  if (Array.isArray(teamData.athletes)) return teamData.athletes;
-  // roster[] key
-  if (Array.isArray(teamData.roster)) return teamData.roster;
-  // Nested in players groups (american sports style)
-  const list = [];
-  for (const pg of (teamData.players || [])) {
-    for (const ath of (pg.athletes || [])) list.push(ath);
-  }
-  return list;
-}
-
-// ── Substitutions (from scoreboard events — accurate, no roster guesswork) ───────
-
-function buildMDSubs(t1, t2, result) {
-  // Only show substitutions when ESPN's scoreboard includes them as events
-  // (Roster data is unreliable — subbedIn/formationPlace is set on all bench players)
-  const subEvents = (result.events || []).filter(e => e.sub);
-  if (!subEvents.length) return '';
-
-  return subEvents.map(e => {
-    const isT1 = e.tid === result.tid1;
-    const line = `<span class="sub-out">↓ ${e.p}</span><span class="sub-in"> ↑ ${e.pIn}</span>`;
-    return `<div class="tl-row">
-      <div class="tl-side tl-left">${isT1 ? line : ''}</div>
-      <div class="tl-min">${e.min}</div>
-      <div class="tl-side tl-right">${!isT1 ? line : ''}</div>
-    </div>`;
-  }).join('');
-}
-
-// ── Lineups ───────────────────────────────────────────────────────────────────
-
-const POS_ORDER_MAP = {
-  GK:0, G:0,
-  CB:1, LB:1, RB:1, WB:1, D:1, DEF:1,
-  DM:2, CM:2, AM:2, M:2, MF:2, MID:2,
-  LW:3, RW:3, ST:3, CF:3, F:3, FW:3, ATT:3,
-};
-function posOrd(abbr) { return POS_ORDER_MAP[(abbr||'').toUpperCase()] ?? 2; }
-
-function buildMDLineups(t1, t2, result) {
-  const parseLineup = (teamData) => {
-    const starters = [], bench = [];
-    const formation = teamData?.formation || '';
-    mdGetAthletes(teamData).forEach(a => {
-      const p = {
-        name:      a.athlete?.shortName || a.athlete?.displayName || '?',
-        jersey:    a.jersey || '',              // direct on athlete (not a.athlete.jersey)
-        pos:       a.position?.abbreviation || '', // direct on athlete
-        subbedOut: !!(a.subbedOut || a.didSubOut),
-      };
-      (a.starter ? starters : bench).push(p);
-    });
-    starters.sort((a,b) => posOrd(a.pos) - posOrd(b.pos));
-    return { formation, starters, bench };
-  };
-
-  const l1 = parseLineup(t1), l2 = parseLineup(t2);
-  if (!l1.starters.length && !l2.starters.length) return '';
-
-  const playerCell = (p, right = false) =>
-    `<div class="lu-player${p.subbedOut ? ' lu-subbed' : ''}${right ? ' lu-r' : ''}">
-      ${right ? '' : (p.jersey ? `<span class="lu-num">${p.jersey}</span>` : '')}
-      <span class="lu-name">${p.name}</span>
-      ${p.pos ? `<span class="lu-pos">${p.pos}</span>` : ''}
-      ${p.subbedOut ? '<span class="lu-out-icon">↓</span>' : ''}
-      ${right ? (p.jersey ? `<span class="lu-num">${p.jersey}</span>` : '') : ''}
-    </div>`;
-
-  const maxLen = Math.max(l1.starters.length, l2.starters.length);
-  let rows = '';
-  for (let i = 0; i < maxLen; i++) {
-    const p1 = l1.starters[i], p2 = l2.starters[i];
-    rows += `<div class="lu-row">
-      <div class="lu-cell">${p1 ? playerCell(p1, false) : ''}</div>
-      <div class="lu-cell lu-cell-r">${p2 ? playerCell(p2, true) : ''}</div>
-    </div>`;
-  }
-
-  const benchRow = (players) => players.map(p =>
-    `<span class="lu-bench-pill">${p.jersey ? p.jersey+' ' : ''}${p.name}</span>`
-  ).join('');
-
-  return `<div class="lu-team-headers">
-    <span>${getFlag(result.team1)} ${displayName(result.team1)}${l1.formation ? ` <span class="lu-form">${l1.formation}</span>` : ''}</span>
-    <span class="lu-th-r">${l2.formation ? `<span class="lu-form">${l2.formation}</span> ` : ''}${displayName(result.team2)} ${getFlag(result.team2)}</span>
-  </div>
-  <div class="lu-grid">${rows}</div>
-  ${(l1.bench.length || l2.bench.length) ? `
-  <div class="lu-bench-wrap">
-    <div class="lu-bench-title">Bench</div>
-    <div class="lu-bench-cols">
-      <div>${benchRow(l1.bench)}</div>
-      <div class="lu-bench-col-r">${benchRow(l2.bench)}</div>
-    </div>
-  </div>` : ''}`;
-}
-
-// ── Player Stats ──────────────────────────────────────────────────────────────
-
-function buildMDPlayerStats(t1, t2, result, summaryData) {
-  const leaders = summaryData?.leaders || [];
+// Match leaders
+function buildLeadersSection(summary) {
+  const leaders = summary?.leaders || [];
   if (!leaders.length) return '';
-
-  const rows = leaders.map(cat => {
-    const catLeaders = (cat.leaders || []).slice(0, 3);
-    if (!catLeaders.length) return '';
-
-    const items = catLeaders.map(l => {
-      const name = l.athlete?.shortName || l.athlete?.displayName
-                 || l.player?.shortName  || l.player?.displayName || '';
-      const teamName = l.team?.displayName ? espnToApp(l.team.displayName) : '';
-      const flag  = teamName ? getFlag(teamName) : '';
-      const value = l.displayValue != null ? l.displayValue
-                  : (l.value != null ? String(Math.round(l.value)) : '');
-      if (!name && !teamName && !value) return '';
-      return `<div class="ldr-item">
-        ${flag}
-        <span class="ldr-name">${name || teamName}</span>
-        ${value ? `<span class="ldr-val">${value}</span>` : ''}
-      </div>`;
+  const rows = leaders.map(cat=>{
+    const cl=(cat.leaders||[]).slice(0,3);
+    if(!cl.length) return '';
+    const items=cl.map(l=>{
+      const name=l.athlete?.shortName||l.athlete?.displayName||l.player?.shortName||l.player?.displayName||'';
+      const team=l.team?.displayName?espnToApp(l.team.displayName):'';
+      const val=l.displayValue!=null?l.displayValue:(l.value!=null?String(Math.round(l.value)):'');
+      if(!name&&!team&&!val) return '';
+      return `<div class="ldr-item">${team?getFlag(team):''}<span class="ldr-name">${name||team}</span>${val?`<span class="ldr-val">${val}</span>`:''}</div>`;
     }).filter(Boolean).join('');
+    if(!items) return '';
+    return `<div class="ldr-cat"><div class="ldr-cat-title">${cat.displayName||cat.name||''}</div>${items}</div>`;
+  }).filter(Boolean).join('');
+  if(!rows) return '';
+  return `<div class="md-section"><div class="md-section-title">⭐ Match Leaders</div><div class="md-leaders">${rows}</div></div>`;
+}
 
-    if (!items) return '';
-    return `<div class="ldr-cat">
-      <div class="ldr-cat-title">${cat.displayName || cat.name || ''}</div>
-      ${items}
-    </div>`;
+// User MotM picker
+function buildUserMotM(result, summary) {
+  const key = `wc2026_motm_${MD.schedId}`;
+  const saved = localStorage.getItem(key) || '';
+
+  const boxPlayers = summary?.rosters || summary?.boxscore?.players || [];
+  const findIn = (arr, name) =>
+    arr.find(t => normName(espnToApp(t.team?.displayName||t.displayName||'')) === normName(name));
+  const t1P = findIn(boxPlayers, result.team1) || boxPlayers[0];
+  const t2P = findIn(boxPlayers, result.team2) || boxPlayers[1];
+  const t1A = mdGetAthletes(t1P||{}).filter(a=>a.starter||a.subbedIn);
+  const t2A = mdGetAthletes(t2P||{}).filter(a=>a.starter||a.subbedIn);
+  const allA = [
+    ...t1A.map(a=>({...a,side:1})),
+    ...t2A.map(a=>({...a,side:2})),
+  ];
+  if (!allA.length) return '';
+
+  const divider = `<div class="motm-divider">${getFlag(result.team2)} ${displayName(result.team2)}</div>`;
+  let crossedSide = false;
+  const btns = allA.map(a => {
+    const n = a.athlete?.shortName || a.athlete?.displayName || '';
+    if (!n) return '';
+    let div = '';
+    if (a.side === 2 && !crossedSide) { div = divider; crossedSide = true; }
+    const picked = saved === n;
+    return div + `<button class="motm-pick-btn${picked?' motm-picked':''}" onclick="pickMotM('${n.replace(/'/g,"\\'")}')">
+      ${picked?'⭐ ':''}${n}
+    </button>`;
   }).filter(Boolean).join('');
 
-  return rows || '';
+  return `<div class="md-section">
+    <div class="md-section-title">🌟 Your Man of the Match${saved?` · <span style="color:var(--gold)">${saved}</span>`:''}</div>
+    <div class="motm-picker-wrap">
+      <div class="motm-team-label">${getFlag(result.team1)} ${displayName(result.team1)}</div>
+      <div class="motm-options">${btns}</div>
+    </div>
+  </div>`;
+}
+
+function pickMotM(name) {
+  const key = `wc2026_motm_${MD.schedId}`;
+  if (name && localStorage.getItem(key) !== name) localStorage.setItem(key, name);
+  else localStorage.removeItem(key);
+  const tc = document.getElementById('md-tab-content');
+  if (tc && MD.tab === 'stats') { tc.innerHTML = renderTab('stats'); }
+}
+
+// ── Compatibility stubs (called from other files) ─────────────────────────────
+function buildMDRichSections() { return ''; }
+function buildMDBasicStats()   { return ''; }
+function buildMDEnhancedStats(){ return ''; }
+function buildMDPlayerStats(t1,t2,r,s){ return buildLeadersSection(s); }
+function buildMDSubs(t1,t2,r){
+  const ev=(r?.events||[]).filter(e=>e.sub);
+  if(!ev.length) return '';
+  return ev.map(e=>{
+    const isT1=e.tid===r.tid1;
+    const l=`<span class="sub-out">↓ ${e.p}</span><span class="sub-in"> ↑ ${e.pIn}</span>`;
+    return `<div class="tl-row"><div class="tl-side tl-left">${isT1?l:''}</div><div class="tl-min">${e.min}</div><div class="tl-side tl-right">${!isT1?l:''}</div></div>`;
+  }).join('');
 }

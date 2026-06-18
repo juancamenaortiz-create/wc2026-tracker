@@ -1688,3 +1688,84 @@ td.ps-name { color: var(--white); font-weight: 600; }
 .ldr-item:last-child { border-bottom: none; }
 .ldr-name { flex: 1; color: var(--white); font-weight: 600; }
 .ldr-val { font-size: 13px; font-weight: 800; color: var(--gold); }
+
+/* ── 3-Tab Modal ── */
+.md-tabs {
+  display: flex; border-bottom: 1px solid var(--border);
+  background: var(--navy4); flex-shrink: 0;
+}
+.md-tab-btn {
+  flex: 1; background: none; border: none;
+  color: var(--muted); font-size: 13px; font-weight: 600;
+  padding: 10px 0; cursor: pointer; letter-spacing: .03em;
+  border-bottom: 2px solid transparent; transition: all .15s;
+}
+.md-tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+/* ── Header scorers row ── */
+.md-scorers-row {
+  display: flex; justify-content: space-between;
+  font-size: 10px; color: var(--muted); padding: 4px 0 0;
+  gap: 8px;
+}
+.md-scorers-row span { flex: 1; }
+.md-scorers-row span:last-child { text-align: right; }
+
+/* ── Facts Tab Timeline ── */
+.facts-timeline { padding: 4px 0 16px; }
+.facts-row {
+  display: grid; grid-template-columns: 1fr 44px 1fr;
+  min-height: 28px; align-items: center; gap: 2px;
+  padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,.03);
+}
+.facts-row:last-child { border-bottom: none; }
+.facts-home { text-align: right; padding-right: 6px; font-size: 11px; color: var(--white); }
+.facts-away { text-align: left;  padding-left:  6px; font-size: 11px; color: var(--white); }
+.facts-min  { text-align: center; font-size: 10px; font-weight: 700; color: var(--muted); white-space: nowrap; }
+.facts-scorer { font-weight: 600; }
+.facts-rscore { font-size: 10px; color: var(--gold); font-weight: 700; }
+.facts-og { font-size: 9px; background: rgba(239,68,68,.2); color: #f87171; border-radius: 3px; padding: 1px 4px; }
+.facts-pk { font-size: 9px; background: rgba(212,175,55,.2); color: var(--gold); border-radius: 3px; padding: 1px 4px; }
+.facts-sub-in  { color: #4ade80; font-size: 11px; font-weight: 600; }
+.facts-sub-out { color: #f87171; font-size: 11px; }
+.facts-card { font-size: 11px; }
+
+/* HT divider */
+.facts-ht {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 12px; margin: 4px 0;
+}
+.facts-ht-line { flex: 1; height: 1px; background: var(--dim); }
+.facts-ht-pill {
+  font-size: 11px; font-weight: 700; color: var(--muted);
+  background: var(--navy4); border: 1px solid var(--border);
+  border-radius: 20px; padding: 3px 10px; white-space: nowrap;
+  flex-shrink: 0;
+}
+.facts-ht-score { color: var(--white); margin-left: 4px; }
+
+/* ── Pitch SVG wrap ── */
+.pitch-wrap { padding: 8px 0; }
+
+/* ── MotM (ESPN) ── */
+.md-motm-box { }
+.md-motm-inner { display: flex; align-items: center; gap: 10px; padding: 10px 12px; }
+.md-motm-name { font-size: 15px; font-weight: 700; color: var(--white); }
+.md-motm-team { font-size: 11px; color: var(--muted); }
+.md-motm-val  { margin-left: auto; font-size: 22px; font-weight: 900; color: var(--gold); }
+
+/* ── User MotM picker ── */
+.motm-picker-wrap { padding: 6px 10px 10px; }
+.motm-team-label  { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+.motm-divider     { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin: 8px 0 6px; }
+.motm-options     { display: flex; flex-wrap: wrap; gap: 6px; }
+.motm-pick-btn {
+  background: var(--navy4); border: 1px solid var(--border);
+  color: var(--muted); font-size: 11px; font-weight: 600;
+  padding: 5px 10px; border-radius: 20px; cursor: pointer;
+  transition: all .15s;
+}
+.motm-pick-btn.motm-picked {
+  background: rgba(212,175,55,.15); border-color: var(--gold);
+  color: var(--gold);
+}

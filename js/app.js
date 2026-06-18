@@ -139,15 +139,27 @@ async function fetchFromESPN() {
   // Fetch today + yesterday so we catch scores even if opened late
   // Build date list: yesterday–3 days ago (local) + today's UTC date
   // Late CT games (e.g. 11 PM CDT = 4 AM UTC next day) may appear under the next UTC date in ESPN
-  // Fetch ALL tournament dates (June 11 → tomorrow UTC) in parallel
-  // so historical matches are visible even on fresh installs
+  // Date strategy: always fetch recent 4 days (live + recent FT).
+  // On first load of a new device, also fetch full tournament history (Jun 11 → today)
+  // to bootstrap historical matches — this runs once, then localStorage takes over.
   const datesToFetch = new Set();
-  const start = new Date('2026-06-11T00:00:00Z');
-  const end   = new Date(Date.now() + 86400000); // tomorrow UTC
-  for (const d = new Date(start); d <= end; d.setUTCDate(d.getUTCDate() + 1)) {
-    datesToFetch.add(
-      `${d.getUTCFullYear()}${String(d.getUTCMonth()+1).padStart(2,'0')}${String(d.getUTCDate()).padStart(2,'0')}`
-    );
+  const utcStr = d => `${d.getUTCFullYear()}${String(d.getUTCMonth()+1).padStart(2,'0')}${String(d.getUTCDate()).padStart(2,'0')}`;
+
+  // Always: last 4 days (local) + tomorrow UTC (catches late CT → early UTC games)
+  for (let back = 0; back <= 3; back++) {
+    const d = new Date(Date.now() - back * 86400000);
+    datesToFetch.add(utcStr(d));
+  }
+  datesToFetch.add(utcStr(new Date(Date.now() + 86400000)));
+
+  // One-time bootstrap: if this device has never seen history, fetch it all now
+  const bootstrapped = localStorage.getItem('wc2026_bootstrapped');
+  if (!bootstrapped) {
+    const start = new Date('2026-06-11T00:00:00Z');
+    const cutoff = new Date(Date.now() - 4 * 86400000); // everything older than 4 days
+    for (const d = new Date(start); d < cutoff; d.setUTCDate(d.getUTCDate() + 1)) {
+      datesToFetch.add(utcStr(d));
+    }
   }
 
   // Fetch all dates in parallel for speed
@@ -316,6 +328,10 @@ async function fetchScores() {
       results: STATE.results,
       timestamp: STATE.lastUpdated.toISOString(),
     }));
+    // Mark bootstrap complete so we don't re-fetch full history next time
+    if (!localStorage.getItem('wc2026_bootstrapped')) {
+      localStorage.setItem('wc2026_bootstrapped', '1');
+    }
     console.log(`Scores updated via ${source}: ${merged.filter(m=>m.status==='FT').length} FT, ${merged.filter(m=>m.status==='LIVE').length} LIVE`);
     updateStatusUI();
     renderActiveTab();

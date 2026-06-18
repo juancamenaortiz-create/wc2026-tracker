@@ -15,6 +15,62 @@ const STATE = {
 };
 
 // ── Init ─────────────────────────────────────
+// Background history bootstrap — runs once after first successful fetch
+// Quietly fetches historical dates and merges FT results into local cache
+async function bootstrapHistory() {
+  const utcStr  = d => `${d.getUTCFullYear()}${String(d.getUTCMonth()+1).padStart(2,'0')}${String(d.getUTCDate()).padStart(2,'0')}`;
+  const cutoff  = new Date(Date.now() - 4 * 86400000);
+  const start   = new Date('2026-06-11T00:00:00Z');
+  const dates   = [];
+  for (let d = new Date(start); d < cutoff; d.setUTCDate(d.getUTCDate() + 1)) {
+    dates.push(utcStr(new Date(d)));
+  }
+  // Sequentially fetch historical dates in background — no rush, no timeout pressure
+  for (const ds of dates) {
+    try {
+      const ac = new AbortController();
+      const t  = setTimeout(() => ac.abort(), 6000);
+      const r  = await fetch(
+        `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=${ds}`,
+        { signal: ac.signal }
+      ).finally(() => clearTimeout(t));
+      if (!r || !r.ok) continue;
+      const data = await r.json();
+      // Re-use fetchFromESPN's event processing by doing a mini-parse
+      for (const ev of (data.events || [])) {
+        const comp = ev.competitions?.[0];
+        if (!comp) continue;
+        const st = comp.status?.type || {};
+        if (!st.completed) continue; // only care about FT for historical
+        const cs = comp.competitors || [];
+        const home = cs.find(c => c.homeAway==='home') || cs[0];
+        const away = cs.find(c => c.homeAway==='away') || cs[1];
+        if (!home || !away) continue;
+        const n1 = espnToApp(home.team?.displayName||'');
+        const n2 = espnToApp(away.team?.displayName||'');
+        const m  = SCHEDULE.find(m =>
+          (normName(m.t1)===normName(n1) && normName(m.t2)===normName(n2)) ||
+          (normName(m.t1)===normName(n2) && normName(m.t2)===normName(n1))
+        );
+        if (!m || STATE.results.groupMatches.find(r => r.matchId===m.id)) continue;
+        const flip = normName(m.t1)===normName(n2);
+        const s1=parseInt(home.score)||0, s2=parseInt(away.score)||0;
+        STATE.results.groupMatches.push({
+          matchId:m.id, espnId:ev.id,
+          team1:m.t1, team2:m.t2,
+          score1:flip?s2:s1, score2:flip?s1:s2,
+          status:'FT', substatus:'', tid1:'', tid2:'',
+          events:[], stats:null,
+        });
+      }
+      localStorage.setItem('wc2026_results', JSON.stringify({
+        results: STATE.results, timestamp: new Date().toISOString()
+      }));
+    } catch(_) { /* silent fail for individual dates */ }
+  }
+  renderActiveTab(); // refresh display with newly loaded historical matches
+}
+
 function init() {
   try { STATE.myTeams = JSON.parse(localStorage.getItem('wc2026_myteams') || '[]'); } catch(e) { STATE.myTeams = []; }
   loadPreviewCache();
@@ -139,41 +195,29 @@ async function fetchFromESPN() {
   // Fetch today + yesterday so we catch scores even if opened late
   // Build date list: yesterday–3 days ago (local) + today's UTC date
   // Late CT games (e.g. 11 PM CDT = 4 AM UTC next day) may appear under the next UTC date in ESPN
-  // Date strategy: always fetch recent 4 days (live + recent FT).
-  // On first load of a new device, also fetch full tournament history (Jun 11 → today)
-  // to bootstrap historical matches — this runs once, then localStorage takes over.
-  const datesToFetch = new Set();
+  // Recent dates — fast sequential fetch (3-5 requests, 5s timeout each)
   const utcStr = d => `${d.getUTCFullYear()}${String(d.getUTCMonth()+1).padStart(2,'0')}${String(d.getUTCDate()).padStart(2,'0')}`;
-
-  // Always: last 4 days (local) + tomorrow UTC (catches late CT → early UTC games)
+  const datesToFetch = new Set();
   for (let back = 0; back <= 3; back++) {
-    const d = new Date(Date.now() - back * 86400000);
-    datesToFetch.add(utcStr(d));
+    datesToFetch.add(utcStr(new Date(Date.now() - back * 86400000)));
   }
-  datesToFetch.add(utcStr(new Date(Date.now() + 86400000)));
+  datesToFetch.add(utcStr(new Date(Date.now() + 86400000))); // tomorrow UTC
 
-  // One-time bootstrap: if this device has never seen history, fetch it all now
-  const bootstrapped = localStorage.getItem('wc2026_bootstrapped');
-  if (!bootstrapped) {
-    const start = new Date('2026-06-11T00:00:00Z');
-    const cutoff = new Date(Date.now() - 4 * 86400000); // everything older than 4 days
-    for (const d = new Date(start); d < cutoff; d.setUTCDate(d.getUTCDate() + 1)) {
-      datesToFetch.add(utcStr(d));
-    }
-  }
+  // Helper: fetch with broad-compat timeout (AbortController, not AbortSignal.timeout)
+  const fetchDate = ds => {
+    const ac = new AbortController();
+    const t  = setTimeout(() => ac.abort(), 5000);
+    return fetch(
+      `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=${ds}`,
+      { signal: ac.signal }
+    ).then(r => r.ok ? r.json() : null)
+     .catch(() => null)
+     .finally(() => clearTimeout(t));
+  };
 
-  // Fetch all dates in parallel for speed
-  const dateResponses = await Promise.allSettled(
-    [...datesToFetch].map(ds =>
-      fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=${ds}`,
-        { signal: AbortSignal.timeout(10000) })
-        .then(r => r.ok ? r.json() : null)
-        .catch(() => null)
-    )
-  );
-
-  for (const { value: data } of dateResponses) {
+  for (const ds of datesToFetch) {
     try {
+      const data = await fetchDate(ds);
       if (!data) continue;
       for (const ev of (data.events || [])) {
         const comp = ev.competitions?.[0];
@@ -276,7 +320,7 @@ async function fetchFromESPN() {
           },
         });
       }
-    } catch(_) { /* skip on parse error */ }
+    } catch(_) { /* skip date */ }
   }
   // Return what we found — empty list is valid on non-match days
   return { groupMatches: found, knockoutMatches: [], unmatched };
@@ -328,9 +372,11 @@ async function fetchScores() {
       results: STATE.results,
       timestamp: STATE.lastUpdated.toISOString(),
     }));
-    // Mark bootstrap complete so we don't re-fetch full history next time
+    // One-time background bootstrap: fetch historical dates for new devices
+    // Runs after initial render so it doesn't block the app loading
     if (!localStorage.getItem('wc2026_bootstrapped')) {
       localStorage.setItem('wc2026_bootstrapped', '1');
+      bootstrapHistory().catch(() => {}); // fire-and-forget
     }
     console.log(`Scores updated via ${source}: ${merged.filter(m=>m.status==='FT').length} FT, ${merged.filter(m=>m.status==='LIVE').length} LIVE`);
     updateStatusUI();

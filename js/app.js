@@ -71,6 +71,130 @@ async function bootstrapHistory() {
   renderActiveTab(); // refresh display with newly loaded historical matches
 }
 
+// ── Static results JSON ──────────────────────────────────────────────────────
+// Load /data/results.json from the server (static file committed to repo).
+// Acts as historical baseline; localStorage + ESPN always override it.
+async function loadStaticResults() {
+  try {
+    // Try KV-backed endpoint first (/api/sync GET); fall back to /data/results.json
+    let data = null;
+    try {
+      const r = await fetch('/api/sync');
+      if (r.ok) data = await r.json();
+    } catch(e) {}
+    if (!data || !data.matches) {
+      const r2 = await fetch('/data/results.json');
+      if (r2.ok) data = await r2.json();
+    }
+    const matches = (data && data.matches) || [];
+    if (!matches.length) return;
+    // KV/static data is baseline — localStorage + ESPN takes precedence
+    STATE.results.groupMatches = mergeResults(matches, STATE.results.groupMatches);
+    renderActiveTab();
+    console.log('[KV] Loaded ' + matches.length + ' historical matches');
+  } catch(e) { /* KV unavailable — continue without historical data */ }
+}
+
+// Async init chain: static JSON → ESPN (if stale)
+async function _initAsync() {
+  await loadStaticResults();
+  const cacheAge = STATE.lastUpdated ? (Date.now() - STATE.lastUpdated.getTime()) : Infinity;
+  if (cacheAge > 5 * 60 * 1000) {
+    fetchScores();
+  } else {
+    scheduleNextRefresh();
+  }
+}
+
+// ── Sync older games (called from Settings) ───────────────────────────────────
+// Fetches ESPN for every tournament day older than 2 days, one day at a time.
+// Shows live progress in the settings modal. After sync, user can download JSON.
+async function syncHistory() {
+  const btn  = document.getElementById('sync-history-btn');
+  const prog = document.getElementById('sync-progress');
+  const dlBtn= document.getElementById('export-json-btn');
+  if (btn)  btn.disabled = true;
+  if (prog) { prog.style.display = ''; prog.innerHTML = 'Syncing…'; }
+  if (dlBtn) dlBtn.style.display = 'none';
+
+  const utcStr  = d => `${d.getUTCFullYear()}${String(d.getUTCMonth()+1).padStart(2,'0')}${String(d.getUTCDate()).padStart(2,'0')}`;
+  const start   = new Date('2026-06-11T00:00:00Z');
+  const cutoff  = new Date(Date.now() - 2 * 86400000);
+  const dates   = [];
+  for (let d = new Date(start); d <= cutoff; d.setUTCDate(d.getUTCDate() + 1)) {
+    dates.push(utcStr(new Date(d)));
+  }
+
+  if (!dates.length) {
+    if (prog) prog.innerHTML = '\u2705 Nothing to sync yet.';
+    if (btn)  btn.disabled = false;
+    return;
+  }
+
+  try {
+    if (prog) prog.innerHTML = '\uD83D\uDCE1 Sending dates to server…';
+    // POST all dates to /api/sync — server fetches ESPN, merges into KV, returns results
+    const r = await fetch('/api/sync', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ dates }),
+    });
+    if (!r.ok) throw new Error('Server returned ' + r.status);
+    const result = await r.json();
+
+    // Reload KV data into the app
+    await loadStaticResults();
+
+    if (prog) prog.innerHTML = '\u2705 Done! Synced ' + result.synced + ' matches ('
+      + result.total + ' total). All users now see this data automatically.';
+    if (dlBtn) dlBtn.style.display = ''; // still offer JSON download as backup
+  } catch(e) {
+    // Fallback: client-side ESPN fetch (same as before KV)
+    if (prog) prog.innerHTML = '\u26A0\uFE0F Server sync failed, trying direct…';
+    let totalMatches = 0;
+    for (let i = 0; i < dates.length; i++) {
+      const ds = dates[i];
+      if (prog) prog.innerHTML = '\uD83D\uDCE1 Fetching ' + ds.slice(0,4)+'-'+ds.slice(4,6)+'-'+ds.slice(6) + ' (' + (i+1) + '/' + dates.length + ')…';
+      try {
+        const fresh = await fetchFromESPN(new Set([ds]));
+        if (fresh.groupMatches.length) {
+          STATE.results.groupMatches = mergeResults(STATE.results.groupMatches, fresh.groupMatches);
+          totalMatches += fresh.groupMatches.length;
+          renderActiveTab();
+        }
+      } catch(_) {}
+      await new Promise(res => setTimeout(res, 300));
+    }
+    try { localStorage.setItem('wc2026_results', JSON.stringify({ results: STATE.results, timestamp: new Date().toISOString() })); } catch(_) {}
+    if (prog) prog.innerHTML = '\u2705 Done (local only)! Found ' + totalMatches + ' matches.';
+    if (dlBtn) dlBtn.style.display = '';
+  }
+
+  if (btn) btn.disabled = false;
+}
+
+// ── Export results.json (called from Settings after sync) ─────────────────────
+// Generates a JSON file the user can save to /data/results.json in the repo.
+// Committing that file gives every new visitor instant historical data.
+function exportResults() {
+  const ftMatches = STATE.results.groupMatches.filter(function(m) { return m.status === 'FT'; });
+  const out = {
+    asOf: new Date().toISOString().split('T')[0],
+    _note: 'Static cache of completed WC2026 group-stage matches. Commit to /data/results.json.',
+    matches: ftMatches,
+  };
+  const json = JSON.stringify(out, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = 'results.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 function init() {
   try { STATE.myTeams = JSON.parse(localStorage.getItem('wc2026_myteams') || '[]'); } catch(e) { STATE.myTeams = []; }
   loadPreviewCache();
@@ -82,13 +206,8 @@ function init() {
   navigateTo('today');
   initTimezone();
 
-  // Start adaptive refresh: 1 min via ESPN (free), 60 min via Claude (costs money)
-  const cacheAge = STATE.lastUpdated ? (Date.now() - STATE.lastUpdated.getTime()) : Infinity;
-  if (cacheAge > 5 * 60 * 1000) {
-    fetchScores(); // scheduleNextRefresh() is called inside fetchScores's finally block
-  } else {
-    scheduleNextRefresh();
-  }
+  // Load static JSON first (fills historical gaps), then fetch live ESPN data
+  _initAsync();
 
   // Re-check on tab focus — fetch if stale
   document.addEventListener('visibilitychange', () => {
@@ -189,21 +308,20 @@ const ESPN_NAMES = {
 };
 function espnToApp(n) { return ESPN_NAMES[n] || n || ''; }
 
-async function fetchFromESPN() {
+async function fetchFromESPN(overrideDates) {
   const found = [];
   const unmatched = []; // collect any ESPN teams we can't match
-  // Fetch today + yesterday so we catch scores even if opened late
-  // Build date list: yesterday–3 days ago (local) + today's UTC date
-  // Late CT games (e.g. 11 PM CDT = 4 AM UTC next day) may appear under the next UTC date in ESPN
-  // Only fetch recent dates in the blocking path — keeps startup fast (3-5 requests)
   const utcStr = d => `${d.getUTCFullYear()}${String(d.getUTCMonth()+1).padStart(2,'0')}${String(d.getUTCDate()).padStart(2,'0')}`;
-  const recentDates = new Set();
-  for (let back = 0; back <= 3; back++) {
-    recentDates.add(utcStr(new Date(Date.now() - back * 86400000)));
-  }
-  recentDates.add(utcStr(new Date(Date.now() + 86400000))); // tomorrow UTC
 
-  for (const ds of recentDates) {
+  // If called from syncHistory, use the provided date(s); otherwise build the recent window
+  const datesToQuery = overrideDates || (() => {
+    const s = new Set();
+    for (let back = 0; back <= 3; back++) s.add(utcStr(new Date(Date.now() - back * 86400000)));
+    s.add(utcStr(new Date(Date.now() + 86400000))); // tomorrow UTC
+    return s;
+  })();
+
+  for (const ds of datesToQuery) {
     try {
       const ac = new AbortController();
       const t  = setTimeout(() => ac.abort(), 6000);

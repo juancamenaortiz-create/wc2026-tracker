@@ -139,27 +139,30 @@ async function fetchFromESPN() {
   // Fetch today + yesterday so we catch scores even if opened late
   // Build date list: yesterday–3 days ago (local) + today's UTC date
   // Late CT games (e.g. 11 PM CDT = 4 AM UTC next day) may appear under the next UTC date in ESPN
+  // Fetch ALL tournament dates (June 11 → tomorrow UTC) in parallel
+  // so historical matches are visible even on fresh installs
   const datesToFetch = new Set();
-  for (let back = 0; back <= 3; back++) {
-    const d = new Date();
-    d.setDate(d.getDate() - back);
-    // Local date (handles evening CT games staying on the right local day)
-    datesToFetch.add(`${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`);
+  const start = new Date('2026-06-11T00:00:00Z');
+  const end   = new Date(Date.now() + 86400000); // tomorrow UTC
+  for (const d = new Date(start); d <= end; d.setUTCDate(d.getUTCDate() + 1)) {
+    datesToFetch.add(
+      `${d.getUTCFullYear()}${String(d.getUTCMonth()+1).padStart(2,'0')}${String(d.getUTCDate()).padStart(2,'0')}`
+    );
   }
-  // Also add the CURRENT UTC date — late CT games (e.g. 11 PM CDT = 4 AM UTC June 14)
-  // get filed under the *next* UTC date in ESPN, which differs from the local CT date.
-  // Bug that was here: we used Date.now()+86400000 (tomorrow UTC) instead of today UTC.
-  const utcNow = new Date();
-  datesToFetch.add(`${utcNow.getUTCFullYear()}${String(utcNow.getUTCMonth()+1).padStart(2,'0')}${String(utcNow.getUTCDate()).padStart(2,'0')}`);
 
-  for (const ds of datesToFetch) {
+  // Fetch all dates in parallel for speed
+  const dateResponses = await Promise.allSettled(
+    [...datesToFetch].map(ds =>
+      fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=${ds}`,
+        { signal: AbortSignal.timeout(10000) })
+        .then(r => r.ok ? r.json() : null)
+        .catch(() => null)
+    )
+  );
+
+  for (const { value: data } of dateResponses) {
     try {
-      const r = await fetch(
-        `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=${ds}`,
-        { signal: AbortSignal.timeout(7000) }
-      );
-      if (!r.ok) continue;
-      const data = await r.json();
+      if (!data) continue;
       for (const ev of (data.events || [])) {
         const comp = ev.competitions?.[0];
         if (!comp) continue;
@@ -261,7 +264,7 @@ async function fetchFromESPN() {
           },
         });
       }
-    } catch(_) { /* skip date on network error */ }
+    } catch(_) { /* skip on parse error */ }
   }
   // Return what we found — empty list is valid on non-match days
   return { groupMatches: found, knockoutMatches: [], unmatched };
@@ -757,7 +760,6 @@ function showToast(msg) {
 
 // ── Settings ──────────────────────────────────
 function openSettings() {
-  renderNotifSetting();
   const m = document.getElementById('settings-modal');
   if (!m) return;
 

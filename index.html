@@ -82,6 +82,18 @@
         <button class="modal-btn" onclick="clearCache()">Clear</button>
       </div>
 
+      <div class="modal-row modal-row-col">
+        <div>
+          <div class="modal-row-name">&#128229; Game History</div>
+          <div class="modal-row-label">Fetch all completed matches from Jun 11 for accurate standings &amp; bracket</div>
+        </div>
+        <div class="sync-row">
+          <button id="sync-history-btn" class="modal-btn" onclick="syncHistory()">&#x1F504; Sync Older Games</button>
+          <button id="export-json-btn" class="modal-btn" style="display:none" onclick="exportResults()">&#128190; Download results.json</button>
+        </div>
+        <div id="sync-progress" style="display:none;font-size:11px;color:var(--muted);padding:6px 0 2px;line-height:1.5"></div>
+      </div>
+
       <div class="modal-row">
         <div>
           <div class="modal-row-name">Auto-refresh</div>

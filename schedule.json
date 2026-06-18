@@ -1,0 +1,506 @@
+[
+    {
+        "id": 1,
+        "t1": "Mexico",
+        "t2": "South Africa",
+        "g": "A",
+        "date": "2026-06-11"
+    },
+    {
+        "id": 2,
+        "t1": "South Korea",
+        "t2": "Czechia",
+        "g": "A",
+        "date": "2026-06-11"
+    },
+    {
+        "id": 3,
+        "t1": "Canada",
+        "t2": "Bosnia & Herzegovina",
+        "g": "B",
+        "date": "2026-06-12"
+    },
+    {
+        "id": 4,
+        "t1": "USA",
+        "t2": "Paraguay",
+        "g": "D",
+        "date": "2026-06-12"
+    },
+    {
+        "id": 5,
+        "t1": "Qatar",
+        "t2": "Switzerland",
+        "g": "B",
+        "date": "2026-06-13"
+    },
+    {
+        "id": 6,
+        "t1": "Brazil",
+        "t2": "Morocco",
+        "g": "C",
+        "date": "2026-06-13"
+    },
+    {
+        "id": 7,
+        "t1": "Haiti",
+        "t2": "Scotland",
+        "g": "C",
+        "date": "2026-06-13"
+    },
+    {
+        "id": 8,
+        "t1": "Australia",
+        "t2": "T\u00fcrkiye",
+        "g": "D",
+        "date": "2026-06-13"
+    },
+    {
+        "id": 9,
+        "t1": "Germany",
+        "t2": "Cura\u00e7ao",
+        "g": "E",
+        "date": "2026-06-14"
+    },
+    {
+        "id": 10,
+        "t1": "Netherlands",
+        "t2": "Japan",
+        "g": "F",
+        "date": "2026-06-14"
+    },
+    {
+        "id": 11,
+        "t1": "Ivory Coast",
+        "t2": "Ecuador",
+        "g": "E",
+        "date": "2026-06-14"
+    },
+    {
+        "id": 12,
+        "t1": "Tunisia",
+        "t2": "Sweden",
+        "g": "F",
+        "date": "2026-06-14"
+    },
+    {
+        "id": 13,
+        "t1": "Spain",
+        "t2": "Cape Verde",
+        "g": "H",
+        "date": "2026-06-15"
+    },
+    {
+        "id": 14,
+        "t1": "Belgium",
+        "t2": "Egypt",
+        "g": "G",
+        "date": "2026-06-15"
+    },
+    {
+        "id": 15,
+        "t1": "Saudi Arabia",
+        "t2": "Uruguay",
+        "g": "H",
+        "date": "2026-06-15"
+    },
+    {
+        "id": 16,
+        "t1": "Iran",
+        "t2": "New Zealand",
+        "g": "G",
+        "date": "2026-06-15"
+    },
+    {
+        "id": 17,
+        "t1": "France",
+        "t2": "Senegal",
+        "g": "I",
+        "date": "2026-06-16"
+    },
+    {
+        "id": 18,
+        "t1": "Iraq",
+        "t2": "Norway",
+        "g": "I",
+        "date": "2026-06-16"
+    },
+    {
+        "id": 19,
+        "t1": "Argentina",
+        "t2": "Algeria",
+        "g": "J",
+        "date": "2026-06-16"
+    },
+    {
+        "id": 20,
+        "t1": "Austria",
+        "t2": "Jordan",
+        "g": "J",
+        "date": "2026-06-16"
+    },
+    {
+        "id": 21,
+        "t1": "Portugal",
+        "t2": "Congo DR",
+        "g": "K",
+        "date": "2026-06-17"
+    },
+    {
+        "id": 22,
+        "t1": "England",
+        "t2": "Croatia",
+        "g": "L",
+        "date": "2026-06-17"
+    },
+    {
+        "id": 23,
+        "t1": "Ghana",
+        "t2": "Panama",
+        "g": "L",
+        "date": "2026-06-17"
+    },
+    {
+        "id": 24,
+        "t1": "Uzbekistan",
+        "t2": "Colombia",
+        "g": "K",
+        "date": "2026-06-17"
+    },
+    {
+        "id": 25,
+        "t1": "Czechia",
+        "t2": "South Africa",
+        "g": "A",
+        "date": "2026-06-18"
+    },
+    {
+        "id": 26,
+        "t1": "Switzerland",
+        "t2": "Bosnia & Herzegovina",
+        "g": "B",
+        "date": "2026-06-18"
+    },
+    {
+        "id": 27,
+        "t1": "Canada",
+        "t2": "Qatar",
+        "g": "B",
+        "date": "2026-06-18"
+    },
+    {
+        "id": 28,
+        "t1": "Mexico",
+        "t2": "South Korea",
+        "g": "A",
+        "date": "2026-06-18"
+    },
+    {
+        "id": 29,
+        "t1": "USA",
+        "t2": "Australia",
+        "g": "D",
+        "date": "2026-06-19"
+    },
+    {
+        "id": 30,
+        "t1": "Scotland",
+        "t2": "Morocco",
+        "g": "C",
+        "date": "2026-06-19"
+    },
+    {
+        "id": 31,
+        "t1": "Brazil",
+        "t2": "Haiti",
+        "g": "C",
+        "date": "2026-06-19"
+    },
+    {
+        "id": 32,
+        "t1": "T\u00fcrkiye",
+        "t2": "Paraguay",
+        "g": "D",
+        "date": "2026-06-19"
+    },
+    {
+        "id": 33,
+        "t1": "Netherlands",
+        "t2": "Sweden",
+        "g": "F",
+        "date": "2026-06-20"
+    },
+    {
+        "id": 34,
+        "t1": "Germany",
+        "t2": "Ivory Coast",
+        "g": "E",
+        "date": "2026-06-20"
+    },
+    {
+        "id": 35,
+        "t1": "Ecuador",
+        "t2": "Cura\u00e7ao",
+        "g": "E",
+        "date": "2026-06-20"
+    },
+    {
+        "id": 36,
+        "t1": "Tunisia",
+        "t2": "Japan",
+        "g": "F",
+        "date": "2026-06-20"
+    },
+    {
+        "id": 37,
+        "t1": "Spain",
+        "t2": "Saudi Arabia",
+        "g": "H",
+        "date": "2026-06-21"
+    },
+    {
+        "id": 38,
+        "t1": "Belgium",
+        "t2": "Iran",
+        "g": "G",
+        "date": "2026-06-21"
+    },
+    {
+        "id": 39,
+        "t1": "Uruguay",
+        "t2": "Cape Verde",
+        "g": "H",
+        "date": "2026-06-21"
+    },
+    {
+        "id": 40,
+        "t1": "New Zealand",
+        "t2": "Egypt",
+        "g": "G",
+        "date": "2026-06-21"
+    },
+    {
+        "id": 41,
+        "t1": "Argentina",
+        "t2": "Austria",
+        "g": "J",
+        "date": "2026-06-22"
+    },
+    {
+        "id": 42,
+        "t1": "France",
+        "t2": "Iraq",
+        "g": "I",
+        "date": "2026-06-22"
+    },
+    {
+        "id": 43,
+        "t1": "Norway",
+        "t2": "Senegal",
+        "g": "I",
+        "date": "2026-06-22"
+    },
+    {
+        "id": 44,
+        "t1": "Jordan",
+        "t2": "Algeria",
+        "g": "J",
+        "date": "2026-06-22"
+    },
+    {
+        "id": 45,
+        "t1": "Portugal",
+        "t2": "Uzbekistan",
+        "g": "K",
+        "date": "2026-06-23"
+    },
+    {
+        "id": 46,
+        "t1": "England",
+        "t2": "Ghana",
+        "g": "L",
+        "date": "2026-06-23"
+    },
+    {
+        "id": 47,
+        "t1": "Panama",
+        "t2": "Croatia",
+        "g": "L",
+        "date": "2026-06-23"
+    },
+    {
+        "id": 48,
+        "t1": "Colombia",
+        "t2": "Congo DR",
+        "g": "K",
+        "date": "2026-06-23"
+    },
+    {
+        "id": 49,
+        "t1": "Switzerland",
+        "t2": "Canada",
+        "g": "B",
+        "date": "2026-06-24"
+    },
+    {
+        "id": 50,
+        "t1": "Bosnia & Herzegovina",
+        "t2": "Qatar",
+        "g": "B",
+        "date": "2026-06-24"
+    },
+    {
+        "id": 51,
+        "t1": "Brazil",
+        "t2": "Scotland",
+        "g": "C",
+        "date": "2026-06-24"
+    },
+    {
+        "id": 52,
+        "t1": "Morocco",
+        "t2": "Haiti",
+        "g": "C",
+        "date": "2026-06-24"
+    },
+    {
+        "id": 53,
+        "t1": "Mexico",
+        "t2": "Czechia",
+        "g": "A",
+        "date": "2026-06-24"
+    },
+    {
+        "id": 54,
+        "t1": "South Korea",
+        "t2": "South Africa",
+        "g": "A",
+        "date": "2026-06-24"
+    },
+    {
+        "id": 55,
+        "t1": "Ecuador",
+        "t2": "Germany",
+        "g": "E",
+        "date": "2026-06-25"
+    },
+    {
+        "id": 56,
+        "t1": "Cura\u00e7ao",
+        "t2": "Ivory Coast",
+        "g": "E",
+        "date": "2026-06-25"
+    },
+    {
+        "id": 57,
+        "t1": "Tunisia",
+        "t2": "Netherlands",
+        "g": "F",
+        "date": "2026-06-25"
+    },
+    {
+        "id": 58,
+        "t1": "Japan",
+        "t2": "Sweden",
+        "g": "F",
+        "date": "2026-06-25"
+    },
+    {
+        "id": 59,
+        "t1": "USA",
+        "t2": "T\u00fcrkiye",
+        "g": "D",
+        "date": "2026-06-25"
+    },
+    {
+        "id": 60,
+        "t1": "Paraguay",
+        "t2": "Australia",
+        "g": "D",
+        "date": "2026-06-25"
+    },
+    {
+        "id": 61,
+        "t1": "Norway",
+        "t2": "France",
+        "g": "I",
+        "date": "2026-06-26"
+    },
+    {
+        "id": 62,
+        "t1": "Senegal",
+        "t2": "Iraq",
+        "g": "I",
+        "date": "2026-06-26"
+    },
+    {
+        "id": 63,
+        "t1": "Uruguay",
+        "t2": "Spain",
+        "g": "H",
+        "date": "2026-06-26"
+    },
+    {
+        "id": 64,
+        "t1": "Cape Verde",
+        "t2": "Saudi Arabia",
+        "g": "H",
+        "date": "2026-06-26"
+    },
+    {
+        "id": 65,
+        "t1": "New Zealand",
+        "t2": "Belgium",
+        "g": "G",
+        "date": "2026-06-26"
+    },
+    {
+        "id": 66,
+        "t1": "Egypt",
+        "t2": "Iran",
+        "g": "G",
+        "date": "2026-06-26"
+    },
+    {
+        "id": 67,
+        "t1": "Panama",
+        "t2": "England",
+        "g": "L",
+        "date": "2026-06-27"
+    },
+    {
+        "id": 68,
+        "t1": "Croatia",
+        "t2": "Ghana",
+        "g": "L",
+        "date": "2026-06-27"
+    },
+    {
+        "id": 69,
+        "t1": "Colombia",
+        "t2": "Portugal",
+        "g": "K",
+        "date": "2026-06-27"
+    },
+    {
+        "id": 70,
+        "t1": "Congo DR",
+        "t2": "Uzbekistan",
+        "g": "K",
+        "date": "2026-06-27"
+    },
+    {
+        "id": 71,
+        "t1": "Argentina",
+        "t2": "Jordan",
+        "g": "J",
+        "date": "2026-06-27"
+    },
+    {
+        "id": 72,
+        "t1": "Algeria",
+        "t2": "Austria",
+        "g": "J",
+        "date": "2026-06-27"
+    }
+]

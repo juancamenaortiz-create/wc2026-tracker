@@ -88,10 +88,20 @@ async function loadStaticResults() {
     }
     const matches = (data && data.matches) || [];
     if (!matches.length) return;
-    // KV/static data is baseline — localStorage + ESPN takes precedence
-    STATE.results.groupMatches = mergeResults(matches, STATE.results.groupMatches);
+    // KV only ever holds fully-completed matches (2+ days old) — it's the canonical
+    // synced source for those matchIds, so it should always win over a possibly-stale
+    // local cache. (Recent/live matches aren't in KV, so localStorage entries for those
+    // are untouched by this merge — only matching matchIds get overwritten.)
+    STATE.results.groupMatches = mergeResults(STATE.results.groupMatches, matches);
+    // Persist the corrected merge immediately so a stale local cache can't shadow it again
+    try {
+      localStorage.setItem('wc2026_results', JSON.stringify({
+        results: STATE.results,
+        timestamp: STATE.lastUpdated ? STATE.lastUpdated.toISOString() : new Date().toISOString(),
+      }));
+    } catch(e) {}
     renderActiveTab();
-    console.log('[KV] Loaded ' + matches.length + ' historical matches');
+    console.log('[KV] Loaded ' + matches.length + ' historical matches (KV takes precedence)');
   } catch(e) { /* KV unavailable — continue without historical data */ }
 }
 

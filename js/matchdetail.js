@@ -283,10 +283,17 @@ function _tabLineup(result, summary) {
     ? '<div class="lu-bench-wrap"><div class="lu-bench-title">Bench</div><div class="lu-bench-cols"><div>' + bench1.map(pill).join('') + '</div><div class="lu-bench-col-r">' + bench2.map(pill).join('') + '</div></div></div>'
     : '';
 
-  return '<div class="pitch-wrap">' + svg + '</div>' + bench;
+  // Formation header row (flag + name + formation pill) — sits above the pitch,
+  // away team on top to mirror the pitch orientation, so it never overlaps players
+  var fmHeader = '<div class="lu-fm-header">'
+    + '<div class="lu-fm-team"><span class="lu-fm-flag">' + getFlag(result.team2) + '</span><span class="lu-fm-name">' + displayName(result.team2) + '</span>' + (t2P.formation ? '<span class="lu-fm-pill">' + t2P.formation + '</span>' : '') + '</div>'
+    + '<div class="lu-fm-team lu-fm-team-r">' + (t1P.formation ? '<span class="lu-fm-pill">' + t1P.formation + '</span>' : '') + '<span class="lu-fm-name">' + displayName(result.team1) + '</span><span class="lu-fm-flag">' + getFlag(result.team1) + '</span></div>'
+    + '</div>';
+
+  return fmHeader + '<div class="pitch-wrap">' + svg + '</div>' + bench;
 }
 
-// SVG pitch — smaller circles (r=8), number+name combined below dot
+// SVG pitch — emoji-sized circles (r=6), formation labels moved off-pitch into header row
 
 function _buildPitch(homeA, awayA, homeFm, awayFm) {
   var W=260, H=390, half=H/2;
@@ -315,7 +322,7 @@ function _buildPitch(homeA, awayA, homeFm, awayFm) {
     return out;
   }
 
-  // Draw player: small circle + "NUM Name" text below
+  // Draw player: emoji-sized circle + "NUM Name" text below
   function draw(p, fill) {
     var a    = p.a, x = p.x, y = p.y;
     var name = ((a.athlete && (a.athlete.shortName || a.athlete.displayName)) || '?')
@@ -324,8 +331,8 @@ function _buildPitch(homeA, awayA, homeFm, awayFm) {
     var label = num ? num + ' ' + name : name;
     var op   = (a.subbedOut || a.didSubOut) ? ' opacity=".45"' : '';
     return '<g' + op + '>'
-      + '<circle cx="' + x + '" cy="' + y + '" r="8" fill="' + fill + '" stroke="rgba(255,255,255,.6)" stroke-width="1.2"/>'
-      + '<text x="' + x + '" y="' + (y+20) + '" text-anchor="middle" fill="rgba(255,255,255,.9)" font-size="7.5">' + label + '</text>'
+      + '<circle cx="' + x + '" cy="' + y + '" r="6" fill="' + fill + '" stroke="rgba(255,255,255,.6)" stroke-width="1"/>'
+      + '<text x="' + x + '" y="' + (y+17) + '" text-anchor="middle" fill="rgba(255,255,255,.9)" font-size="7">' + label + '</text>'
       + '</g>';
   }
 
@@ -345,9 +352,6 @@ function _buildPitch(homeA, awayA, homeFm, awayFm) {
     // Penalty areas
     + '<rect x="' + (W/2-44) + '" y="8" width="88" height="46" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="1"/>'
     + '<rect x="' + (W/2-44) + '" y="' + (H-54) + '" width="88" height="46" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="1"/>'
-    // Formation labels
-    + '<text x="' + (W/2) + '" y="' + (half-10) + '" text-anchor="middle" fill="rgba(255,255,255,.25)" font-size="9">' + awayFm + '</text>'
-    + '<text x="' + (W/2) + '" y="' + (half+17) + '" text-anchor="middle" fill="rgba(255,255,255,.25)" font-size="9">' + homeFm + '</text>'
     // Away players (red)
     + ap.map(function(p){return draw(p,'#b52020');}).join('')
     // Home players (blue)

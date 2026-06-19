@@ -1769,3 +1769,26 @@ td.ps-name { color: var(--white); font-weight: 600; }
   background: rgba(212,175,55,.15); border-color: var(--gold);
   color: var(--gold);
 }
+
+/* ── Stacked scorers in match header ── */
+.md-scorers-stacked { padding: 4px 0 0; font-size: 10px; color: var(--muted); }
+.md-sc-home { text-align: left;  padding: 1px 0; }
+.md-sc-away { text-align: right; padding: 1px 0; }
+
+/* ── MotM second team label spacing ── */
+.motm-team-label-2 { margin-top: 10px; }
+
+/* ── Settings sync row ── */
+.modal-row-col { flex-direction: column; align-items: flex-start; gap: 8px; }
+.sync-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ── Card badges (replaces emoji — guaranteed rendering, no font dependency) ── */
+.card-badge {
+  display: inline-block;
+  width: 9px; height: 13px;
+  border-radius: 2px;
+  margin-right: 4px;
+  vertical-align: -1px;
+}
+.card-badge-yellow { background: #e8c547; }
+.card-badge-red    { background: #e0483e; }

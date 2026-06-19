@@ -219,9 +219,9 @@ function _tabFacts(result, summary) {
       content = '<span class="facts-scorer">&#9917; ' + ev.p + tag + '</span>'
               + ' <span class="facts-rscore">(' + ev.rs1 + '&ndash;' + ev.rs2 + ')</span>';
     } else if (ev.r) {
-      content = '<span class="facts-card">&#129125; ' + ev.p + '</span>';
+      content = '<span class="facts-card"><span class="card-badge card-badge-red"></span>' + ev.p + '</span>';
     } else if (ev.y) {
-      content = '<span class="facts-card">&#128949; ' + ev.p + '</span>';
+      content = '<span class="facts-card"><span class="card-badge card-badge-yellow"></span>' + ev.p + '</span>';
     }
     if (isT1) {
       return '<div class="facts-row"><div class="facts-home">' + content + '</div><div class="facts-min">' + ev.min + '</div><div class="facts-away"></div></div>';

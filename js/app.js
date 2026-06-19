@@ -411,11 +411,11 @@ async function fetchFromESPN(overrideDates) {
         // Penalty shootout scores (ESPN uses shootoutScore on the competitor)
         const homePen = parseInt(home.shootoutScore ?? home.penaltyAggregateScore ?? null);
         const awayPen = parseInt(away.shootoutScore ?? away.penaltyAggregateScore ?? null);
-        // Score lag fix: derive score from events in case ESPN's counter lags behind
-        const derivedHome = events.filter(e=>e.g&&!e.og&&e.tid===homeId).length
-                           + events.filter(e=>e.g&&e.og&&e.tid===awayId).length;
-        const derivedAway = events.filter(e=>e.g&&!e.og&&e.tid===awayId).length
-                           + events.filter(e=>e.g&&e.og&&e.tid===homeId).length;
+        // Score lag fix: derive score from events in case ESPN's counter lags behind.
+        // NOTE: ESPN's event "team" field is already the BENEFITING team for own goals
+        // (i.e. tid already points to whoever's score the OG counts toward) — no extra flip needed.
+        const derivedHome = events.filter(e=>e.g&&e.tid===homeId).length;
+        const derivedAway = events.filter(e=>e.g&&e.tid===awayId).length;
         const fs1 = Math.max(s1, derivedHome);
         const fs2 = Math.max(s2, derivedAway);
         found.push({ matchId:m.id, team1:m.t1, team2:m.t2, espnId:ev.id,

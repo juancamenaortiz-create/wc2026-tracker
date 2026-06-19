@@ -111,11 +111,12 @@ function _mdShell(result, sched) {
   var scorers = '';
   if (has && result.events && result.events.length) {
     var goals = result.events.filter(function(e) { return e.g; });
+    // tid already = benefiting team for ALL goals (incl. own goals) — filter directly, no flip
     var hg = goals
-      .filter(function(e) { return (!e.og&&e.tid===result.tid1)||(e.og&&e.tid===result.tid2); })
+      .filter(function(e) { return e.tid===result.tid1; })
       .map(function(e) { return e.p + ' ' + e.min; }).join(', ');
     var ag = goals
-      .filter(function(e) { return (!e.og&&e.tid===result.tid2)||(e.og&&e.tid===result.tid1); })
+      .filter(function(e) { return e.tid===result.tid2; })
       .map(function(e) { return e.p + ' ' + e.min; }).join(', ');
     if (hg || ag) {
       scorers = '<div class="md-scorers-stacked">'
@@ -192,8 +193,8 @@ function _tabFacts(result, summary) {
       htDone = true;
     }
     if (ev.g) {
-      var bT1 = (!ev.og && ev.tid===result.tid1) || (ev.og && ev.tid===result.tid2);
-      if (bT1) s1++; else s2++;
+      // tid already = benefiting team (incl. own goals) — no flip needed
+      if (ev.tid === result.tid1) s1++; else s2++;
       if (!htDone) { htS1=s1; htS2=s2; }
     }
     var ev2 = Object.assign({}, ev, { rs1:s1, rs2:s2 });

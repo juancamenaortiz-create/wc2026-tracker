@@ -1792,3 +1792,18 @@ td.ps-name { color: var(--white); font-weight: 600; }
 }
 .card-badge-yellow { background: #e8c547; }
 .card-badge-red    { background: #e0483e; }
+
+/* ── Lineup formation header (above pitch, avoids on-field overlap) ── */
+.lu-fm-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 6px 4px 0;
+}
+.lu-fm-team { display: flex; align-items: center; gap: 5px; }
+.lu-fm-team-r { flex-direction: row-reverse; }
+.lu-fm-flag { font-size: 14px; }
+.lu-fm-name { font-size: 11px; font-weight: 700; color: var(--white); }
+.lu-fm-pill {
+  font-size: 10px; font-weight: 700; color: var(--gold);
+  background: var(--navy4); border: 1px solid var(--border);
+  border-radius: 10px; padding: 1px 7px;
+}

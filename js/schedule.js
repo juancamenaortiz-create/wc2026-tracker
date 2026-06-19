@@ -95,11 +95,11 @@ function buildScheduleRow(match) {
     }
   } else if (isFT)  statusHtml = '<span class="ft-badge sm">FT</span>';
   else {
-    const kickoff = match.date && match.time ? parseGameTimeCT(match.date, match.time) : null;
+    const kickoff = match.date && match.time ? parseGameTimeCT(match.date, getMatchTime(match)) : null;
     const overdue  = kickoff && (Date.now() - kickoff.getTime() > 300000);
     statusHtml = overdue
       ? `<span class="sched-overdue">⏱ LIVE?</span>`
-      : `<span class="sched-time">${formatGameTime(match.date, match.time)} ${getTZAbbr()}</span>`;
+      : `<span class="sched-time">${formatGameTime(match.date, getMatchTime(match))} ${getTZAbbr()}</span>`;
   }
 
   let centerHtml = '';

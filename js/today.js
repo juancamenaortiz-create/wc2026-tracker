@@ -88,7 +88,7 @@ function renderToday(container) {
   SCHEDULE.forEach(m => {
     if (m.date !== yesterdayCT) return;
     if (todayMatches.some(x => x.id === m.id)) return; // already included
-    const kickoff = parseGameTimeCT(m.date, m.time);
+    const kickoff = parseGameTimeCT(m.date, getMatchTime(m));
     const msSince = Date.now() - kickoff.getTime();
     // Within 3 hours of kickoff = could still be in first/second half or extra time
     if (msSince > 0 && msSince < 3 * 60 * 60 * 1000) {
@@ -149,7 +149,7 @@ function renderToday(container) {
         matches.forEach(m => {
           const starred = STATE.myTeams.some(t => normName(t)===normName(m.t1)||normName(t)===normName(m.t2));
           html += `<div class="upcoming-row${starred?' my-t':''}">
-            <span class="upcoming-time">${formatGameTime(m.date, m.time)}</span>
+            <span class="upcoming-time">${formatGameTime(m.date, getMatchTime(m))}</span>
             <span class="upcoming-grp">Grp ${m.g}</span>
             <span class="upcoming-teams-txt">${getFlag(m.t1)} ${displayName(m.t1)} <span class="upcoming-vs">vs</span> ${displayName(m.t2)} ${getFlag(m.t2)}</span>
           </div>`;
@@ -185,7 +185,7 @@ function buildMatchCard(match, now) {
   const t1Wins  = hasResult && (isPSO ? (result.penScore1 ?? 0) > (result.penScore2 ?? 0) : score1 > score2);
   const t2Wins  = hasResult && (isPSO ? (result.penScore2 ?? 0) > (result.penScore1 ?? 0) : score2 > score1);
 
-  const kickoffUTC = parseGameTimeCT(match.date, match.time);
+  const kickoffUTC = parseGameTimeCT(match.date, getMatchTime(match));
   const msUntil    = kickoffUTC - now;
   const countdown  = (!isFT && !isLive && msUntil > 0) ? formatCountdown(msUntil) : null;
   const isMyCard   = STATE.myTeams.some(t => normName(t) === normName(match.t1) || normName(t) === normName(match.t2));
@@ -207,7 +207,7 @@ function buildMatchCard(match, now) {
     }
   } else {
     // Two-line time display — or "overdue" if kickoff has passed with no ESPN data yet
-    const t = match.time;
+    const t = getMatchTime(match);
     const tzAbbr = getTZAbbr();
     const isOverdue = msUntil < -300000; // 5+ min past kickoff, still no result
     if (isOverdue) {

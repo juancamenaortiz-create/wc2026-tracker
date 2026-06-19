@@ -12,6 +12,7 @@ const STATE = {
   espnUnmatched:    [],   // ESPN team names that couldn't be matched — surfaced as a warning
   aiPreviews:       {},   // matchId → { text, loading, error }
   nextRefreshAt:    null, // Date.now() + interval — for countdown display
+  scheduleCorrections: {}, // matchId → ISO kickoff string from ESPN (overrides static SCHEDULE.time when present)
 };
 
 // ── Init ─────────────────────────────────────
@@ -361,7 +362,28 @@ async function fetchFromESPN(overrideDates) {
           // Only STATUS_HALFTIME (exact break between halves) gets HT badge
           if (sn === 'STATUS_HALFTIME') substatus = 'HT';
           status = 'LIVE';
-        } else continue; // not started yet
+        } else {
+          // Not started yet — still capture ESPN's authoritative kickoff time so we can
+          // correct any wrong/stale time in the hand-typed SCHEDULE data. ESPN's comp.date
+          // is the same field broadcasters and ticket vendors pull from, so it's far more
+          // reliable than a manually-typed schedule that can drift from late FIFA changes.
+          const isoDate = comp.date || ev.date;
+          if (isoDate) {
+            const cs2 = comp.competitors || [];
+            const h2 = cs2.find(c => c.homeAway === 'home') || cs2[0];
+            const a2 = cs2.find(c => c.homeAway === 'away') || cs2[1];
+            if (h2 && a2) {
+              const nn1 = espnToApp(h2.team?.displayName || '');
+              const nn2 = espnToApp(a2.team?.displayName || '');
+              const sm = SCHEDULE.find(sm =>
+                (normName(sm.t1)===normName(nn1) && normName(sm.t2)===normName(nn2)) ||
+                (normName(sm.t1)===normName(nn2) && normName(sm.t2)===normName(nn1))
+              );
+              if (sm) STATE.scheduleCorrections[sm.id] = isoDate;
+            }
+          }
+          continue; // no score/events to parse for a match that hasn't started
+        }
         const cs = comp.competitors || [];
         const home = cs.find(c => c.homeAway === 'home') || cs[0];
         const away = cs.find(c => c.homeAway === 'away') || cs[1];
@@ -810,6 +832,20 @@ function formatCountdown(ms) {
 function formatDate(dateStr) {
   const [y,mo,d] = dateStr.split('-').map(Number);
   return new Date(y, mo-1, d).toLocaleDateString('en-US', { weekday:'long', month:'short', day:'numeric' });
+}
+
+// Returns the best-known kickoff time string for a scheduled match (e.g. "7:30 PM").
+// Prefers ESPN's live-fetched kickoff (STATE.scheduleCorrections), since that reflects
+// any last-minute FIFA/broadcast changes; falls back to the static SCHEDULE.time string
+// (hand-typed at build time) when ESPN data for that match hasn't been fetched yet.
+function getMatchTime(sched) {
+  const iso = STATE.scheduleCorrections[sched.id];
+  if (!iso) return sched.time;
+  try {
+    return new Date(iso).toLocaleTimeString('en-US', {
+      hour: 'numeric', minute: '2-digit', timeZone: 'America/Chicago',
+    });
+  } catch(e) { return sched.time; }
 }
 
 // ── My Teams ──────────────────────────────────

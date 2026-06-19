@@ -98,8 +98,9 @@ function parseDay(data, schedule) {
 
     const homePen = parseInt(home.shootoutScore ?? home.penaltyAggregateScore ?? null);
     const awayPen = parseInt(away.shootoutScore ?? away.penaltyAggregateScore ?? null);
-    const dH = events.filter(e=>e.g&&!e.og&&e.tid===homeId).length + events.filter(e=>e.g&&e.og&&e.tid===awayId).length;
-    const dA = events.filter(e=>e.g&&!e.og&&e.tid===awayId).length + events.filter(e=>e.g&&e.og&&e.tid===homeId).length;
+    // ESPN's event "team" field is already the BENEFITING team for own goals — no flip needed
+    const dH = events.filter(e=>e.g&&e.tid===homeId).length;
+    const dA = events.filter(e=>e.g&&e.tid===awayId).length;
     const fs1 = Math.max(s1, dH), fs2 = Math.max(s2, dA);
 
     found.push({

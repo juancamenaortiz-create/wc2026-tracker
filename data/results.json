@@ -1,5 +1,5 @@
 {
-  "asOf": "2026-06-18",
+  "asOf": "2026-06-19",
   "_note": "Static cache of completed WC2026 group-stage matches. Commit to /data/results.json.",
   "matches": [
     {
@@ -1490,7 +1490,7 @@
           "foulsCommitted": 12,
           "wonCorners": 5,
           "goalAssists": 1,
-          "possessionPct": 38.2,
+          "possessionPct": 38.3,
           "shotAssists": 11,
           "shotsOnTarget": 3,
           "totalGoals": 1,
@@ -1501,7 +1501,7 @@
           "foulsCommitted": 10,
           "wonCorners": 5,
           "goalAssists": 0,
-          "possessionPct": 61.8,
+          "possessionPct": 61.7,
           "shotAssists": 11,
           "shotsOnTarget": 4,
           "totalGoals": 1,
@@ -2694,6 +2694,320 @@
           "shotsOnTarget": 8,
           "totalGoals": 2,
           "totalShots": 14
+        }
+      }
+    },
+    {
+      "matchId": 26,
+      "team1": "Switzerland",
+      "team2": "Bosnia & Herzegovina",
+      "espnId": "760439",
+      "score1": 4,
+      "score2": 1,
+      "status": "FT",
+      "substatus": "",
+      "group": "B",
+      "date": "2026-06-18",
+      "clock": "90'+8'",
+      "events": [
+        {
+          "min": "59'",
+          "tid": "452",
+          "p": "A. Dedic",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "61'",
+          "tid": "452",
+          "p": "E. Dzeko",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "65'",
+          "tid": "475",
+          "p": "N. Elvedi",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "74'",
+          "tid": "475",
+          "p": "J. Manzambi",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "80'",
+          "tid": "452",
+          "p": "T. Muharemovic",
+          "pIn": "",
+          "g": false,
+          "y": false,
+          "r": true,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "84'",
+          "tid": "475",
+          "p": "R. Vargas",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "90'",
+          "tid": "475",
+          "p": "J. Manzambi",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "90'+3'",
+          "tid": "452",
+          "p": "E. Mahmic",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "90'+7'",
+          "tid": "475",
+          "p": "G. Xhaka",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": true
+        }
+      ],
+      "tid1": "475",
+      "tid2": "452",
+      "penScore1": null,
+      "penScore2": null,
+      "stats": {
+        "t1": {
+          "appearances": 0,
+          "foulsCommitted": 7,
+          "wonCorners": 7,
+          "goalAssists": 2,
+          "possessionPct": 62.3,
+          "shotAssists": 10,
+          "shotsOnTarget": 7,
+          "totalGoals": 4,
+          "totalShots": 13
+        },
+        "t2": {
+          "appearances": 0,
+          "foulsCommitted": 18,
+          "wonCorners": 3,
+          "goalAssists": 0,
+          "possessionPct": 37.7,
+          "shotAssists": 3,
+          "shotsOnTarget": 3,
+          "totalGoals": 1,
+          "totalShots": 5
+        }
+      }
+    },
+    {
+      "matchId": 27,
+      "team1": "Canada",
+      "team2": "Qatar",
+      "espnId": "760440",
+      "score1": 6,
+      "score2": 1,
+      "status": "FT",
+      "substatus": "",
+      "group": "B",
+      "date": "2026-06-18",
+      "clock": "90'+10'",
+      "events": [
+        {
+          "min": "9'",
+          "tid": "206",
+          "p": "D. Cornelius",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "16'",
+          "tid": "206",
+          "p": "C. Larin",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "29'",
+          "tid": "206",
+          "p": "J. David",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "33'",
+          "tid": "4398",
+          "p": "H. Ahmed",
+          "pIn": "",
+          "g": false,
+          "y": false,
+          "r": true,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "45'+3'",
+          "tid": "206",
+          "p": "J. David",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "53'",
+          "tid": "4398",
+          "p": "A. Madibo",
+          "pIn": "",
+          "g": false,
+          "y": false,
+          "r": true,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "62'",
+          "tid": "4398",
+          "p": "A. Fathy",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "64'",
+          "tid": "206",
+          "p": "N. Saliba",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "75'",
+          "tid": "206",
+          "p": "M. Manai",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": true,
+          "pk": false
+        },
+        {
+          "min": "90'+2'",
+          "tid": "206",
+          "p": "J. David",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        }
+      ],
+      "tid1": "206",
+      "tid2": "4398",
+      "penScore1": null,
+      "penScore2": null,
+      "stats": {
+        "t1": {
+          "appearances": 0,
+          "foulsCommitted": 9,
+          "wonCorners": 19,
+          "goalAssists": 1,
+          "possessionPct": 78.8,
+          "shotAssists": 21,
+          "shotsOnTarget": 10,
+          "totalGoals": 6,
+          "totalShots": 32
+        },
+        "t2": {
+          "appearances": 0,
+          "foulsCommitted": 10,
+          "wonCorners": 1,
+          "goalAssists": 0,
+          "possessionPct": 21.2,
+          "shotAssists": 1,
+          "shotsOnTarget": 0,
+          "totalGoals": 0,
+          "totalShots": 2
         }
       }
     }

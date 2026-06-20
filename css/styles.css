@@ -1087,6 +1087,15 @@ img.emoji {
 }
 .stat-bar-1 { height: 100%; background: var(--gold);   flex-shrink: 0; border-radius: 3px 0 0 3px; }
 .stat-bar-2 { height: 100%; background: var(--crimson); flex-shrink: 0; border-radius: 0 3px 3px 0; }
+
+/* ── Stat leader highlight — pill background on whichever side is winning that stat ── */
+.stat-val-lead {
+  border-radius: 12px; padding: 2px 8px;
+  min-width: auto;
+}
+.stat-val-lead-1 { background: var(--gold);    color: #1a1500; }
+.stat-val-lead-2 { background: var(--crimson); color: #ffffff; }
+
 .stat-label {
   font-size: 9px; color: var(--muted); text-align: center;
   text-transform: uppercase; letter-spacing: 0.05em;

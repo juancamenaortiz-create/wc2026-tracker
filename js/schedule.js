@@ -1,6 +1,6 @@
 // SCHEDULE.JS — Full schedule tab renderer
 
-const SCHEDULE_STATE = { view: 'date', filter: 'all' };
+const SCHEDULE_STATE = { view: 'date', filter: 'all', scrollToToday: false };
 
 function renderSchedule(container) {
   const allMatches = [
@@ -47,7 +47,7 @@ function renderSchedule(container) {
       const d = new Date(date + 'T12:00:00');
       const day  = d.toLocaleDateString('en-US', { weekday: 'long' });
       const mon  = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      html += `<div class="date-hdr"><span class="date-hdr-day">${day}, </span><span class="date-hdr-date">${mon}</span></div>`;
+      html += `<div class="date-hdr" id="sched-date-${date}"><span class="date-hdr-day">${day}, </span><span class="date-hdr-date">${mon}</span></div>`;
       byDate[date].forEach(match => { html += buildScheduleRow(match); });
     });
   }
@@ -59,6 +59,29 @@ function renderSchedule(container) {
     const btn = starBtn(slot.dataset.starTeam, () => renderSchedule(container));
     slot.appendChild(btn);
   });
+
+  // Auto-scroll to today's matches — only on a fresh tab open (set by navigateTo),
+  // never on background refreshes or filter changes, so we don't yank the scroll
+  // position away while the person is browsing.
+  if (SCHEDULE_STATE.scrollToToday) {
+    SCHEDULE_STATE.scrollToToday = false;
+    scrollScheduleToToday(container, Object.keys(byDate).sort());
+  }
+}
+
+// Finds today's date header (or the nearest upcoming one if today has no match,
+// or the most recent past one if the tournament has ended) and scrolls to it.
+function scrollScheduleToToday(container, sortedDates) {
+  if (!sortedDates.length) return;
+  const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Chicago' }); // YYYY-MM-DD
+  let target = sortedDates.find(d => d === todayStr)
+            || sortedDates.find(d => d > todayStr)   // next upcoming date
+            || sortedDates[sortedDates.length - 1];  // tournament over — show the last date
+  const el = document.getElementById(`sched-date-${target}`);
+  if (el) {
+    // Defer to next frame so layout has settled before measuring scroll position
+    requestAnimationFrame(() => el.scrollIntoView({ behavior: 'auto', block: 'start' }));
+  }
 }
   if (typeof twemoji !== 'undefined') twemoji.parse(container);
 

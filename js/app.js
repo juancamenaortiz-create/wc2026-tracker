@@ -583,6 +583,9 @@ function updateStatusUI() {
 function navigateTo(tab) {
   STATE.activeTab = tab;
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  if (tab === 'schedule' && typeof SCHEDULE_STATE !== 'undefined') {
+    SCHEDULE_STATE.scrollToToday = true; // fresh tab open — jump to today's matches
+  }
   renderActiveTab();
 }
 

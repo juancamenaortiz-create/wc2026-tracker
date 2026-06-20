@@ -368,10 +368,10 @@ var _STAT_DEFS = [
   { key:'saves',           label:'Saves' },
   { key:'passingAccuracy', label:'Pass Accuracy', fmt:function(v){return v+'%';}, isPct:true },
   { key:'totalTackles',    label:'Tackles' },
-  { key:'yellowCards',     label:'Yellow Cards' },
+  { key:'yellowCards',     label:'Yellow Cards', inverse:true },
   { key:'wonCorners',      label:'Corners' },
-  { key:'foulsCommitted',  label:'Fouls' },
-  { key:'offsides',        label:'Offsides' },
+  { key:'foulsCommitted',  label:'Fouls',         inverse:true },
+  { key:'offsides',        label:'Offsides',      inverse:true },
 ];
 
 function _tabStats(result, summary, sched) {
@@ -401,10 +401,17 @@ function _tabStats(result, summary, sched) {
     var total = def.isPct ? 100 : (a+b||1);
     var pct1  = Math.round((a/total)*100);
     var d = def.fmt || function(v){return Math.round(v);};
+
+    // Determine which side "wins" this stat — lower is better for fouls/cards/offsides
+    var aLeads = def.inverse ? (a < b) : (a > b);
+    var bLeads = def.inverse ? (b < a) : (b > a);
+    var aCls = 'stat-val' + (aLeads ? ' stat-val-lead stat-val-lead-1' : '');
+    var bCls = 'stat-val r' + (bLeads ? ' stat-val-lead stat-val-lead-2' : '');
+
     return '<div class="stat-row">'
-      + '<span class="stat-val">' + d(a) + '</span>'
+      + '<span class="' + aCls + '">' + d(a) + '</span>'
       + '<div class="stat-mid"><div class="stat-bar"><div class="stat-bar-1" style="width:' + pct1 + '%"></div><div class="stat-bar-2" style="width:' + (100-pct1) + '%"></div></div><span class="stat-label">' + def.label + '</span></div>'
-      + '<span class="stat-val r">' + d(b) + '</span>'
+      + '<span class="' + bCls + '">' + d(b) + '</span>'
       + '</div>';
   }).filter(Boolean).join('');
 

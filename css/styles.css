@@ -1070,17 +1070,19 @@ img.emoji {
 .stats-toggle.open          { color: var(--gold); border-color: rgba(212,175,55,0.3); }
 .sched-stats                { margin: 4px 0 0; }
 
-.match-stats-panel          { padding: 10px 0 2px; }
+.match-stats-panel          { padding: 12px 6px 4px; }
 .stat-row {
-  display: flex; align-items: center; gap: 8px;
-  margin-bottom: 9px;
+  display: flex; align-items: center; gap: 6px;
+  margin-bottom: 11px;
 }
+/* Fixed-width outer column — NEVER changes size based on content or highlight state,
+   so the bar in the middle always lines up perfectly across every row. */
 .stat-val {
+  width: 58px; flex: 0 0 58px;
+  display: flex; align-items: center; justify-content: center;
   font-size: 12px; font-weight: 700; color: var(--white);
-  min-width: 36px; text-align: center;
 }
-.stat-val.r                 { text-align: right; }
-.stat-mid                   { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+.stat-mid                   { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
 .stat-bar {
   height: 5px; border-radius: 3px;
   background: var(--dim); overflow: hidden; display: flex;
@@ -1088,13 +1090,14 @@ img.emoji {
 .stat-bar-1 { height: 100%; background: var(--gold);   flex-shrink: 0; border-radius: 3px 0 0 3px; }
 .stat-bar-2 { height: 100%; background: var(--crimson); flex-shrink: 0; border-radius: 0 3px 3px 0; }
 
-/* ── Stat leader highlight — pill background on whichever side is winning that stat ── */
-.stat-val-lead {
-  border-radius: 12px; padding: 2px 8px;
-  min-width: auto;
+/* Inner pill — sized to its own content, centered inside the fixed-width column above.
+   Because it's a separate inner element, its padding/width never disturbs row alignment. */
+.stat-val-inner {
+  display: inline-block; padding: 2px 9px; border-radius: 11px;
+  line-height: 1.4; white-space: nowrap;
 }
-.stat-val-lead-1 { background: var(--gold);    color: #1a1500; }
-.stat-val-lead-2 { background: var(--crimson); color: #ffffff; }
+.stat-pill-1 { background: var(--gold);    color: #1a1500; }
+.stat-pill-2 { background: var(--crimson); color: #ffffff; }
 
 .stat-label {
   font-size: 9px; color: var(--muted); text-align: center;

@@ -405,13 +405,13 @@ function _tabStats(result, summary, sched) {
     // Determine which side "wins" this stat — lower is better for fouls/cards/offsides
     var aLeads = def.inverse ? (a < b) : (a > b);
     var bLeads = def.inverse ? (b < a) : (b > a);
-    var aCls = 'stat-val' + (aLeads ? ' stat-val-lead stat-val-lead-1' : '');
-    var bCls = 'stat-val r' + (bLeads ? ' stat-val-lead stat-val-lead-2' : '');
+    var aPill = aLeads ? ' stat-pill stat-pill-1' : '';
+    var bPill = bLeads ? ' stat-pill stat-pill-2' : '';
 
     return '<div class="stat-row">'
-      + '<span class="' + aCls + '">' + d(a) + '</span>'
+      + '<span class="stat-val"><span class="stat-val-inner' + aPill + '">' + d(a) + '</span></span>'
       + '<div class="stat-mid"><div class="stat-bar"><div class="stat-bar-1" style="width:' + pct1 + '%"></div><div class="stat-bar-2" style="width:' + (100-pct1) + '%"></div></div><span class="stat-label">' + def.label + '</span></div>'
-      + '<span class="' + bCls + '">' + d(b) + '</span>'
+      + '<span class="stat-val"><span class="stat-val-inner' + bPill + '">' + d(b) + '</span></span>'
       + '</div>';
   }).filter(Boolean).join('');
 

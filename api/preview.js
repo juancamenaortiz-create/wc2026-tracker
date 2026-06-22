@@ -13,41 +13,32 @@ export default async function handler(req, res) {
   const { team1, team2, group, city, date, groupStandings } = req.body || {};
   if (!team1 || !team2) return res.status(400).json({ error: 'Missing team names', data: null });
 
-  const prompt = `You are a FIFA World Cup 2026 tactical analyst. Search for CURRENT tournament information and return a focused pre-match preview as ONLY a raw JSON object — no markdown, no backticks, no explanation.
+  // Build the standings note as plain text so the prompt has no nested template literals
+  const standingsNote = groupStandings
+    ? 'Current Group ' + group + ' standings (already provided — do NOT search for this):\n' + groupStandings + '\n'
+    : '';
 
-Match: ${team1} vs ${team2}
-${group ? 'Group ' + group + ' · ' : ''}${city} · ${date} · 2026 FIFA World Cup
+  const prompt = 'You are a FIFA World Cup 2026 tactical analyst. Search for CURRENT tournament information and return a focused pre-match preview as ONLY a raw JSON object — no markdown, no backticks, no explanation.\n\n'
+    + 'Match: ' + team1 + ' vs ' + team2 + '\n'
+    + (group ? 'Group ' + group + ' · ' : '') + city + ' · ' + date + ' · 2026 FIFA World Cup\n\n'
+    + 'IMPORTANT: Do NOT repeat basic team info (rankings, WC history, general style) — the user already has that in team profiles.\n'
+    + standingsNote
+    + 'Focus your web searches ONLY on: each team\'s results and scorers so far in THIS tournament, and tactical/H2H research. Do NOT search for group standings.\n\n'
+    + 'Return ONLY this JSON:\n'
+    + '{\n'
+    + '  "stakes": "<2 sentences: group table situation — who is 1st/2nd/3rd, what each team needs from this result>",\n'
+    + '  "form": {\n'
+    + '    "team1": "<' + team1 + '\'s results in THIS tournament only, e.g. W 3-0 vs X, D 1-1 vs Y. Include top scorer>",\n'
+    + '    "team2": "<same for ' + team2 + '>"\n'
+    + '  },\n'
+    + '  "tactical_battle": "<the specific matchup that will decide this game — concrete, specific to these teams>",\n'
+    + '  "key_duel": { "player1": "<player from ' + team1 + '>", "player2": "<player from ' + team2 + '>", "why": "<why this 1v1 is key>" },\n'
+    + '  "h2h": { "summary": "<last 2-3 meetings with scores and year, or first ever meeting>", "edge": "<who has the historical edge>" },\n'
+    + '  "x_factor": "<one unexpected element that could swing this match>",\n'
+    + '  "prediction": { "score": "<e.g. 2-1>", "reasoning": "<2 sentences based on form and tactical analysis>" }\n'
+    + '}\n\n'
+    + 'Be specific, factual, current. Return ONLY the JSON.';
 
-IMPORTANT: Do NOT repeat basic team info (rankings, WC history, general style) — the user already has that in team profiles.
-${groupStandings ? `Current Group ${group} standings (do NOT search for this — it is already provided):
-${groupStandings}` : ''}
-Focus your web searches ONLY on: each team's results and scorers so far in this tournament, and any tactical/H2H research. Do NOT search for group standings.
-
-Return ONLY this JSON:
-{
-  "stakes": "<2 sentences: the exact group table situation going into this match — who is 1st/2nd/3rd, what each team specifically needs from this result, whether either is already through or at risk of elimination>",
-  "form": {
-    "team1": "<results in THIS tournament only, e.g. W 3-0 vs X (Brobbey 2), D 1-1 vs Y. State their top scorer if they have one.>",
-    "team2": "<same format for team2>"
-  },
-  "tactical_battle": "<the specific tactical matchup that will decide this game — e.g. how team2 high press matches team1 ball-playing CBs, or how team1 wide forwards exploit team2 defensive width. Be concrete and specific to these teams, not generic.>",
-  "key_duel": {
-    "player1": "<player name from team1>",
-    "player2": "<player name from team2>",
-    "why": "<why this specific 1v1 or positional battle is the key to the match outcome>"
-  },
-  "h2h": {
-    "summary": "<last 2-3 competitive meetings with scores and year, or first ever meeting if applicable>",
-    "edge": "<which team has the historical edge in this matchup, or no clear pattern>"
-  },
-  "x_factor": "<one specific unexpected element that could swing this match — a set-piece specialist, a player returning from suspension, a tactical wrinkle the opponent won't expect, or an environmental factor>",
-  "prediction": {
-    "score": "<specific scoreline e.g. 2-1>",
-    "reasoning": "<2 sentences explaining this prediction based on current form and the tactical analysis above — no generic statements>"
-  }
-}
-
-Be specific, factual, and current. Return ONLY the JSON.\`;
   try {
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',

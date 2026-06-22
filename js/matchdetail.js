@@ -179,12 +179,18 @@ function _tabFacts(result, summary) {
       + '</div>';
   }
 
-  var events = result.events || [];
-  if (!events.length) return info + '<div class="md-empty">No events yet.</div>';
+  // Enrich scoreboard events (goals + cards) with substitutions, VAR decisions
+  // and shootout kicks from the summary plays array. The scoreboard API only
+  // returns goals and cards; everything else lives in the summary endpoint.
+  var events = _enrichEvents(result.events || [], summary, result);
+  var psoKicks = _extractPSOKicks(summary, result);
+
+  if (!events.length && !psoKicks.length)
+    return info + '<div class="md-empty">No events yet.</div>';
 
   // Sort events and compute running score
   var sorted = events.slice().sort(function(a,b) { return parseEventMin(a.min)-parseEventMin(b.min); });
-  var s1=0, s2=0, htDone=false, htS1=0, htS2=0;
+  var s1=0, s2=0, htDone=false, htS1=0, htS2=0, aetDone=false;
   var rows = [];
   sorted.forEach(function(ev) {
     var min = parseEventMin(ev.min);
@@ -192,8 +198,11 @@ function _tabFacts(result, summary) {
       rows.push({ _ht:true, s1:htS1, s2:htS2 });
       htDone = true;
     }
+    if (!aetDone && min >= 105.5) {
+      rows.push({ _aet:true });
+      aetDone = true;
+    }
     if (ev.g) {
-      // tid already = benefiting team (incl. own goals) — no flip needed
       if (ev.tid === result.tid1) s1++; else s2++;
       if (!htDone) { htS1=s1; htS2=s2; }
     }
@@ -202,18 +211,28 @@ function _tabFacts(result, summary) {
   });
 
   var html = rows.map(function(ev) {
+    // HT divider
     if (ev._ht) {
-      return '<div class="facts-ht">'
-        + '<div class="facts-ht-line"></div>'
-        + '<div class="facts-ht-pill">HT <span class="facts-ht-score">' + ev.s1 + '&ndash;' + ev.s2 + '</span></div>'
-        + '<div class="facts-ht-line"></div>'
-        + '</div>';
+      return '<div class="facts-ht"><div class="facts-ht-line"></div>'
+           + '<div class="facts-ht-pill">HT <span class="facts-ht-score">' + ev.s1 + '&ndash;' + ev.s2 + '</span></div>'
+           + '<div class="facts-ht-line"></div></div>';
     }
+    // AET divider
+    if (ev._aet) {
+      return '<div class="facts-ht"><div class="facts-ht-line"></div>'
+           + '<div class="facts-ht-pill" style="color:var(--gold)">AET</div>'
+           + '<div class="facts-ht-line"></div></div>';
+    }
+
     var isT1 = ev.tid === result.tid1;
     var content = '';
+
     if (ev.sub) {
       content = '<span class="facts-sub-in">&#8593; ' + (ev.pIn||'') + '</span><br>'
               + '<span class="facts-sub-out">&#8595; ' + (ev.p||'') + '</span>';
+    } else if (ev.var) {
+      // VAR disallowed goal — crossed out in both columns the same side as the team
+      content = '<span class="facts-var">&#9917;&#10007; ' + (ev.p||'') + ' <span class="facts-var-label">VAR</span></span>';
     } else if (ev.g) {
       var tag = ev.og ? ' <span class="facts-og">OG</span>' : ev.pk ? ' <span class="facts-pk">P</span>' : '';
       content = '<span class="facts-scorer">&#9917; ' + ev.p + tag + '</span>'
@@ -223,13 +242,128 @@ function _tabFacts(result, summary) {
     } else if (ev.y) {
       content = '<span class="facts-card"><span class="card-badge card-badge-yellow"></span>' + ev.p + '</span>';
     }
-    if (isT1) {
-      return '<div class="facts-row"><div class="facts-home">' + content + '</div><div class="facts-min">' + ev.min + '</div><div class="facts-away"></div></div>';
-    }
-    return '<div class="facts-row"><div class="facts-home"></div><div class="facts-min">' + ev.min + '</div><div class="facts-away">' + content + '</div></div>';
-  }).join('');
 
-  return info + '<div class="facts-timeline">' + html + '</div>';
+    if (!content) return '';
+    if (isT1) {
+      return '<div class="facts-row"><div class="facts-home">' + content + '</div>'
+           + '<div class="facts-min">' + ev.min + '</div>'
+           + '<div class="facts-away"></div></div>';
+    }
+    return '<div class="facts-row"><div class="facts-home"></div>'
+         + '<div class="facts-min">' + ev.min + '</div>'
+         + '<div class="facts-away">' + content + '</div></div>';
+  }).filter(Boolean).join('');
+
+  // Penalty shootout section
+  var psoHtml = '';
+  if (psoKicks.length) {
+    var t1Kicks = psoKicks.filter(function(k){ return k.tid === result.tid1; });
+    var t2Kicks = psoKicks.filter(function(k){ return k.tid === result.tid2; });
+    var maxKicks = Math.max(t1Kicks.length, t2Kicks.length);
+    var kickRows = '';
+    for (var i=0; i<maxKicks; i++) {
+      var k1 = t1Kicks[i], k2 = t2Kicks[i];
+      kickRows += '<div class="pso-kick-row">'
+        + '<span class="pso-kick pso-left">'  + (k1 ? (k1.scored?'&#9917;':'&#10005;') + ' ' + k1.name : '') + '</span>'
+        + '<span class="pso-kick-num">' + (i+1) + '</span>'
+        + '<span class="pso-kick pso-right">' + (k2 ? (k2.scored?'&#9917;':'&#10005;') + ' ' + k2.name : '') + '</span>'
+        + '</div>';
+    }
+    psoHtml = '<div class="pso-section">'
+      + '<div class="pso-header">'
+      + '<span class="pso-team">' + getFlag(result.team1) + ' ' + displayName(result.team1) + ' <b>' + t1Kicks.filter(function(k){return k.scored;}).length + '</b></span>'
+      + '<span class="pso-label">Penalty Shootout</span>'
+      + '<span class="pso-team pso-team-r"><b>' + t2Kicks.filter(function(k){return k.scored;}).length + '</b> ' + displayName(result.team2) + ' ' + getFlag(result.team2) + '</span>'
+      + '</div>'
+      + kickRows
+      + '</div>';
+  }
+
+  return info + '<div class="facts-timeline">' + html + '</div>' + psoHtml;
+}
+
+// ── Event enrichment helpers ───────────────────────────────────────────────────
+
+// Merge scoreboard events (goals+cards) with richer summary plays (subs, VAR)
+function _enrichEvents(stored, summary, result) {
+  if (!summary) return stored;
+
+  // Try every path ESPN might use for their play-by-play timeline
+  var plays = summary.plays
+           || (summary.boxscore && summary.boxscore.plays)
+           || summary.events
+           || [];
+
+  if (!plays.length) {
+    // Fallback: extract subs from roster data (no minute info, but at least shows who)
+    return stored.concat(_subsFromRosters(summary, result));
+  }
+
+  // Build a set of matchIds we already have from scoreboard to avoid duplicates
+  var storedGoals = {};
+  stored.forEach(function(e) {
+    if (e.g && e.p) storedGoals[(e.p + e.min).toLowerCase().replace(/\s/g,'')] = true;
+  });
+
+  var extra = [];
+  plays.forEach(function(p) {
+    var typeText = ((p.type && (p.type.text || p.type.name)) || p.text || '').toLowerCase();
+    var min  = (p.clock && p.clock.displayValue) || '';
+    var tid  = (p.team && p.team.id) || '';
+    var ath  = p.participants || p.athletes || [];
+    var name0 = (ath[0] && (ath[0].athlete && (ath[0].athlete.shortName || ath[0].athlete.displayName)) || ath[0] && (ath[0].shortName || ath[0].displayName)) || '';
+    var name1 = (ath[1] && (ath[1].athlete && (ath[1].athlete.shortName || ath[1].athlete.displayName)) || ath[1] && (ath[1].shortName || ath[1].displayName)) || '';
+
+    if (typeText.includes('sub') || typeText.includes('substitut')) {
+      // Substitution
+      extra.push({ min:min, tid:tid, p:name0, pIn:name1, sub:true, g:false, y:false, r:false, og:false, pk:false });
+    } else if (typeText.includes('disallow') || typeText.includes('var') || typeText.includes('overturned')) {
+      // VAR disallowed goal
+      extra.push({ min:min, tid:tid, p:name0, var:true, g:false, sub:false, y:false, r:false });
+    }
+    // Goals and cards already come from the scoreboard; we skip them here to avoid dups
+  });
+
+  return stored.concat(extra);
+}
+
+// Fallback: build minimal sub events from roster flags when summary.plays is unavailable
+function _subsFromRosters(summary, result) {
+  var subs = [];
+  var rosters = summary.rosters || (summary.boxscore && summary.boxscore.players) || [];
+  rosters.forEach(function(team) {
+    var tid = (team.team && team.team.id) || '';
+    var ath = (team.roster || team.athletes || []);
+    ath.forEach(function(a) {
+      var name = (a.athlete && (a.athlete.shortName || a.athlete.displayName)) || '';
+      if (a.subbedIn && name) {
+        subs.push({ min:'', tid:tid, p:'', pIn:name, sub:true, g:false, y:false, r:false, og:false, pk:false });
+      }
+    });
+  });
+  return subs;
+}
+
+// Extract penalty shootout kicks from the summary endpoint
+function _extractPSOKicks(summary, result) {
+  if (!result || result.substatus !== 'PSO') return [];
+  var plays = summary && (summary.plays || (summary.boxscore && summary.boxscore.plays) || []);
+  if (!plays.length) return [];
+  var kicks = [];
+  plays.forEach(function(p) {
+    var typeText = ((p.type && (p.type.text || p.type.name)) || '').toLowerCase();
+    var isPSOkick = typeText.includes('shootout') || typeText.includes('penalty kick');
+    // PSO kicks usually happen in period 5 (after 90+30 AET)
+    var inShootout = p.period && p.period.number >= 5;
+    if (isPSOkick || inShootout) {
+      var ath = p.participants || p.athletes || [];
+      var name = (ath[0] && (ath[0].athlete && (ath[0].athlete.shortName || ath[0].athlete.displayName) || ath[0].shortName || ath[0].displayName)) || '';
+      var tid  = (p.team && p.team.id) || '';
+      var scored = !!(p.scoringPlay || typeText.includes('goal'));
+      if (name || tid) kicks.push({ name:name, tid:tid, scored:scored });
+    }
+  });
+  return kicks;
 }
 
 // ── LINEUP TAB ────────────────────────────────────────────────────────────────

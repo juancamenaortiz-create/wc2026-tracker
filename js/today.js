@@ -22,29 +22,27 @@ function buildDetailedPreview(d) {
       <div class="pv-team-hdr">
         <span class="pv-flag">${getFlag(t.name)}</span>
         <span class="pv-tname">${displayName(t.name)}</span>
-        ${t.ranking ? `<span class="pv-rank">FIFA #${t.ranking}</span>` : ''}
-        ${t.role ? `<span class="pv-role">${t.role}</span>` : ''}
       </div>
-      ${t.form    ? `<p class="pv-form">${t.form}</p>` : ''}
-      ${t.tactics ? `<div class="pv-row"><span class="pv-ico">⚙️</span><span class="pv-row-body"><span class="pv-row-lbl">Tactics</span> ${t.tactics}</span></div>` : ''}
-      ${players   ? `<div class="pv-row"><span class="pv-ico">⭐</span><span class="pv-row-body"><span class="pv-row-lbl">Watch</span><ul class="pv-players">${players}</ul></span></div>` : ''}
-      ${t.history ? `<div class="pv-row"><span class="pv-ico">🏆</span><span class="pv-row-body"><span class="pv-row-lbl">History</span> ${t.history}</span></div>` : ''}
+      ${t.form ? `<p class="pv-form">${t.form}</p>` : ''}
     </div>`;
   };
+  const h2h = d.h2h || {};
   return `<div class="preview-panel">
     <div class="pv-header"><span class="pv-label">🤖 AI Preview</span></div>
-    ${teamBlock(d.team1)}
-    <div class="pv-vs-divider">vs</div>
-    ${teamBlock(d.team2)}
-    ${d.h2h && d.h2h.totalMeetings ? `<div class="pv-row pv-h2h-row">
+    ${d.stakes ? `<div class="pv-row pv-stakes"><span class="pv-ico">📊</span><span class="pv-row-body"><span class="pv-row-lbl">Stakes</span> ${d.stakes}</span></div>` : ''}
+    ${d.form && (d.form.team1 || d.form.team2) ? `<div class="pv-row">
       <span class="pv-ico">📋</span>
       <span class="pv-row-body">
-        <span class="pv-row-lbl">Head to Head</span>
-        ${d.h2h.totalMeetings} meetings · ${d.h2h.winsTeam1}W ${d.h2h.draws}D ${d.h2h.winsTeam2}W
-        ${d.h2h.lastMeeting ? `<br><span class="pv-h2h-last">${d.h2h.lastMeeting}</span>` : ''}
+        <span class="pv-row-lbl">Tournament Form</span>
+        ${d.form.team1 ? `<div class="pv-form-line">${getFlag(d.team1?.name||'')} ${d.form.team1}</div>` : ''}
+        ${d.form.team2 ? `<div class="pv-form-line">${getFlag(d.team2?.name||'')} ${d.form.team2}</div>` : ''}
       </span>
-    </div>` : ''}
-    ${d.context ? `<div class="pv-context"><span class="pv-ico">📊</span><span class="pv-row-body"><span class="pv-row-lbl">Context</span> ${d.context}</span></div>` : ''}
+    </div>` : `<div class="pv-vs-divider">${teamBlock(d.team1)}${teamBlock(d.team2)}</div>`}
+    ${d.tactical_battle ? `<div class="pv-row"><span class="pv-ico">⚙️</span><span class="pv-row-body"><span class="pv-row-lbl">Tactical Battle</span> ${d.tactical_battle}</span></div>` : ''}
+    ${d.key_duel ? `<div class="pv-row"><span class="pv-ico">⚔️</span><span class="pv-row-body"><span class="pv-row-lbl">Key Duel</span> <b>${d.key_duel.player1}</b> vs <b>${d.key_duel.player2}</b> — ${d.key_duel.why}</span></div>` : ''}
+    ${h2h.summary ? `<div class="pv-row pv-h2h-row"><span class="pv-ico">🔁</span><span class="pv-row-body"><span class="pv-row-lbl">Head to Head</span> ${h2h.summary}${h2h.edge ? `<br><span class="pv-h2h-last">${h2h.edge}</span>` : ''}</span></div>` : ''}
+    ${d.x_factor ? `<div class="pv-row"><span class="pv-ico">⚡</span><span class="pv-row-body"><span class="pv-row-lbl">X Factor</span> ${d.x_factor}</span></div>` : ''}
+    ${d.prediction ? `<div class="pv-row pv-prediction"><span class="pv-ico">🎯</span><span class="pv-row-body"><span class="pv-row-lbl">Prediction</span> <b>${d.prediction.score}</b> — ${d.prediction.reasoning}</span></div>` : ''}
   </div>`;
 }
 

@@ -609,6 +609,76 @@ img.emoji {
 .srow-scores .srow-pen { font-size: 9px; font-weight: 700; color: var(--amber); margin-top: -2px; }
 .srow-dash { text-align: center; color: #3a414c; font-size: 14px; font-weight: 700; min-width: 22px; }
 
+/* ══ STANDINGS / GROUPS — redesigned card layout (mockup) ══ */
+.gstd-top {
+  padding: 6px 16px 12px; position: sticky; top: 0; background: var(--bg); z-index: 10;
+}
+.gstd-title { font-size: 24px; font-weight: 800; color: var(--white); letter-spacing: -.025em; margin: 0 0 12px; }
+.gstd-tabs { display: flex; gap: 7px; }
+.gstd-tab {
+  font-family: inherit; font-size: 12px; font-weight: 600; color: var(--muted);
+  background: var(--card); border: 1px solid rgba(255,255,255,.06); border-radius: 9px;
+  padding: 7px 14px; cursor: pointer; white-space: nowrap; transition: background .15s, color .15s;
+}
+.gstd-tab.active { background: #262b34; color: var(--white); font-weight: 700; border-color: transparent; }
+
+.gstd-wrap { padding: 2px 16px 16px; }
+.gstd-card {
+  background: var(--card); border: 1px solid rgba(255,255,255,.06);
+  border-radius: 18px; overflow: hidden; margin-bottom: 12px;
+}
+.gstd-hdr {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 11px 15px; border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.gstd-hdr-title { font-size: 14px; font-weight: 800; color: var(--white); letter-spacing: -.01em; white-space: nowrap; }
+.gstd-hdr-md { font-size: 11px; font-weight: 600; color: #6a727e; white-space: nowrap; }
+
+.gstd-colhdr {
+  display: grid; grid-template-columns: 24px 1fr 26px 34px 32px; gap: 4px;
+  padding: 8px 15px; font-size: 10px; font-weight: 700; color: #6a727e; letter-spacing: .04em;
+}
+.gstd-colhdr .c { text-align: center; }
+
+.gstd-row {
+  display: grid; grid-template-columns: 24px 1fr 26px 34px 32px; gap: 4px;
+  padding: 9px 15px; align-items: center; border-left: 3px solid transparent;
+}
+.gstd-row.adv { border-left-color: var(--green); }
+.gstd-row.adv.first { background: rgba(32,189,118,.04); }
+.gstd-row.last { opacity: .72; }
+
+.gstd-rank { font-size: 11px; font-weight: 700; color: #6a727e; }
+.gstd-row.adv .gstd-rank { font-weight: 800; color: var(--green); }
+.gstd-team { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.gstd-badge {
+  width: 21px; height: 21px; flex-shrink: 0; border-radius: 50%; overflow: hidden;
+  position: relative; display: inline-flex; align-items: center; justify-content: center;
+  background: #21252e; border: 1px solid rgba(255,255,255,.09);
+  font-size: 8px; font-weight: 800; color: #9aa3b0;
+}
+.gstd-badge .flag-img {
+  position: absolute; top: 50%; left: 50%; width: 144%; height: 144%;
+  transform: translate(-50%,-50%); object-fit: cover; border-radius: 0; background: none;
+}
+.gstd-name {
+  font-size: 12.5px; font-weight: 600; color: #aeb6c2;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; cursor: pointer;
+}
+.gstd-row.adv .gstd-name { font-weight: 700; color: var(--white); }
+.gstd-p { font-size: 11px; color: #7e8794; text-align: center; }
+.gstd-row.adv .gstd-p { color: #aab2c0; }
+.gstd-gd { font-size: 11px; font-weight: 600; text-align: center; }
+.gstd-gd.pos { color: #34d488; } .gstd-gd.neg { color: #f0544b; } .gstd-gd.zero { color: #7e8794; }
+.gstd-pts { font-size: 13px; font-weight: 800; text-align: center; color: #aeb6c2; }
+.gstd-row.adv .gstd-pts { color: var(--white); }
+
+.gstd-legend {
+  display: flex; align-items: center; gap: 8px; padding: 12px 4px 0;
+  font-size: 10.5px; color: #6a727e; font-weight: 600;
+}
+.gstd-legend-bar { width: 14px; height: 8px; border-radius: 3px; background: var(--green); }
+
 /* ══ GROUPS TAB — matches artifact StandingsGroup exactly ══ */
 .groups-grid {
   display: grid;

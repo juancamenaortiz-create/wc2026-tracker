@@ -1819,3 +1819,31 @@ td.ps-name { color: var(--white); font-weight: 600; }
   background: var(--navy4); border: 1px solid var(--border);
   border-radius: 10px; padding: 1px 7px;
 }
+
+/* ── VAR disallowed goals ── */
+.facts-var       { color: var(--muted); text-decoration: line-through; font-size: 11px; }
+.facts-var-label { font-size: 9px; color: var(--crimson); font-weight: 700; text-decoration: none;
+                   display: inline-block; background: rgba(192,24,46,.15);
+                   border-radius: 3px; padding: 0 4px; margin-left: 3px; }
+
+/* ── Penalty shootout section ── */
+.pso-section  { margin: 12px 0 4px; border-top: 1px solid var(--border); padding-top: 12px; }
+.pso-header   { display: flex; align-items: center; justify-content: space-between;
+                font-size: 11px; font-weight: 700; color: var(--muted);
+                margin-bottom: 10px; }
+.pso-team     { display: flex; align-items: center; gap: 5px; }
+.pso-team-r   { flex-direction: row-reverse; }
+.pso-team b   { color: var(--white); font-size: 15px; }
+.pso-label    { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.pso-kick-row { display: grid; grid-template-columns: 1fr 28px 1fr;
+                gap: 4px; margin-bottom: 6px; align-items: center; }
+.pso-kick     { font-size: 11px; color: var(--white); }
+.pso-left     { text-align: left; }
+.pso-right    { text-align: right; }
+.pso-kick-num { text-align: center; font-size: 10px; color: var(--dim);
+                font-weight: 700; }
+
+/* ── AI Preview — updated layout ── */
+.pv-stakes     { background: rgba(212,175,55,.07); border-radius: 6px; padding: 6px 8px; }
+.pv-prediction { background: rgba(192,24,46,.07);  border-radius: 6px; padding: 6px 8px; }
+.pv-form-line  { font-size: 11px; color: var(--muted); margin-top: 3px; }

@@ -1,7 +1,7 @@
 {
   "functions": {
     "api/preview.js": {
-      "maxDuration": 25
+      "maxDuration": 45
     },
     "api/team.js": {
       "maxDuration": 25

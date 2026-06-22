@@ -10,7 +10,7 @@ export default async function handler(req, res) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return res.status(200).json({ error: 'API key not configured', data: null });
 
-  const { team1, team2, group, city, date } = req.body || {};
+  const { team1, team2, group, city, date, groupStandings } = req.body || {};
   if (!team1 || !team2) return res.status(400).json({ error: 'Missing team names', data: null });
 
   const prompt = `You are a FIFA World Cup 2026 tactical analyst. Search for CURRENT tournament information and return a focused pre-match preview as ONLY a raw JSON object — no markdown, no backticks, no explanation.
@@ -18,7 +18,10 @@ export default async function handler(req, res) {
 Match: ${team1} vs ${team2}
 ${group ? 'Group ' + group + ' · ' : ''}${city} · ${date} · 2026 FIFA World Cup
 
-IMPORTANT: Do NOT repeat basic team info (rankings, WC history, general style) — the user already has that in the team profiles. Focus on what makes THIS specific matchup unique RIGHT NOW.
+IMPORTANT: Do NOT repeat basic team info (rankings, WC history, general style) — the user already has that in team profiles.
+${groupStandings ? `Current Group ${group} standings (do NOT search for this — it is already provided):
+${groupStandings}` : ''}
+Focus your web searches ONLY on: each team's results and scorers so far in this tournament, and any tactical/H2H research. Do NOT search for group standings.
 
 Return ONLY this JSON:
 {

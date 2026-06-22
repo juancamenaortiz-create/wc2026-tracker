@@ -2,14 +2,14 @@
 function buildPreviewSection(matchId) {
   const p = STATE.aiPreviews[matchId];
   if (!p) {
-    return `<button class="preview-btn" onclick="fetchMatchPreview(${matchId})">🤖 AI Preview</button>`;
+    return `<button class="preview-btn" onclick="fetchMatchPreview(${matchId})">🤖 AI Preview &rsaquo;</button>`;
   }
   if (p.loading) {
     return `<div class="preview-loading"><span class="preview-spin">⟳</span> Generating preview…</div>`;
   }
   if (p.data) return buildDetailedPreview(p.data);
   if (p.text) return `<div class="preview-panel"><span class="pv-label">🤖 AI Preview</span><p class="pv-text">${p.text}</p></div>`;
-  return `<button class="preview-btn preview-retry" onclick="delete STATE.aiPreviews[${matchId}]; fetchMatchPreview(${matchId})">⟳ Retry Preview</button>`;
+  return `<button class="preview-btn preview-retry" onclick="delete STATE.aiPreviews[${matchId}]; fetchMatchPreview(${matchId})">⟳ Retry Preview &rsaquo;</button>`;
 }
 
 function buildDetailedPreview(d) {
@@ -48,10 +48,23 @@ function buildDetailedPreview(d) {
 
 
 
-const TODAY_STATE = { showUpcoming: false };
+const TODAY_STATE = { showUpcoming: false, selectedDate: null };
 
 function toggleUpcoming() {
   TODAY_STATE.showUpcoming = !TODAY_STATE.showUpcoming;
+  const c = document.getElementById('tab-content');
+  if (c) renderToday(STATE.demoMode ? document.getElementById('tab-inner') || c : c);
+}
+
+// ── Date strip helpers ──────────────────────────────────────────────────
+function getAllMatchDates() {
+  return [...new Set(SCHEDULE.map(m => m.date))].filter(Boolean).sort();
+}
+function matchesForDate(date) {
+  return SCHEDULE.filter(m => m.date === date);
+}
+function selectTodayDate(date) {
+  TODAY_STATE.selectedDate = date;
   const c = document.getElementById('tab-content');
   if (c) renderToday(STATE.demoMode ? document.getElementById('tab-inner') || c : c);
 }
@@ -73,91 +86,91 @@ function fmtShort(d) {
 
 function renderToday(container) {
   const todayStr = getTodayCT();
-  let displayDate = todayStr, isNextDay = false;
-  let todayMatches = SCHEDULE.filter(m => m.date === todayStr);
+  const allDates = getAllMatchDates();
 
-  // ── Midnight carryover: keep late-night games visible after CT midnight ──
-  // Any match that kicked off within the last 3 hours belongs on Today
-  // even if its scheduled date is now "yesterday" in CT terms.
-  // Example: 11 PM CDT kicks off at T=0; at 00:05 CDT (65 min later) it
-  // should still appear here, not vanish because the date flipped.
-  const yesterdayCT = new Date(Date.now() - 5*60*60*1000 - 86400000)
-    .toISOString().split('T')[0];
-  SCHEDULE.forEach(m => {
-    if (m.date !== yesterdayCT) return;
-    if (todayMatches.some(x => x.id === m.id)) return; // already included
-    const kickoff = parseGameTimeCT(m.date, getMatchTime(m));
-    const msSince = Date.now() - kickoff.getTime();
-    // Within 3 hours of kickoff = could still be in first/second half or extra time
-    if (msSince > 0 && msSince < 3 * 60 * 60 * 1000) {
-      todayMatches = [m, ...todayMatches]; // prepend so it appears first
-    }
-  });
+  // Anchor: today if it's a match day, otherwise the next upcoming match day
+  let anchor = allDates.includes(todayStr)
+    ? todayStr
+    : (allDates.find(d => d >= todayStr) || allDates[allDates.length - 1] || todayStr);
 
-  if (todayMatches.length === 0) {
-    const futureDates = [...new Set(SCHEDULE.map(m => m.date))].filter(d => d >= todayStr).sort();
-    if (futureDates.length > 0) { displayDate = futureDates[0]; todayMatches = SCHEDULE.filter(m => m.date === displayDate); isNextDay = true; }
-    if (todayMatches.length === 0) {
-      const futureKo = [...new Set(R32_MATCHES.map(m => m.date))].filter(d => d >= todayStr).sort();
-      if (futureKo.length > 0) { displayDate = futureKo[0]; todayMatches = R32_MATCHES.filter(m => m.date === displayDate); isNextDay = displayDate !== todayStr; }
-    }
+  let selectedDate = TODAY_STATE.selectedDate;
+  if (!selectedDate || !allDates.includes(selectedDate)) selectedDate = anchor;
+  const viewingToday = selectedDate === todayStr;
+
+  let dayMatches = matchesForDate(selectedDate);
+
+  // ── Midnight carryover: keep late-night games visible for up to 3h after kickoff ──
+  if (viewingToday) {
+    const yesterdayCT = new Date(Date.now() - 5*60*60*1000 - 86400000)
+      .toISOString().split('T')[0];
+    SCHEDULE.forEach(m => {
+      if (m.date !== yesterdayCT) return;
+      if (dayMatches.some(x => x.id === m.id)) return;
+      const kickoff = parseGameTimeCT(m.date, getMatchTime(m));
+      const msSince = Date.now() - kickoff.getTime();
+      if (msSince > 0 && msSince < 3 * 60 * 60 * 1000) dayMatches = [m, ...dayMatches];
+    });
   }
 
   const now = new Date();
   let played = 0, upcoming = 0, live = 0;
-  todayMatches.forEach(m => {
+  dayMatches.forEach(m => {
     const res = m.g ? getMatchResult(m) : getKnockoutResult(m.id);
     if (res && res.status === 'FT') played++;
     else if (res && res.status === 'LIVE') live++;
     else upcoming++;
   });
 
-  let html = '<div class="today-wrap"><div class="today-hdr">';
-  if (isNextDay) html += `<div class="next-day-note">Next match day: ${formatDate(displayDate)}</div>`;
-  html += `<div class="today-summary"><span class="summary-total">${todayMatches.length} match${todayMatches.length !== 1 ? 'es' : ''} ${isNextDay ? 'scheduled' : 'today'}</span>`;
-  if (played > 0 || live > 0) {
-    const parts = [];
-    if (live > 0) parts.push(`<span class="live-text">${live} LIVE</span>`);
-    if (played > 0) parts.push(`${played} played`);
-    if (upcoming > 0) parts.push(`${upcoming} upcoming`);
-    html += `<span class="summary-detail">${parts.join(' · ')}</span>`;
-  }
-  html += '</div></div>';
+  let html = '<div class="today-wrap">';
 
-
-
-  if (todayMatches.length === 0) {
-    html += '<div class="empty-state">🏆<br>No matches scheduled yet.<br><span>Tournament starts June 11, 2026</span></div>';
-  } else {
-    todayMatches.forEach(m => { html += buildMatchCard(m, now); });
-  }
-
-  // ── Upcoming matches accordion ──────────────────────────────────────────
-  const upcomingDays = getUpcomingDays(displayDate, 5);
-  if (upcomingDays.length > 0) {
-    const totalGames = upcomingDays.reduce((n, d) => n + d.matches.length, 0);
-    const isOpen = TODAY_STATE.showUpcoming;
-    html += `<div class="upcoming-toggle" onclick="toggleUpcoming()">
-      <span>📅 Upcoming — ${totalGames} matches over next ${upcomingDays.length} days</span>
-      <span class="upcoming-chevron">${isOpen ? '▲' : '▼'}</span>
-    </div>`;
-    if (isOpen) {
-      upcomingDays.forEach(({ date, day, matches }) => {
-        html += `<div class="upcoming-day-hdr">${day}, ${fmtShort(date)}</div>`;
-        matches.forEach(m => {
-          const starred = STATE.myTeams.some(t => normName(t)===normName(m.t1)||normName(t)===normName(m.t2));
-          html += `<div class="upcoming-row${starred?' my-t':''}">
-            <span class="upcoming-time">${formatGameTime(m.date, getMatchTime(m))}</span>
-            <span class="upcoming-grp">Grp ${m.g}</span>
-            <span class="upcoming-teams-txt">${getFlag(m.t1)} ${displayName(m.t1)} <span class="upcoming-vs">vs</span> ${displayName(m.t2)} ${getFlag(m.t2)}</span>
-          </div>`;
-        });
-      });
+  // ── Date strip ──
+  html += '<div class="today-datestrip" id="today-datestrip">';
+  allDates.forEach(date => {
+    const sel = date === selectedDate;
+    let label;
+    if (date === todayStr) {
+      label = 'Today';
+    } else {
+      const m0 = matchesForDate(date)[0];
+      const dayNum = Number(date.split('-')[2]);
+      const wd = (m0 && m0.day) ? m0.day
+        : ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date(date + 'T12:00:00Z').getUTCDay()];
+      label = `${wd} ${dayNum}`;
     }
+    html += `<button class="dchip${sel ? ' active' : ''}${date === todayStr ? ' is-today' : ''}" onclick="selectTodayDate('${date}')">${label}</button>`;
+  });
+  html += '</div>';
+
+  // ── Summary line ──
+  const n = dayMatches.length;
+  html += '<div class="today-summary">';
+  html += `<span class="summary-total">${n} match${n !== 1 ? 'es' : ''}</span>`;
+  if (live > 0) {
+    html += `<span class="summary-dot-sep">·</span><span class="summary-live"><span class="summary-live-dot"></span>${live} live now</span>`;
+  } else if (n > 0) {
+    const bits = [];
+    if (upcoming > 0) bits.push(`${upcoming} upcoming`);
+    if (played > 0) bits.push(`${played} played`);
+    if (bits.length) html += `<span class="summary-dot-sep">·</span><span class="summary-detail">${bits.join(' · ')}</span>`;
+  }
+  html += '</div>';
+
+  // ── Match cards ──
+  if (n === 0) {
+    html += '<div class="empty-state">🏆<br>No matches on this day.</div>';
+  } else {
+    dayMatches.forEach(m => { html += buildMatchCard(m, now); });
   }
 
   html += '</div>';
   container.innerHTML = html;
+
+  // Bring the selected day into view in the strip (centered)
+  const strip = container.querySelector('#today-datestrip');
+  if (strip) {
+    const act = strip.querySelector('.dchip.active');
+    if (act) strip.scrollLeft = Math.max(0, act.offsetLeft - strip.clientWidth / 2 + act.offsetWidth / 2);
+  }
 
   container.querySelectorAll('[data-star-team]').forEach(slot => {
     const btn = starBtn(slot.dataset.starTeam, () => renderToday(container));
@@ -165,8 +178,6 @@ function renderToday(container) {
   });
   startCountdowns(container);
 }
-  if (typeof twemoji !== 'undefined') twemoji.parse(container);
-
 
 // Matches the artifact MatchCard exactly
 function buildMatchCard(match, now) {
@@ -188,34 +199,30 @@ function buildMatchCard(match, now) {
   const countdown  = (!isFT && !isLive && msUntil > 0) ? formatCountdown(msUntil) : null;
   const isMyCard   = STATE.myTeams.some(t => normName(t) === normName(match.t1) || normName(t) === normName(match.t2));
 
-  // Left column: FT badge / LIVE / time+CT, then GRP label
-  let leftStatus = '', leftCls = 'ns-col';
+  // Top-right status: FT / HT / LIVE clock / kickoff time / overdue
+  let statusHtml = '';
   if (isFT) {
-    leftCls = 'ft-col';
     const sub = result?.substatus;
-    leftStatus = `<span class="mc-ft">FT</span>${sub ? `<span class="mc-sub">${sub}</span>` : ''}`;
+    statusHtml = `<span class="mc-status-ft">FT${sub ? ' ' + sub : ''}</span>`;
   } else if (isLive) {
     if (result?.substatus === 'HT') {
-      leftCls = 'ht-col';
-      leftStatus = '<span class="mc-ht">HT</span>';
+      statusHtml = '<span class="mc-status-ht">HT</span>';
     } else {
-      leftCls = 'live-col';
-      const clockStr = result?.clock ? ` ${result.clock}` : '';
-      leftStatus = `<span class="mc-live"><span class="pulse-dot"></span>LIVE${clockStr}</span>`;
+      const clockStr = result?.clock ? result.clock : 'LIVE';
+      statusHtml = `<span class="mc-status-live"><span class="pulse-dot"></span>${clockStr}</span>`;
     }
   } else {
-    // Two-line time display — or "overdue" if kickoff has passed with no ESPN data yet
     const t = getMatchTime(match);
     const tzAbbr = getTZAbbr();
     const isOverdue = msUntil < -300000; // 5+ min past kickoff, still no result
     if (isOverdue) {
-      leftCls = 'overdue-col';
-      leftStatus = `<span class="mc-overdue"><span class="pulse-dot" style="background:var(--amber)"></span>LIVE?</span>`;
+      statusHtml = `<span class="mc-status-live"><span class="pulse-dot" style="background:var(--amber)"></span>LIVE?</span>`;
     } else {
-      leftStatus = `<span class="mc-time">${formatGameTime(match.date, t)}</span><span class="mc-tz">${tzAbbr}</span>`;
+      statusHtml = `<span class="mc-status-time">${formatGameTime(match.date, t)} <span class="mc-status-tz">${tzAbbr}</span></span>`;
     }
   }
-  const grpLabel = match.g ? `GRP ${match.g}` : 'R32';
+  const grpLabel = match.g ? `GROUP ${match.g}` : 'R32';
+  const isLiveCard = isLive || (!hasResult && msUntil < -300000);
 
   // Team rows — winner gold + bold, loser 45% opacity
   const cls1 = !isDraw && t1Wins ? 'winner' : (!isDraw && t2Wins ? 'loser' : '');
@@ -223,33 +230,30 @@ function buildMatchCard(match, now) {
   const s1html = hasResult ? `<span class="mc-score">${score1}</span>` : '';
   const s2html = hasResult ? `<span class="mc-score">${score2}</span>` : '';
 
-  return `<div class="mc-wrap${isMyCard ? ' my-team-card' : ''}">
-  <div class="mc-left ${leftCls}">
-    ${leftStatus}
-    <span class="mc-grp">${grpLabel}</span>
+  return `<div class="mc-card${isMyCard ? ' my-team-card' : ''}${isLiveCard ? ' mc-card-live' : ''}">
+  <div class="mc-top">
+    <span class="mc-grp-pill">${grpLabel}</span>
+    ${statusHtml}
   </div>
-  <div class="mc-right">
-    <div class="mc-team ${cls1}">
-      <span class="mc-flag">${getFlag(match.t1)}</span>
-      <span class="mc-name team-link" onclick="openTeamProfile('${match.t1}')">${displayName(match.t1)}</span>
-      <span data-star-team="${match.t1}"></span>
-      ${s1html}
-    </div>
-    <div class="mc-divider"></div>
-    ${isFT && isPSO && result.penScore1 !== null ? `<div class="mc-pso-score">Pens · ${result.penScore1}–${result.penScore2}</div>` : ''}
-    <div class="mc-team ${cls2}">
-      <span class="mc-flag">${getFlag(match.t2)}</span>
-      <span class="mc-name team-link" onclick="openTeamProfile('${match.t2}')">${displayName(match.t2)}</span>
-      <span data-star-team="${match.t2}"></span>
-      ${s2html}
-    </div>
-    ${hasResult ? `<button class="md-trigger-btn" onclick="openMatchDetail(${match.id})">📋 Match Details</button>` : ''}
-    ${(!hasResult && msUntil >= -300000) ? buildPreviewSection(match.id) : ''}
-    <div class="mc-footer">
-      <span class="mc-city">📍 ${match.city}</span>
-      ${countdown ? `<span class="mc-countdown" data-kickoff="${kickoffUTC.getTime()}">${countdown}</span>` : ''}
-      ${(!hasResult && msUntil < -300000) ? '<span class="mc-espn-wait">⚡ Awaiting ESPN…</span>' : ''}
-    </div>
+  <div class="mc-team ${cls1}">
+    <span class="mc-flag">${getFlag(match.t1)}</span>
+    <span class="mc-name team-link" onclick="openTeamProfile('${match.t1}')">${displayName(match.t1)}</span>
+    <span data-star-team="${match.t1}"></span>
+    ${s1html}
+  </div>
+  <div class="mc-team ${cls2}">
+    <span class="mc-flag">${getFlag(match.t2)}</span>
+    <span class="mc-name team-link" onclick="openTeamProfile('${match.t2}')">${displayName(match.t2)}</span>
+    <span data-star-team="${match.t2}"></span>
+    ${s2html}
+  </div>
+  ${isFT && isPSO && result.penScore1 !== null ? `<div class="mc-pso-score">Pens · ${result.penScore1}–${result.penScore2}</div>` : ''}
+  ${(!hasResult && msUntil >= -300000) ? buildPreviewSection(match.id) : ''}
+  <div class="mc-foot">
+    <span class="mc-city">${match.city}</span>
+    ${hasResult ? `<span class="mc-detail-link" onclick="openMatchDetail(${match.id})">Match Centre &rsaquo;</span>` : ''}
+    ${countdown ? `<span class="mc-countdown" data-kickoff="${kickoffUTC.getTime()}">${countdown}</span>` : ''}
+    ${(!hasResult && msUntil < -300000) ? '<span class="mc-espn-wait">⚡ Awaiting ESPN…</span>' : ''}
   </div>
 </div>`;
 }

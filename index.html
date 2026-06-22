@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#06091A">
+  <meta name="theme-color" content="#0c0e12">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="WC 2026">
@@ -11,26 +11,28 @@
   <link rel="icon" type="image/png" href="/icon.png">
   <link rel="manifest" href="/manifest.json">
   <title>FIFA World Cup 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 
-  <!-- ===== HEADER (matches React artifact exactly) ===== -->
+  <!-- ===== HEADER ===== -->
   <header class="app-header">
-    <div class="header-center">
-      <div class="header-eyebrow">LIVE GROUP STAGE TRACKER</div>
-      <div class="header-trophy">&#127942;</div>
-      <div class="header-title">FIFA WORLD CUP 2026</div>
-      <div class="header-tz" id="tz-label">&#128336; All Times U.S. Central (CT)</div>
-    </div>
-    <div class="header-actions">
-      <span id="status-msg" class="status-msg">Not yet refreshed</span>
-      <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
-        <button id="refresh-btn" onclick="fetchScores()">&#8635; Refresh Scores</button>
-        <button class="settings-btn" onclick="openSettings()" title="Settings">&#9881;</button>
+    <div class="header-brand">
+      <div class="header-logo-tile">26</div>
+      <div class="header-wordmark">
+        <div class="header-title">World Cup 2026</div>
+        <div class="header-tz" id="tz-label">Canada &middot; Mexico &middot; USA</div>
       </div>
     </div>
+    <div class="header-actions">
+      <button id="refresh-btn" onclick="fetchScores()" title="Refresh Scores">&#8635;</button>
+      <button class="settings-btn" onclick="openSettings()" title="Settings">&#9881;</button>
+    </div>
   </header>
+  <div class="header-status-bar"><span id="status-msg" class="status-msg"></span></div>
 
   <!-- ===== MAIN CONTENT ===== -->
   <main id="tab-content">
@@ -40,23 +42,23 @@
   <!-- ===== BOTTOM NAV ===== -->
   <nav class="bottom-nav">
     <button class="tab-btn" data-tab="today" onclick="navigateTo('today')">
-      <span class="tab-icon">&#128197;</span>
+      <span class="tab-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg></span>
       <span>Today</span>
     </button>
     <button class="tab-btn" data-tab="schedule" onclick="navigateTo('schedule')">
-      <span class="tab-icon">&#128467;</span>
+      <span class="tab-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 7h12M8.5 12h12M8.5 17h12M4 7h.01M4 12h.01M4 17h.01"/></svg></span>
       <span>Schedule</span>
     </button>
     <button class="tab-btn" data-tab="groups" onclick="navigateTo('groups')">
-      <span class="tab-icon">&#128202;</span>
+      <span class="tab-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><path d="M6 20V11M12 20V5M18 20v-6"/></svg></span>
       <span>Groups</span>
     </button>
     <button class="tab-btn" data-tab="bracket" onclick="navigateTo('bracket')">
-      <span class="tab-icon">&#127942;</span>
+      <span class="tab-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4.5h10V9a5 5 0 0 1-10 0V4.5Z"/><path d="M7 6.5H4.3v.7A2.8 2.8 0 0 0 7 10M17 6.5h2.7v.7A2.8 2.8 0 0 1 17 10"/><path d="M9.5 14.2 9 18.5h6l-.5-4.3M7.5 21h9"/></svg></span>
       <span>Bracket</span>
     </button>
     <button class="tab-btn" data-tab="analyzer" onclick="navigateTo('analyzer')">
-      <span class="tab-icon">&#128300;</span>
+      <span class="tab-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h8M16 8h4M4 16h4M12 16h8"/><circle cx="14" cy="8" r="2.3"/><circle cx="10" cy="16" r="2.3"/></svg></span>
       <span>Analyzer</span>
     </button>
   </nav>
@@ -194,9 +196,10 @@
   <!-- Match Detail Modal -->
   <div class="modal-overlay" id="match-detail-modal" onclick="closeMatchDetail()">
     <div class="tp-sheet" onclick="event.stopPropagation()">
-      <div class="tp-sheet-bar" style="justify-content:space-between">
-        <span style="font-size:13px;font-weight:700;color:var(--white)">📋 Match Details</span>
-        <button class="tp-close" onclick="closeMatchDetail()">✕ Close</button>
+      <div class="tp-sheet-bar md-sheet-bar">
+        <button class="md-back-btn" onclick="closeMatchDetail()" aria-label="Back">&lsaquo;</button>
+        <span class="md-sheet-title">Match Centre</span>
+        <span style="width:34px"></span>
       </div>
       <div id="match-detail-content" class="tp-content"></div>
     </div>

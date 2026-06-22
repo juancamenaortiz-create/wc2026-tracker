@@ -1,6 +1,13 @@
-// SCHEDULE.JS — Full schedule tab renderer
+// SCHEDULE.JS — Full schedule tab renderer (card-grouped, mockup layout)
 
 const SCHEDULE_STATE = { view: 'date', filter: 'all', scrollToToday: false };
+
+function schedSortKey(m) {
+  const t = getMatchTime(m);
+  const ms = (m.date && t) ? parseGameTimeCT(m.date, t).getTime()
+           : (m.date ? new Date(m.date + 'T23:59:59').getTime() : Infinity);
+  return isNaN(ms) ? Infinity : ms;
+}
 
 function renderSchedule(container) {
   const allMatches = [
@@ -8,48 +15,45 @@ function renderSchedule(container) {
     ...R32_MATCHES.map(m => ({ ...m, round: 'R32', isKnockout: true })),
     ...KO_ROUNDS.map(m => ({ ...m, isKnockout: true })),
   ];
+  const viewMode = SCHEDULE_STATE.view;
 
-  const dates  = [...new Set(allMatches.map(m => m.date))].sort();
-  const groups = ['A','B','C','D','E','F','G','H','I','J','K','L','Knockout'];
-  const { view: viewMode, filter: filterKey } = SCHEDULE_STATE;
-
-  let filtered = allMatches;
-  if (filterKey !== 'all') {
-    if (viewMode === 'date') filtered = allMatches.filter(m => m.date === filterKey);
-    else if (filterKey === 'Knockout') filtered = allMatches.filter(m => m.isKnockout);
-    else filtered = allMatches.filter(m => m.g === filterKey);
-  }
-
-  const byDate = {};
-  filtered.forEach(m => { if (!byDate[m.date]) byDate[m.date] = []; byDate[m.date].push(m); });
-  const pills = viewMode === 'date' ? ['all', ...dates] : ['all', ...groups];
-
-  // Artifact-style active pill: crimson gradient, no border, shadow
-  const pillsHtml = pills.map(p => {
-    const label = p === 'all' ? 'All Groups' : viewMode === 'date' ? formatPillDate(p) : p === 'Knockout' ? 'Knockout' : `Grp ${p}`;
-    return `<button class="pill${filterKey === p ? ' active' : ''}" onclick="setScheduleFilter('${p}')">${label}</button>`;
-  }).join('');
-
-  let html = `<div class="sched-header">
-    <div class="sched-view-tabs">
-      <button class="sched-tab-btn${viewMode === 'date' ? ' active' : ''}" onclick="setScheduleView('date')">By Date</button>
-      <button class="sched-tab-btn${viewMode === 'group' ? ' active' : ''}" onclick="setScheduleView('group')">By Group</button>
+  let html = `<div class="sched-top">
+    <h2 class="sched-title">Schedule</h2>
+    <div class="sched-seg">
+      <button class="sched-seg-btn${viewMode === 'date' ? ' active' : ''}" onclick="setScheduleView('date')">By date</button>
+      <button class="sched-seg-btn${viewMode === 'group' ? ' active' : ''}" onclick="setScheduleView('group')">By group</button>
     </div>
-    <div class="pills-wrap">${pillsHtml}</div>
   </div>
   <div class="schedule-wrap">`;
 
-  if (filtered.length === 0) {
-    html += '<div class="empty-state">No matches found</div>';
-  } else {
-    Object.keys(byDate).sort().forEach(date => {
-      // Date header matching artifact DateHeader exactly
-      const d = new Date(date + 'T12:00:00');
-      const day  = d.toLocaleDateString('en-US', { weekday: 'long' });
-      const mon  = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      html += `<div class="date-hdr" id="sched-date-${date}"><span class="date-hdr-day">${day}, </span><span class="date-hdr-date">${mon}</span></div>`;
-      byDate[date].forEach(match => { html += buildScheduleRow(match); });
+  let sortedDates = [];
+
+  if (viewMode === 'group') {
+    const groups = ['A','B','C','D','E','F','G','H','I','J','K','L'];
+    let any = false;
+    groups.forEach(g => {
+      const ms = allMatches.filter(m => m.g === g).sort((a,b) => schedSortKey(a) - schedSortKey(b));
+      if (!ms.length) return;
+      any = true;
+      html += buildSchedCard(`Group ${g}`, `${ms.length} games`, ms, null);
     });
+    const ko = allMatches.filter(m => m.isKnockout).sort((a,b) => schedSortKey(a) - schedSortKey(b));
+    if (ko.length) { any = true; html += buildSchedCard('Knockout stage', `${ko.length} games`, ko, null); }
+    if (!any) html += '<div class="empty-state">No matches found</div>';
+  } else {
+    const byDate = {};
+    allMatches.forEach(m => { (byDate[m.date] = byDate[m.date] || []).push(m); });
+    sortedDates = Object.keys(byDate).sort();
+    if (!sortedDates.length) {
+      html += '<div class="empty-state">No matches found</div>';
+    } else {
+      sortedDates.forEach(date => {
+        const ms = byDate[date].sort((a,b) => schedSortKey(a) - schedSortKey(b));
+        const d = new Date(date + 'T12:00:00');
+        const title = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+        html += buildSchedCard(title, `${ms.length} game${ms.length !== 1 ? 's' : ''}`, ms, date);
+      });
+    }
   }
 
   html += '</div>';
@@ -60,31 +64,43 @@ function renderSchedule(container) {
     slot.appendChild(btn);
   });
 
-  // Auto-scroll to today's matches — only on a fresh tab open (set by navigateTo),
-  // never on background refreshes or filter changes, so we don't yank the scroll
-  // position away while the person is browsing.
-  if (SCHEDULE_STATE.scrollToToday) {
+  // Auto-scroll to today's card — only on a fresh tab open (set by navigateTo),
+  // never on background refreshes or view changes.
+  if (SCHEDULE_STATE.scrollToToday && viewMode === 'date') {
     SCHEDULE_STATE.scrollToToday = false;
-    scrollScheduleToToday(container, Object.keys(byDate).sort());
+    scrollScheduleToToday(sortedDates);
   }
 }
 
-// Finds today's date header (or the nearest upcoming one if today has no match,
-// or the most recent past one if the tournament has ended) and scrolls to it.
-function scrollScheduleToToday(container, sortedDates) {
-  if (!sortedDates.length) return;
-  const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Chicago' }); // YYYY-MM-DD
-  let target = sortedDates.find(d => d === todayStr)
-            || sortedDates.find(d => d > todayStr)   // next upcoming date
-            || sortedDates[sortedDates.length - 1];  // tournament over — show the last date
+function buildSchedCard(title, countLabel, matches, dateId) {
+  const rows = matches.map(buildScheduleRow).join('');
+  const idAttr = dateId ? ` id="sched-date-${dateId}"` : '';
+  return `<div class="sched-card"${idAttr}>
+    <div class="sched-card-hdr">
+      <span class="sched-card-title">${title}</span>
+      <span class="sched-card-count">${countLabel}</span>
+    </div>
+    ${rows}
+  </div>`;
+}
+
+// Finds today's date card (or the nearest upcoming one, or the last past one)
+// and scrolls the tab container to it without using scrollIntoView.
+function scrollScheduleToToday(sortedDates) {
+  if (!sortedDates || !sortedDates.length) return;
+  const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Chicago' });
+  const target = sortedDates.find(d => d === todayStr)
+              || sortedDates.find(d => d > todayStr)
+              || sortedDates[sortedDates.length - 1];
   const el = document.getElementById(`sched-date-${target}`);
-  if (el) {
-    // Defer to next frame so layout has settled before measuring scroll position
-    requestAnimationFrame(() => el.scrollIntoView({ behavior: 'auto', block: 'start' }));
+  const scroller = document.getElementById('tab-content');
+  if (el && scroller) {
+    requestAnimationFrame(() => {
+      const top = el.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop;
+      scroller.scrollTop = Math.max(0, top - 8);
+    });
   }
 }
-  if (typeof twemoji !== 'undefined') twemoji.parse(container);
-
 
 function buildScheduleRow(match) {
   const result = match.isKnockout ? getKnockoutResult(match.id) : getMatchResult(match);
@@ -92,70 +108,59 @@ function buildScheduleRow(match) {
   const score1 = result ? result.score1 : null;
   const score2 = result ? result.score2 : null;
   const isLive = status === 'LIVE', isFT = status === 'FT';
-
   const isPSO = !!(result?.substatus === 'PSO');
+
   let w1 = '', w2 = '';
   if (isFT && score1 !== null) {
     const pen1 = result?.penScore1 ?? 0, pen2 = result?.penScore2 ?? 0;
     if (isPSO ? pen1 > pen2 : score1 > score2)      { w1 = 'winner'; w2 = 'loser'; }
     else if (isPSO ? pen2 > pen1 : score2 > score1) { w1 = 'loser';  w2 = 'winner'; }
-    else                      { w1 = 'draw';   w2 = 'draw'; }
+    else                                            { w1 = 'draw';   w2 = 'draw'; }
   }
 
-  const isMyT1 = isMyTeam(match.t1 || ''), isMyT2 = isMyTeam(match.t2 || '');
-  const t1Name = match.t1 || match.slot1 || 'TBD', t2Name = match.t2 || match.slot2 || 'TBD';
-  const t1Flag = match.t1 ? getFlag(match.t1) : '❓', t2Flag = match.t2 ? getFlag(match.t2) : '❓';
-  const roundLabel = match.round ? match.round : (match.g ? `Grp ${match.g}` : 'R32');
+  const isMy1 = isMyTeam(match.t1 || ''), isMy2 = isMyTeam(match.t2 || '');
+  const t1Name = match.t1 || match.slot1 || 'TBD';
+  const t2Name = match.t2 || match.slot2 || 'TBD';
+  const badge = (team) => team
+    ? `<span class="srow-badge">${getFlag(team)}</span>`
+    : `<span class="srow-badge srow-badge-tbd">?</span>`;
 
-  let statusHtml = '';
+  // ── Status cell (left column) ──
+  let statusCell;
   if (isLive) {
-    const sub = result?.substatus || '';
-    if (sub === 'HT') {
-      statusHtml = '<span class="ht-badge">HT</span>';
-    } else {
-      const clockStr = result?.clock ? ` ${result.clock}` : '';
-      statusHtml = `<span class="live-badge sm"><span class="pulse-dot"></span>LIVE${clockStr}</span>`;
-    }
-  } else if (isFT)  statusHtml = '<span class="ft-badge sm">FT</span>';
-  else {
-    const kickoff = match.date && match.time ? parseGameTimeCT(match.date, getMatchTime(match)) : null;
-    const overdue  = kickoff && (Date.now() - kickoff.getTime() > 300000);
-    statusHtml = overdue
-      ? `<span class="sched-overdue">⏱ LIVE?</span>`
-      : `<span class="sched-time">${formatGameTime(match.date, getMatchTime(match))} ${getTZAbbr()}</span>`;
-  }
-
-  let centerHtml = '';
-  if ((isLive || isFT) && score1 !== null) {
-    const sub = result?.substatus || '';
-    const penLine = isFT && isPSO && result?.penScore1 !== null
-      ? `<div class="row-pso">${result.penScore1}–${result.penScore2}p</div>` : '';
-    centerHtml = `<div class="sched-score-wrap"><div class="sched-score"><span class="${w1}">${score1}</span>–<span class="${w2}">${score2}</span>${sub?`<span class="row-sub">${sub}</span>`:''}</div>${penLine}</div>`;
+    statusCell = (result?.substatus === 'HT')
+      ? '<span class="srow-live">HT</span>'
+      : `<span class="srow-live"><span class="pulse-dot"></span>${result?.clock || 'LIVE'}</span>`;
+  } else if (isFT) {
+    statusCell = `<span class="srow-ft">FT</span>`;
   } else {
-    centerHtml = '<div class="sched-score vs">vs</div>';
+    const kickoff = (match.date && getMatchTime(match)) ? parseGameTimeCT(match.date, getMatchTime(match)) : null;
+    const sinceKick = kickoff ? Date.now() - kickoff.getTime() : -1;
+    const overdue = sinceKick > 300000 && sinceKick < 4 * 60 * 60 * 1000; // only flag near kickoff
+    statusCell = overdue
+      ? '<span class="srow-live"><span class="pulse-dot"></span>LIVE?</span>'
+      : `<span class="srow-time">${formatGameTime(match.date, getMatchTime(match))}</span>`;
   }
 
-  return `<div class="schedule-row${isMyT1 || isMyT2 ? ' my-team-row' : ''}">
-  <div class="sched-meta">
-    <span class="sched-round">${roundLabel}</span>
-    ${statusHtml}
-  </div>
-  <div class="sched-teams">
-    <div class="sched-team ${w1}${isMyT1 ? ' my-t' : ''}">
-      <span class="flag">${t1Flag}</span>
-      <span class="sched-name${match.t1?' team-link':''}" ${match.t1?`onclick="openTeamProfile('${match.t1}')"`:''}>${displayName(t1Name)}</span>
-      ${match.t1 ? `<span data-star-team="${match.t1}"></span>` : ''}
+  // ── Score cell (right column) ──
+  let scoreCell;
+  if ((isLive || isFT) && score1 !== null) {
+    const pen = (isFT && isPSO && result?.penScore1 != null)
+      ? `<span class="srow-pen">${result.penScore1}–${result.penScore2}p</span>` : '';
+    scoreCell = `<div class="srow-scores"><span class="${w1}">${score1}</span><span class="${w2}">${score2}</span>${pen}</div>`;
+  } else {
+    scoreCell = '<div class="srow-dash">–</div>';
+  }
+
+  const clickable = isLive || isFT;
+  return `<div class="srow${isMy1 || isMy2 ? ' my-t' : ''}${clickable ? ' srow-click' : ''}"${clickable ? ` onclick="openMatchDetail(${match.id})"` : ''}>
+    <div class="srow-status">${statusCell}</div>
+    <div class="srow-teams">
+      <div class="srow-team ${w1}">${badge(match.t1)}<span class="srow-name">${displayName(t1Name)}</span></div>
+      <div class="srow-team ${w2}">${badge(match.t2)}<span class="srow-name">${displayName(t2Name)}</span></div>
     </div>
-    ${centerHtml}
-    <div class="sched-team right ${w2}${isMyT2 ? ' my-t' : ''}">
-      ${match.t2 ? `<span data-star-team="${match.t2}"></span>` : ''}
-      <span class="sched-name r${match.t2?' team-link':''}" ${match.t2?`onclick="openTeamProfile('${match.t2}')"`:''}>${displayName(t2Name)}</span>
-      <span class="flag">${t2Flag}</span>
-    </div>
-  </div>
-  ${(isLive || isFT) ? `<button class="md-trigger-btn" onclick="openMatchDetail(${match.id})">📋 Match Details</button>` : ''}
-  <div class="sched-city">📍 ${match.city}</div>
-</div>`;
+    ${scoreCell}
+  </div>`;
 }
 
 function setScheduleView(view) {

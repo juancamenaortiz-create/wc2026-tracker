@@ -13,49 +13,38 @@ export default async function handler(req, res) {
   const { team1, team2, group, city, date } = req.body || {};
   if (!team1 || !team2) return res.status(400).json({ error: 'Missing team names', data: null });
 
-  const prompt = `You are a FIFA World Cup 2026 analyst. Search for current information about both teams and return a structured match preview as ONLY a raw JSON object — no markdown, no backticks, no explanation.
+  const prompt = `You are a FIFA World Cup 2026 tactical analyst. Search for CURRENT tournament information and return a focused pre-match preview as ONLY a raw JSON object — no markdown, no backticks, no explanation.
 
 Match: ${team1} vs ${team2}
 ${group ? 'Group ' + group + ' · ' : ''}${city} · ${date} · 2026 FIFA World Cup
 
-Return ONLY this JSON structure (fill in all fields based on real research):
+IMPORTANT: Do NOT repeat basic team info (rankings, WC history, general style) — the user already has that in the team profiles. Focus on what makes THIS specific matchup unique RIGHT NOW.
+
+Return ONLY this JSON:
 {
-  "team1": {
-    "name": "${team1}",
-    "ranking": <current FIFA ranking number>,
-    "role": "<e.g. The Favorites / The Underdogs / The Dark Horses>",
-    "form": "<1–2 sentences: current form, manager name, recent results, tournament momentum>",
-    "tactics": "<How they are expected to play — formation, pressing style, build-up approach>",
-    "players": [
-      {"name": "<player name>", "reason": "<why they are dangerous or important>"},
-      {"name": "<player name>", "reason": "<why they are dangerous or important>"}
-    ],
-    "history": "<WC appearances count, best finish, and one memorable historical moment>"
+  "stakes": "<2 sentences: the exact group table situation going into this match — who is 1st/2nd/3rd, what each team specifically needs from this result, whether either is already through or at risk of elimination>",
+  "form": {
+    "team1": "<results in THIS tournament only, e.g. W 3-0 vs X (Brobbey 2), D 1-1 vs Y. State their top scorer if they have one.>",
+    "team2": "<same format for team2>"
   },
-  "team2": {
-    "name": "${team2}",
-    "ranking": <current FIFA ranking number>,
-    "role": "<role>",
-    "form": "<1–2 sentences>",
-    "tactics": "<tactical approach, especially how they plan to counter team1>",
-    "players": [
-      {"name": "<player name>", "reason": "<reason>"},
-      {"name": "<player name>", "reason": "<reason>"}
-    ],
-    "history": "<WC history>"
+  "tactical_battle": "<the specific tactical matchup that will decide this game — e.g. how team2 high press matches team1 ball-playing CBs, or how team1 wide forwards exploit team2 defensive width. Be concrete and specific to these teams, not generic.>",
+  "key_duel": {
+    "player1": "<player name from team1>",
+    "player2": "<player name from team2>",
+    "why": "<why this specific 1v1 or positional battle is the key to the match outcome>"
   },
   "h2h": {
-    "totalMeetings": <total competitive meetings or null if fewer than 3>,
-    "winsTeam1": <wins by team1>,
-    "draws": <draws>,
-    "winsTeam2": <wins by team2>,
-    "lastMeeting": "<e.g. Germany 2–0 France · Nov 2023 · UEFA Nations League>"
+    "summary": "<last 2-3 competitive meetings with scores and year, or first ever meeting if applicable>",
+    "edge": "<which team has the historical edge in this matchup, or no clear pattern>"
   },
-  "context": "<1–2 sentences on the broader stakes: group standings implications, rivalry history, or tournament context>"
+  "x_factor": "<one specific unexpected element that could swing this match — a set-piece specialist, a player returning from suspension, a tactical wrinkle the opponent won't expect, or an environmental factor>",
+  "prediction": {
+    "score": "<specific scoreline e.g. 2-1>",
+    "reasoning": "<2 sentences explaining this prediction based on current form and the tactical analysis above — no generic statements>"
+  }
 }
 
-Rules: 2–3 players per team. FIFA rankings must be real current numbers. Be factual and specific. Return ONLY the JSON.`;
-
+Be specific, factual, and current. Return ONLY the JSON.\`;
   try {
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -66,7 +55,7 @@ Rules: 2–3 players per team. FIFA rankings must be real current numbers. Be fa
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 1200,
+        max_tokens: 1500,
         tools: [{ type: 'web_search_20250305', name: 'web_search' }],
         messages: [{ role: 'user', content: prompt }],
       }),

@@ -912,6 +912,15 @@ async function fetchMatchPreview(matchId) {
   renderActiveTab();
 
   try {
+    // Build a compact group standings snapshot to give the AI context it would
+    // otherwise need 2-3 web searches to find. This cuts ~15s off the preview time.
+    const groupStandings = (() => {
+      try {
+        const rows = calculateStandings(match.g, STATE.results.groupMatches);
+        return rows.map(r => `${r.rank}. ${r.team} — ${r.w}W ${r.d}D ${r.l}L ${r.gf}:${r.ga} (${r.pts} pts)`).join('\n');
+      } catch(e) { return ''; }
+    })();
+
     const resp = await fetch('/api/preview', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -921,6 +930,7 @@ async function fetchMatchPreview(matchId) {
         group: match.g || '',
         city:  match.city || '',
         date:  match.date || '',
+        groupStandings, // current table so AI doesn't need to search for it
       }),
     });
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);

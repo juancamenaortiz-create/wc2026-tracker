@@ -295,8 +295,10 @@ function _enrichEvents(stored, summary, result) {
            || [];
 
   if (!plays.length) {
-    // Fallback: extract subs from roster data (no minute info, but at least shows who)
-    return stored.concat(_subsFromRosters(summary, result));
+    // No play-by-play from summary — skip roster-derived subs here.
+    // They have no minute info and clutter the timeline.
+    // Subs are shown in the Lineup tab's Substitutions section instead.
+    return stored;
   }
 
   // Build a set of matchIds we already have from scoreboard to avoid duplicates
@@ -314,8 +316,8 @@ function _enrichEvents(stored, summary, result) {
     var name0 = (ath[0] && (ath[0].athlete && (ath[0].athlete.shortName || ath[0].athlete.displayName)) || ath[0] && (ath[0].shortName || ath[0].displayName)) || '';
     var name1 = (ath[1] && (ath[1].athlete && (ath[1].athlete.shortName || ath[1].athlete.displayName)) || ath[1] && (ath[1].shortName || ath[1].displayName)) || '';
 
-    if (typeText.includes('sub') || typeText.includes('substitut')) {
-      // Substitution
+    if ((typeText.includes('sub') || typeText.includes('substitut')) && min) {
+      // Only include subs that have a real minute — untimed subs go to Lineup tab instead
       extra.push({ min:min, tid:tid, p:name0, pIn:name1, sub:true, g:false, y:false, r:false, og:false, pk:false });
     } else if (typeText.includes('disallow') || typeText.includes('var') || typeText.includes('overturned')) {
       // VAR disallowed goal
@@ -417,14 +419,38 @@ function _tabLineup(result, summary) {
     ? '<div class="lu-bench-wrap"><div class="lu-bench-title">Bench</div><div class="lu-bench-cols"><div>' + bench1.map(pill).join('') + '</div><div class="lu-bench-col-r">' + bench2.map(pill).join('') + '</div></div></div>'
     : '';
 
-  // Formation header row (flag + name + formation pill) — sits above the pitch,
-  // away team on top to mirror the pitch orientation, so it never overlaps players
+  // Formation header row (flag + name + formation pill) — sits above the pitch
   var fmHeader = '<div class="lu-fm-header">'
     + '<div class="lu-fm-team"><span class="lu-fm-flag">' + getFlag(result.team2) + '</span><span class="lu-fm-name">' + displayName(result.team2) + '</span>' + (t2P.formation ? '<span class="lu-fm-pill">' + t2P.formation + '</span>' : '') + '</div>'
     + '<div class="lu-fm-team lu-fm-team-r">' + (t1P.formation ? '<span class="lu-fm-pill">' + t1P.formation + '</span>' : '') + '<span class="lu-fm-name">' + displayName(result.team1) + '</span><span class="lu-fm-flag">' + getFlag(result.team1) + '</span></div>'
     + '</div>';
 
-  return fmHeader + '<div class="pitch-wrap">' + svg + '</div>' + bench;
+  // Substitutions — who came on and who they replaced, paired by index
+  // (ESPN returns subbedIn and subbedOut lists in substitution order)
+  var subs1on  = t1A.filter(function(a){ return a.subbedIn; });
+  var subs1off = t1A.filter(function(a){ return a.subbedOut || a.didSubOut; });
+  var subs2on  = t2A.filter(function(a){ return a.subbedIn; });
+  var subs2off = t2A.filter(function(a){ return a.subbedOut || a.didSubOut; });
+
+  function subPair(aOn, aOff) {
+    var nOn  = aOn  && ((aOn.athlete  && (aOn.athlete.shortName  || aOn.athlete.displayName))  || '');
+    var nOff = aOff && ((aOff.athlete && (aOff.athlete.shortName || aOff.athlete.displayName)) || '');
+    if (!nOn && !nOff) return '';
+    return '<div class="lu-sub-pair">'
+      + (nOn  ? '<span class="facts-sub-in">&#8593; '  + nOn  + '</span>' : '')
+      + (nOff ? '<span class="facts-sub-out">&#8595; ' + nOff + '</span>' : '')
+      + '</div>';
+  }
+  var sr1 = subs1on.map(function(a,i){ return subPair(a, subs1off[i]); }).filter(Boolean).join('');
+  var sr2 = subs2on.map(function(a,i){ return subPair(a, subs2off[i]); }).filter(Boolean).join('');
+  var subsHtml = (sr1 || sr2) ? '<div class="lu-bench-wrap">'
+    + '<div class="lu-bench-title">Substitutions</div>'
+    + '<div class="lu-bench-cols">'
+    + '<div>' + (sr1 || '') + '</div>'
+    + '<div class="lu-bench-col-r">' + (sr2 || '') + '</div>'
+    + '</div></div>' : '';
+
+  return fmHeader + '<div class="pitch-wrap">' + svg + '</div>' + bench + subsHtml;
 }
 
 // SVG pitch — emoji-sized circles (r=6), formation labels moved off-pitch into header row

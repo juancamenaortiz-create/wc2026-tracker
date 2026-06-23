@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=20260623d">
+  <link rel="stylesheet" href="css/styles.css?v=20260623e">
 </head>
 <body>
 
@@ -65,133 +65,145 @@
 
   <!-- ===== SETTINGS MODAL ===== -->
   <div class="modal-overlay" id="settings-modal" onclick="closeSettings()">
-    <div class="modal-sheet" onclick="event.stopPropagation()">
-      <div class="modal-title">&#9881;&#65039; Settings</div>
+    <div class="settings-sheet" onclick="event.stopPropagation()">
 
-      <div class="modal-row">
-        <div>
-          <div class="modal-row-name">My Teams</div>
-          <div class="modal-row-label">Pinned teams (max 10) highlighted across the app</div>
-        </div>
-        <button class="modal-btn danger" onclick="clearMyTeams()">Clear All</button>
+      <div class="settings-head">
+        <h2 class="settings-title">Settings</h2>
+        <button class="settings-close" onclick="closeSettings()" aria-label="Close settings">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
       </div>
 
-      <div class="modal-row">
-        <div>
-          <div class="modal-row-name">Scores Cache</div>
-          <div class="modal-row-label">Cached scores are restored on reload</div>
+      <div class="settings-body">
+
+        <div class="set-sec-label">Preferences</div>
+        <div class="set-card">
+          <div class="set-row">
+            <div class="set-row-text">
+              <div class="set-row-name">My Teams</div>
+              <div class="set-row-sub">Pin up to 10, highlighted everywhere</div>
+            </div>
+            <button class="set-btn danger" onclick="clearMyTeams()">Clear all</button>
+          </div>
+          <div class="set-row">
+            <div class="set-row-text">
+              <div class="set-row-name">Timezone</div>
+              <div class="set-row-sub" id="setting-tz-detail">Auto-detected</div>
+            </div>
+            <div class="set-select-wrap">
+              <select id="tz-select" class="set-select" onchange="setTimezone(this.value)">
+                <option value="auto">Auto</option>
+                <optgroup label="Americas">
+                  <option value="America/New_York">New York (ET)</option>
+                  <option value="America/Chicago">Chicago (CT)</option>
+                  <option value="America/Denver">Denver (MT)</option>
+                  <option value="America/Los_Angeles">Los Angeles (PT)</option>
+                  <option value="America/Mexico_City">Mexico City</option>
+                  <option value="America/Bogota">Bogotá / Lima</option>
+                  <option value="America/Sao_Paulo">São Paulo</option>
+                  <option value="America/Argentina/Buenos_Aires">Buenos Aires</option>
+                </optgroup>
+                <optgroup label="Europe">
+                  <option value="Europe/London">London</option>
+                  <option value="Europe/Madrid">Madrid / Paris</option>
+                  <option value="Europe/Berlin">Berlin / Amsterdam</option>
+                  <option value="Europe/Istanbul">Istanbul</option>
+                </optgroup>
+                <optgroup label="Africa">
+                  <option value="Africa/Lagos">Lagos / Accra</option>
+                  <option value="Africa/Johannesburg">Johannesburg</option>
+                </optgroup>
+                <optgroup label="Middle East &amp; Asia">
+                  <option value="Asia/Dubai">Dubai</option>
+                  <option value="Asia/Karachi">Karachi / Islamabad</option>
+                  <option value="Asia/Kolkata">Mumbai / Delhi</option>
+                  <option value="Asia/Tokyo">Seoul / Tokyo</option>
+                </optgroup>
+                <optgroup label="Pacific">
+                  <option value="Australia/Sydney">Sydney</option>
+                </optgroup>
+              </select>
+              <svg class="set-select-chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+            </div>
+          </div>
+          <div class="set-row">
+            <div class="set-row-text">
+              <div class="set-row-name">Auto-refresh</div>
+              <div class="set-row-sub" id="setting-refresh-detail">Every 1 min on match days</div>
+            </div>
+            <div class="set-toggle on" id="setting-refresh-status"><span class="set-toggle-knob"></span></div>
+          </div>
         </div>
-        <button class="modal-btn" onclick="clearCache()">Clear</button>
+
+        <div class="set-sec-label">Data</div>
+        <div class="set-card">
+          <div class="set-row set-row-stack">
+            <div class="set-row-main">
+              <div class="set-row-text">
+                <div class="set-row-name">Game History</div>
+                <div class="set-row-sub">Sync completed matches from Jun 11</div>
+              </div>
+              <button id="sync-history-btn" class="set-btn" onclick="syncHistory()">Sync</button>
+            </div>
+            <button id="export-json-btn" class="set-btn set-btn-wide" style="display:none" onclick="exportResults()">&#128190; Download results.json</button>
+            <div id="sync-progress" style="display:none;font-size:11px;color:var(--muted);padding:2px 0 0;line-height:1.5"></div>
+          </div>
+          <div class="set-row">
+            <div class="set-row-text">
+              <div class="set-row-name">Data source</div>
+              <div class="set-row-sub" id="setting-source-detail">Free live data from ESPN</div>
+            </div>
+            <span id="setting-source-badge" class="set-badge">ESPN ✓</span>
+          </div>
+          <div class="set-row">
+            <div class="set-row-text">
+              <div class="set-row-name">Scores cache</div>
+              <div class="set-row-sub">Restored on reload</div>
+            </div>
+            <button class="set-btn" onclick="clearCache()">Clear</button>
+          </div>
+          <div class="set-row">
+            <div class="set-row-text">
+              <div class="set-row-name">Demo mode</div>
+              <div class="set-row-sub">Preview features with fake results</div>
+            </div>
+            <button class="set-btn demo" onclick="loadDemoData()">Load demo</button>
+          </div>
+        </div>
+
+        <div class="set-sec-label">Resources</div>
+        <div class="set-card">
+          <a class="set-link-row" href="https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/standings" target="_blank" rel="noopener">
+            <div class="set-row-text">
+              <div class="set-row-name">WC 2026 Standings</div>
+              <div class="set-row-sub">Official FIFA group standings</div>
+            </div>
+            <span class="set-link-arrow">↗</span>
+          </a>
+          <a class="set-link-row" href="https://www.fifa.com/en/world-rankings" target="_blank" rel="noopener">
+            <div class="set-row-text">
+              <div class="set-row-name">FIFA World Rankings</div>
+              <div class="set-row-sub">Official men's rankings</div>
+            </div>
+            <span class="set-link-arrow">↗</span>
+          </a>
+        </div>
+
       </div>
-
-      <div class="modal-row modal-row-col">
-        <div>
-          <div class="modal-row-name">&#128229; Game History</div>
-          <div class="modal-row-label">Fetch all completed matches from Jun 11 for accurate standings &amp; bracket</div>
-        </div>
-        <div class="sync-row">
-          <button id="sync-history-btn" class="modal-btn" onclick="syncHistory()">&#x1F504; Sync Older Games</button>
-          <button id="export-json-btn" class="modal-btn" style="display:none" onclick="exportResults()">&#128190; Download results.json</button>
-        </div>
-        <div id="sync-progress" style="display:none;font-size:11px;color:var(--muted);padding:6px 0 2px;line-height:1.5"></div>
-      </div>
-
-      <div class="modal-row">
-        <div>
-          <div class="modal-row-name">Auto-refresh</div>
-          <div class="modal-row-label" id="setting-refresh-detail">Every 1 min on match days (ESPN)</div>
-        </div>
-        <span id="setting-refresh-status" style="color:var(--green);font-size:12px;">On</span>
-      </div>
-
-      <div class="modal-row">
-        <div>
-          <div class="modal-row-name">&#127917; Demo Mode</div>
-          <div class="modal-row-label">Load fake results to preview all features before Jun 11</div>
-        </div>
-        <button class="modal-btn demo" onclick="loadDemoData()">Load Demo</button>
-      </div>
-
-      <div class="modal-row">
-        <div>
-          <div class="modal-row-name">Data source</div>
-          <div class="modal-row-label" id="setting-source-detail">Free live data from ESPN — no API cost</div>
-        </div>
-        <span id="setting-source-badge" style="color:var(--green);font-size:11px;">ESPN ✓</span>
-      </div>
-
-      <div class="modal-row">
-        <div>
-          <div class="modal-row-name">Timezone</div>
-          <div class="modal-row-label" id="setting-tz-detail">Auto-detected</div>
-        </div>
-        <select id="tz-select" class="modal-select" onchange="setTimezone(this.value)">
-          <option value="auto">Auto</option>
-          <optgroup label="Americas">
-            <option value="America/New_York">New York (ET)</option>
-            <option value="America/Chicago">Chicago (CT)</option>
-            <option value="America/Denver">Denver (MT)</option>
-            <option value="America/Los_Angeles">Los Angeles (PT)</option>
-            <option value="America/Mexico_City">Mexico City</option>
-            <option value="America/Bogota">Bogotá / Lima</option>
-            <option value="America/Sao_Paulo">São Paulo</option>
-            <option value="America/Argentina/Buenos_Aires">Buenos Aires</option>
-          </optgroup>
-          <optgroup label="Europe">
-            <option value="Europe/London">London</option>
-            <option value="Europe/Madrid">Madrid / Paris</option>
-            <option value="Europe/Berlin">Berlin / Amsterdam</option>
-            <option value="Europe/Istanbul">Istanbul</option>
-          </optgroup>
-          <optgroup label="Africa">
-            <option value="Africa/Lagos">Lagos / Accra</option>
-            <option value="Africa/Johannesburg">Johannesburg</option>
-          </optgroup>
-          <optgroup label="Middle East &amp; Asia">
-            <option value="Asia/Dubai">Dubai</option>
-            <option value="Asia/Karachi">Karachi / Islamabad</option>
-            <option value="Asia/Kolkata">Mumbai / Delhi</option>
-            <option value="Asia/Tokyo">Seoul / Tokyo</option>
-          </optgroup>
-          <optgroup label="Pacific">
-            <option value="Australia/Sydney">Sydney</option>
-          </optgroup>
-        </select>
-      </div>
-
-      <div class="modal-section-label">Resources</div>
-
-      <a class="modal-link-row" href="https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/standings" target="_blank" rel="noopener">
-        <div>
-          <div class="modal-row-name">WC 2026 Standings</div>
-          <div class="modal-row-label">Official FIFA group standings</div>
-        </div>
-        <span class="modal-link-arrow">↗</span>
-      </a>
-
-      <a class="modal-link-row" href="https://www.fifa.com/en/world-rankings" target="_blank" rel="noopener">
-        <div>
-          <div class="modal-row-name">FIFA World Rankings</div>
-          <div class="modal-row-label">Official FIFA men's rankings</div>
-        </div>
-        <span class="modal-link-arrow">↗</span>
-      </a>
-
-      <button class="modal-close-btn" onclick="closeSettings()">Close</button>
     </div>
   </div>
 
   <!-- Scripts -->
-  <script src="js/data.js?v=20260623d"></script>
-  <script src="js/teamdata.js?v=20260623d"></script>
-  <script src="js/teamprofile.js?v=20260623d"></script>
-  <script src="js/app.js?v=20260623d"></script>
-  <script src="js/today.js?v=20260623d"></script>
-  <script src="js/schedule.js?v=20260623d"></script>
-  <script src="js/standings.js?v=20260623d"></script>
-  <script src="js/bracket.js?v=20260623d"></script>
-  <script src="js/analyzer.js?v=20260623d"></script>
-  <script src="js/matchdetail.js?v=20260623d"></script>
+  <script src="js/data.js?v=20260623e"></script>
+  <script src="js/teamdata.js?v=20260623e"></script>
+  <script src="js/teamprofile.js?v=20260623e"></script>
+  <script src="js/app.js?v=20260623e"></script>
+  <script src="js/today.js?v=20260623e"></script>
+  <script src="js/schedule.js?v=20260623e"></script>
+  <script src="js/standings.js?v=20260623e"></script>
+  <script src="js/bracket.js?v=20260623e"></script>
+  <script src="js/analyzer.js?v=20260623e"></script>
+  <script src="js/matchdetail.js?v=20260623e"></script>
 
   <!-- Match Detail Modal -->
   <div class="modal-overlay" id="match-detail-modal" onclick="closeMatchDetail()">

@@ -543,7 +543,8 @@ function setRefreshUI(loading) {
   const msg = document.getElementById('status-msg');
   if (btn) {
     btn.disabled = loading;
-    btn.textContent = loading ? 'Refreshing\u2026' : '\u21BB Refresh Scores';
+    btn.textContent = loading ? '\u21BB' : '\u21BB';
+    btn.classList.toggle('spinning', loading);
   }
   if (msg) {
     msg.classList.toggle('loading', loading);
@@ -1009,8 +1010,7 @@ function openSettings() {
   }
   const refreshStatus = document.getElementById('setting-refresh-status');
   if (refreshStatus) {
-    refreshStatus.textContent = 'On';
-    refreshStatus.style.color = 'var(--green)';
+    refreshStatus.classList.add('on');
   }
   const sourceDetail = document.getElementById('setting-source-detail');
   if (sourceDetail) {
@@ -1023,7 +1023,7 @@ function openSettings() {
   const sourceBadge = document.getElementById('setting-source-badge');
   if (sourceBadge) {
     sourceBadge.textContent = onClaudeFallback ? 'Claude ⚠' : 'ESPN ✓';
-    sourceBadge.style.color = onClaudeFallback ? 'var(--amber)' : 'var(--green)';
+    sourceBadge.classList.toggle('warn', onClaudeFallback);
   }
 
   m.classList.add('open');

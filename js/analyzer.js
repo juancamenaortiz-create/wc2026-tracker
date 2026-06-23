@@ -11,6 +11,9 @@ const ANALYZER_STATE = {
 
 function isGroupStageOver() { return getTodayCT() > '2026-06-27'; }
 
+// Circular flag badge (shared analyzer visual vocabulary)
+function azFlag(team, size) { size = size || 18; return `<span class="cflag" style="width:${size}px;height:${size}px">${getFlag(team)}</span>`; }
+
 function setAnalyzerMode(mode) {
   ANALYZER_STATE.mode = mode;
   const content = document.getElementById('tab-content');
@@ -25,7 +28,8 @@ function setAnalyzerTab(tab) {
 function renderAnalyzer(container) {
   // Sub-tab nav (looks identical to Groups tab sub-nav)
   const tab = ANALYZER_STATE.tab;
-  const subnav = `<div class="groups-subnav">
+  const subnav = `<h2 class="az-page-title">Analyzer</h2>
+  <div class="groups-subnav">
     <button class="subnav-btn ${tab==='groups'     ?'active':''}" onclick="setAnalyzerTab('groups')">Groups</button>
     <button class="subnav-btn ${tab==='bracket'    ?'active':''}" onclick="setAnalyzerTab('bracket')">Bracket</button>
     <button class="subnav-btn ${tab==='calculator' ?'active':''}" onclick="setAnalyzerTab('calculator')">Calculator</button>
@@ -76,15 +80,14 @@ function renderAnalyzer(container) {
   let standingsHtml = '';
   standings.forEach((team, idx) => {
     const cls = idx < 2 ? 'qualified' : idx === 2 ? 'third-place' : 'eliminated';
-    const qIcon = idx < 2 ? '✅' : idx === 2 ? '🟡' : '❌';
-    standingsHtml += `<div class="az-standing-row ${cls}">
-      <span class="rank-num">${idx+1}</span>
-      <span class="flag">${getFlag(team.name)}</span>
-      <span class="az-team-name">${displayName(team.name)}</span>
+    const gd  = team.GD > 0 ? '+'+team.GD : ''+team.GD;
+    standingsHtml += `<div class="az-srow ${cls}">
+      <span class="az-srank">${idx+1}</span>
+      ${azFlag(team.name, 20)}
+      <span class="az-sname team-link" onclick="openTeamProfile('${team.name.replace(/'/g,"\\'")}')">${displayName(team.name)}</span>
       <span data-star-team="${team.name}"></span>
-      <span class="az-pts">${team.Pts}pts</span>
-      <span class="az-gd">${team.GD >= 0 ? '+'+team.GD : team.GD}</span>
-      <span class="az-qual">${qIcon}</span>
+      <span class="az-sgd">${gd}</span>
+      <span class="az-spts">${team.Pts}</span>
     </div>`;
   });
 
@@ -108,11 +111,11 @@ function renderAnalyzer(container) {
       const s1 = r ? r.score1 : '?';
       const s2 = r ? r.score2 : '?';
       playedHtml += `<div class="az-played-row">
-        <span class="flag">${getFlag(m.t1)}</span>
+        ${azFlag(m.t1, 16)}
         <span>${m.t1}</span>
         <span class="az-score">${s1}–${s2}</span>
         <span>${m.t2}</span>
-        <span class="flag">${getFlag(m.t2)}</span>
+        ${azFlag(m.t2, 16)}
         <span class="ft-badge xs">FT</span>
       </div>`;
     });
@@ -138,18 +141,13 @@ function renderAnalyzer(container) {
     </div>
 
     <div class="az-section">
-      <div class="az-section-title">📊 Projected Standings ${thisGroupWhatIf ? '<span class="what-if-badge">WHAT-IF</span>' : ''}</div>
+      <div class="az-section-title">Projected &middot; Group ${g} ${thisGroupWhatIf ? '<span class="what-if-badge">WHAT-IF</span>' : ''}</div>
       ${standingsHtml}
-      <div class="legend-row">
-        <span class="legend-dot qualified"></span><span>Advance</span>
-        <span class="legend-dot third-place"></span><span>3rd</span>
-        <span class="legend-dot eliminated"></span><span>Out</span>
-      </div>
     </div>
 
     ${remainingMatches.length > 0 ? `
     <div class="az-section">
-      <div class="az-section-title">🔬 What-If Scenarios
+      <div class="az-section-title">What-If Scenarios
         ${hasAnyOverrides ? `<button class="reset-btn" onclick="resetAnalyzerOverrides()">Reset All${totalOverrides > 1 ? ` (${totalOverrides})` : ''}</button>` : ''}
       </div>
       ${remainingHtml}
@@ -157,12 +155,12 @@ function renderAnalyzer(container) {
 
     ${playedMatches.length > 0 ? `
     <div class="az-section">
-      <div class="az-section-title">✅ Played</div>
+      <div class="az-section-title">Played</div>
       ${playedHtml}
     </div>` : ''}
 
     <div class="az-section">
-      <div class="az-section-title">🗺️ Tournament Path</div>
+      <div class="az-section-title">Tournament Path</div>
       <div class="path-legend">
         <span class="path-dot confirmed"></span>Confirmed
         <span class="path-dot likely"></span>Likely
@@ -190,11 +188,11 @@ function buildMatchToggle(match, key, override) {
 
   return `<div class="az-match-toggle">
     <div class="az-toggle-teams">
-      <span class="flag">${getFlag(t1)}</span>
+      ${azFlag(t1, 18)}
       <span class="toggle-team">${displayName(t1)}</span>
       <span class="vs-text">vs</span>
       <span class="toggle-team">${displayName(t2)}</span>
-      <span class="flag">${getFlag(t2)}</span>
+      ${azFlag(t2, 18)}
     </div>
     <div class="az-toggle-btns">
       <button class="toggle-opt ${isHome ? 'active-home' : ''}" onclick="setOverride('${key}','home')">${t1.split(' ')[0]} Win</button>
@@ -250,7 +248,7 @@ function buildTournamentPath(team, rank, group, overrides = {}) {
     if (opp.team && opp.p > 0) {
       // We know who's in that position right now
       r32Inner = `<span class="path-round">R32</span>
-        <div class="path-opp">${getFlag(opp.team)}&nbsp;${opp.team}</div>
+        <div class="path-opp">${azFlag(opp.team, 16)}<span class="path-opp-name">${opp.team}</span></div>
         <div class="path-sub">${opp.rank} Grp ${opp.group} &middot; ${opp.pts}pts</div>
         <div class="path-sub">${venue}</div>`;
     } else {
@@ -266,7 +264,7 @@ function buildTournamentPath(team, rank, group, overrides = {}) {
       const sorted = [...opp.played].sort((a,b) => b.pts-a.pts || b.gd-a.gd || b.gf-a.gf);
       const rows = sorted.map((c,i) =>
         `<div class="path-cand${i===0?' path-cand-top':''}">
-          ${getFlag(c.team)}&nbsp;<span class="path-cand-name">${c.team}</span>
+          ${azFlag(c.team, 14)}<span class="path-cand-name">${c.team}</span>
           <span class="path-cand-meta">Grp ${c.group}</span>
           <span class="path-cand-pts">${c.pts}pts</span>
         </div>`
@@ -291,7 +289,7 @@ function buildTournamentPath(team, rank, group, overrides = {}) {
   ];
 
   const stepsHtml =
-    `<div class="path-step open${wideClass}">${r32Inner}</div>` +
+    `<div class="path-step path-r32${wideClass}">${r32Inner}</div>` +
     plainSteps.map(s =>
       `<div class="path-arrow">›</div>
        <div class="path-step open">
@@ -302,7 +300,7 @@ function buildTournamentPath(team, rank, group, overrides = {}) {
 
   return `<div class="tournament-path">
     <div class="path-team-header">
-      <span class="flag">${getFlag(team)}</span>
+      ${azFlag(team, 22)}
       <span>${displayName(team)}</span>
       <span class="rank-badge">${rank === 1 ? '1st' : '2nd'}</span>
     </div>
@@ -404,13 +402,13 @@ function buildBracketPickCard(match) {
 function buildPickRow(matchId, team, slot, cls, isFinal) {
   if (!team) {
     const label = slot.replace('W-M','W').replace('L-M','L');
-    return `<div class="bp-team bp-tbd"><span class="bp-tbd-ico">❓</span><span class="bp-name" style="color:var(--dim)">${label}</span></div>`;
+    return `<div class="bp-team bp-tbd"><span class="cflag empty" style="width:18px;height:18px"></span><span class="bp-name" style="color:var(--dim)">${label}</span></div>`;
   }
   const clickable = !isFinal;
   const onclick   = clickable ? `onclick="pickBracket(${matchId},'${team.replace(/'/g,"\\'")}')"` : '';
   const check     = cls === 'bp-winner' ? '<span class="bp-check">✓</span>' : '';
   return `<div class="bp-team ${cls}" ${onclick} style="${clickable?'cursor:pointer':''}">
-    ${getFlag(team)}<span class="bp-name">${displayName(team)}</span>${check}
+    ${azFlag(team, 18)}<span class="bp-name">${displayName(team)}</span>${check}
   </div>`;
 }
 
@@ -516,7 +514,7 @@ function buildCalculatorHTML() {
     html += `<div class="calc-card">
       <div class="calc-card-hdr">
         <span class="calc-grp-lbl">Group ${g}</span>
-        <span class="calc-round-lbl">R${round} · ${played}/6 played</span>
+        <span class="calc-round-lbl">${played}/6</span>
       </div>`;
 
     standings.forEach((team, idx) => {
@@ -530,7 +528,7 @@ function buildCalculatorHTML() {
 
       html += `<div class="calc-row ${rowCls}">
         <span class="calc-rank">${idx+1}</span>
-        <span class="flag" style="font-size:15px">${getFlag(team.name)}</span>
+        ${azFlag(team.name, 17)}
         <span class="calc-name">${displayName(team.name)}</span>
         ${badge}
       </div>`;

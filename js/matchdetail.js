@@ -95,52 +95,38 @@ function _mdShell(result, sched) {
   var has = result && result.status !== 'NS';
   var score = has
     ? result.score1 + '<span class="md-score-sep">&ndash;</span>' + result.score2
-    : 'vs';
+    : '<span class="md-score-sep">vs</span>';
 
-  var status = sched.time + ' CT';
+  // Status pill
+  var statusTxt, statusCls;
   if (result && result.status === 'FT') {
     var s = result.substatus;
-    status = s === 'AET' ? 'Full Time (AET)'
-           : s === 'PSO' ? 'Full Time &middot; Pens ' + result.penScore1 + '&ndash;' + result.penScore2
-           : 'Full Time';
+    statusTxt = s === 'AET' ? 'Full Time (AET)'
+              : s === 'PSO' ? 'Pens ' + result.penScore1 + '&ndash;' + result.penScore2
+              : 'Full Time';
+    statusCls = 'md-pill-ft';
   } else if (result && result.status === 'LIVE') {
-    status = result.substatus === 'HT' ? 'Half Time' : (result.clock || 'Live');
-  }
-
-  // Goal scorers — STACKED (home on top, away below)
-  var scorers = '';
-  if (has && result.events && result.events.length) {
-    var goals = result.events.filter(function(e) { return e.g; });
-    // tid already = benefiting team for ALL goals (incl. own goals) — filter directly, no flip
-    var hg = goals
-      .filter(function(e) { return e.tid===result.tid1; })
-      .map(function(e) { return e.p + ' ' + e.min; }).join(', ');
-    var ag = goals
-      .filter(function(e) { return e.tid===result.tid2; })
-      .map(function(e) { return e.p + ' ' + e.min; }).join(', ');
-    if (hg || ag) {
-      scorers = '<div class="md-scorers-stacked">'
-        + (hg ? '<div class="md-sc-home">' + hg + '</div>' : '')
-        + (ag ? '<div class="md-sc-away">' + ag + '</div>' : '')
-        + '</div>';
-    }
+    statusTxt  = result.substatus === 'HT' ? 'Half Time' : (result.clock || 'Live');
+    statusCls  = 'md-pill-live';
+  } else {
+    statusTxt = sched.time + ' CT';
+    statusCls = 'md-pill-ns';
   }
 
   var round = sched.g ? 'Group ' + sched.g : (sched.round || 'Knockout');
-  var tabs  = ['facts','lineup','stats'].map(function(t) {
-    var label = t.charAt(0).toUpperCase() + t.slice(1);
-    return '<button class="md-tab-btn' + (MD_TAB===t?' active':'') + '" data-tab="' + t + '" onclick="setMDTab(\'' + t + '\')">' + label + '</button>';
+  var tabs  = [['facts','Summary'],['stats','Stats'],['lineup','Lineups']].map(function(t) {
+    return '<button class="md-tab-btn' + (MD_TAB===t[0]?' active':'') + '" data-tab="' + t[0] + '" onclick="setMDTab(\'' + t[0] + '\')">' + t[1] + '</button>';
   }).join('');
 
   return '<div class="md-header">'
     + '<div class="md-round-label">' + round + ' &middot; ' + formatDate(sched.date) + '</div>'
     + '<div class="md-teams">'
-    +   '<div class="md-team"><span class="md-flag">' + getFlag(t1) + '</span><span class="md-tname">' + displayName(t1) + '</span></div>'
-    +   '<div class="md-score-block"><div class="md-score">' + score + '</div><div class="md-status-str">' + status + '</div></div>'
-    +   '<div class="md-team md-team-r"><span class="md-tname">' + displayName(t2) + '</span><span class="md-flag">' + getFlag(t2) + '</span></div>'
+    +   '<div class="md-team"><span class="md-flag-badge">' + getFlag(t1) + '</span><span class="md-tname">' + displayName(t1) + '</span></div>'
+    +   '<div class="md-score-block"><div class="md-score">' + score + '</div></div>'
+    +   '<div class="md-team"><span class="md-flag-badge">' + getFlag(t2) + '</span><span class="md-tname">' + displayName(t2) + '</span></div>'
     + '</div>'
-    + scorers
-    + '<div class="md-city">&#128205; ' + sched.city + '</div>'
+    + '<div class="md-status-wrap"><span class="md-status-pill ' + statusCls + '">' + statusTxt + '</span></div>'
+    + '<div class="md-city">' + sched.city + '</div>'
     + '</div>'
     + '<div class="md-tabs">' + tabs + '</div>'
     + '<div id="md-tab-content"></div>';
@@ -214,7 +200,7 @@ function _tabFacts(result, summary) {
     // HT divider
     if (ev._ht) {
       return '<div class="facts-ht"><div class="facts-ht-line"></div>'
-           + '<div class="facts-ht-pill">HT <span class="facts-ht-score">' + ev.s1 + '&ndash;' + ev.s2 + '</span></div>'
+           + '<div class="facts-ht-pill">Half Time <span class="facts-ht-score">' + ev.s1 + '&ndash;' + ev.s2 + '</span></div>'
            + '<div class="facts-ht-line"></div></div>';
     }
     // AET divider
@@ -225,33 +211,41 @@ function _tabFacts(result, summary) {
     }
 
     var isT1 = ev.tid === result.tid1;
-    var content = '';
+    var marker = '', name = '', sub = '', nameCls = '';
 
     if (ev.sub) {
-      content = '<span class="facts-sub-in">&#8593; ' + (ev.pIn||'') + '</span><br>'
-              + '<span class="facts-sub-out">&#8595; ' + (ev.p||'') + '</span>';
+      marker  = '<span class="fr-icon fr-sub-icon">&#8645;</span>';
+      name    = ev.pIn || '';
+      sub     = 'for ' + (ev.p || '');
     } else if (ev.var) {
-      // VAR disallowed goal — crossed out in both columns the same side as the team
-      content = '<span class="facts-var">&#9917;&#10007; ' + (ev.p||'') + ' <span class="facts-var-label">VAR</span></span>';
+      marker  = '<span class="fr-dot fr-ball" style="opacity:.4"></span>';
+      name    = ev.p || '';
+      nameCls = 'fr-strike';
+      sub     = '<span class="fr-var">VAR &middot; disallowed</span>';
     } else if (ev.g) {
       var tag = ev.og ? ' <span class="facts-og">OG</span>' : ev.pk ? ' <span class="facts-pk">P</span>' : '';
-      content = '<span class="facts-scorer">&#9917; ' + ev.p + tag + '</span>'
-              + ' <span class="facts-rscore">(' + ev.rs1 + '&ndash;' + ev.rs2 + ')</span>';
+      marker  = '<span class="fr-dot fr-ball"></span>';
+      name    = ev.p + tag;
+      sub     = 'Goal &middot; ' + ev.rs1 + '&ndash;' + ev.rs2;
     } else if (ev.r) {
-      content = '<span class="facts-card"><span class="card-badge card-badge-red"></span>' + ev.p + '</span>';
+      marker  = '<span class="fr-card fr-red"></span>';
+      name    = ev.p;
+      sub     = 'Red card';
     } else if (ev.y) {
-      content = '<span class="facts-card"><span class="card-badge card-badge-yellow"></span>' + ev.p + '</span>';
+      marker  = '<span class="fr-card fr-yellow"></span>';
+      name    = ev.p;
+      sub     = 'Yellow card';
     }
 
-    if (!content) return '';
-    if (isT1) {
-      return '<div class="facts-row"><div class="facts-home">' + content + '</div>'
-           + '<div class="facts-min">' + ev.min + '</div>'
-           + '<div class="facts-away"></div></div>';
-    }
-    return '<div class="facts-row"><div class="facts-home"></div>'
-         + '<div class="facts-min">' + ev.min + '</div>'
-         + '<div class="facts-away">' + content + '</div></div>';
+    if (!name && !marker) return '';
+    var text = '<div class="fr-text"><div class="fr-name ' + nameCls + '">' + name + '</div>'
+             + (sub ? '<div class="fr-sub">' + sub + '</div>' : '') + '</div>';
+    var cell = isT1 ? text + marker : marker + text;
+
+    return '<div class="facts-row">'
+         + '<div class="facts-home">' + (isT1 ? cell : '') + '</div>'
+         + '<div class="facts-min"><span class="fr-min-pill">' + ev.min + '</span></div>'
+         + '<div class="facts-away">' + (!isT1 ? cell : '') + '</div></div>';
   }).filter(Boolean).join('');
 
   // Penalty shootout section
@@ -279,7 +273,8 @@ function _tabFacts(result, summary) {
       + '</div>';
   }
 
-  return info + '<div class="facts-timeline">' + html + '</div>' + psoHtml;
+  return info + '<div class="facts-timeline">' + html + '</div>' + psoHtml
+       + '<button class="md-fullstats-btn" onclick="setMDTab(\'stats\')">View full match stats</button>';
 }
 
 // ── Event enrichment helpers ───────────────────────────────────────────────────

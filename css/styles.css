@@ -1694,25 +1694,68 @@ img.emoji {
   padding: 5px 12px; border-radius: 6px; cursor: pointer;
 }
 .tp-close:hover { color: var(--white); border-color: var(--muted); }
+/* Titled header bar (mockup Frame 8) */
+.tp-sheet-bar-titled { justify-content: space-between; align-items: center; padding: 12px 14px; }
+.tp-sheet-title { font-size: 13px; font-weight: 700; color: var(--white); }
+.tp-close-icon {
+  width: 34px; height: 34px; border-radius: 11px;
+  background: #171a21; border: 1px solid rgba(255,255,255,.07);
+  color: #aab2c0; font-size: 14px; line-height: 1; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; padding: 0;
+}
+.tp-close-icon:hover { color: var(--white); border-color: rgba(255,255,255,.15); }
 .tp-content { overflow-y: auto; padding: 16px; flex: 1; background: #0f1217; }
 
 .tp-loading {
   display: flex; flex-direction: column; align-items: center;
   justify-content: center; padding: 48px 20px; gap: 10px;
 }
-.tp-flag-lg { font-size: 48px; line-height: 1; }
+.tp-flag-lg { width: 54px; height: 54px; font-size: 20px; line-height: 1; }
+.tp-loading .tp-flag-lg { width: 56px; height: 56px; }
 .tp-team-name { font-size: 22px; font-weight: 800; color: var(--white); }
 .tp-spinner { font-size: 13px; color: var(--muted); }
 .tp-badges { display: flex; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
 .tp-badge {
   font-size: 10px; font-weight: 700; color: var(--gold);
-  background: rgba(212,175,55,.12); border-radius: 4px;
-  padding: 2px 7px;
+  background: rgba(212,175,55,.12); border-radius: 6px;
+  padding: 3px 8px; white-space: nowrap;
 }
+.tp-badge-neutral { color: #aab2c0; background: #1d212a; }
 .tp-header {
-  display: flex; align-items: center; gap: 12px;
+  display: flex; align-items: center; gap: 13px;
   margin-bottom: 14px;
 }
+.tp-head-info { min-width: 0; }
+
+/* Section label above a card (mockup) */
+.tp-label {
+  font-size: 10px; font-weight: 700; color: #6a727e;
+  text-transform: uppercase; letter-spacing: .07em;
+  margin-bottom: 8px; padding: 0 2px;
+}
+.tp-card {
+  background: #15181c; border: 1px solid rgba(255,255,255,.06);
+  border-radius: 16px; padding: 14px; margin-bottom: 13px;
+}
+.tp-card.tp-info { padding: 4px 14px; }
+
+.tp-up-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,.04);
+}
+.tp-up-row:first-child { padding-top: 4px; }
+.tp-up-row:last-child { border-bottom: none; padding-bottom: 4px; }
+.tp-up-team { display: flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 600; color: #e7eaf0; }
+.tp-up-time { font-size: 11px; color: #7e8794; flex-shrink: 0; }
+
+.tp-titles { display: inline-flex; align-items: center; gap: 5px; color: var(--gold); font-weight: 700; }
+.tp-pin {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; font-weight: 700; cursor: pointer; font-family: inherit;
+  color: var(--muted); background: #1d212a; border: 1px solid var(--border);
+  border-radius: 6px; padding: 3px 8px; white-space: nowrap;
+}
+.tp-pin.on { color: #34d488; background: rgba(32,189,118,.12); border-color: rgba(32,189,118,.3); }
 
 .tp-section {
   background: #1a1d24;
@@ -1762,13 +1805,16 @@ img.emoji {
 .tp-upcoming-time { color: var(--muted); font-size: 10px; }
 
 .tp-notable { font-size: 11px; color: var(--muted); line-height: 1.5; margin-top: 6px; font-style: italic; }
-.tp-sw { display: flex; gap: 6px; font-size: 11px; padding: 4px 0; }
-.tp-sw-ico { flex-shrink: 0; }
+.tp-sw { display: flex; gap: 9px; font-size: 11.5px; padding: 5px 0; line-height: 1.5; color: #aab2c0; }
+.tp-sw b { color: #f3f5f9; }
+.tp-sw-ico { flex-shrink: 0; font-size: 14px; line-height: 1.3; }
+.tp-sw-ico.up   { color: #34d488; }
+.tp-sw-ico.down { color: #f0b54b; }
 
 /* Form dots */
-.tp-form { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 6px; }
+.tp-form { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 13px; padding: 0 2px; }
 .form-dot {
-  width: 24px; height: 24px; border-radius: 50%;
+  width: 27px; height: 27px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   font-size: 9px; font-weight: 800; color: var(--white);
 }

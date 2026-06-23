@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=20260623c">
+  <link rel="stylesheet" href="css/styles.css?v=20260623d">
 </head>
 <body>
 
@@ -182,16 +182,16 @@
   </div>
 
   <!-- Scripts -->
-  <script src="js/data.js?v=20260623c"></script>
-  <script src="js/teamdata.js?v=20260623c"></script>
-  <script src="js/teamprofile.js?v=20260623c"></script>
-  <script src="js/app.js?v=20260623c"></script>
-  <script src="js/today.js?v=20260623c"></script>
-  <script src="js/schedule.js?v=20260623c"></script>
-  <script src="js/standings.js?v=20260623c"></script>
-  <script src="js/bracket.js?v=20260623c"></script>
-  <script src="js/analyzer.js?v=20260623c"></script>
-  <script src="js/matchdetail.js?v=20260623c"></script>
+  <script src="js/data.js?v=20260623d"></script>
+  <script src="js/teamdata.js?v=20260623d"></script>
+  <script src="js/teamprofile.js?v=20260623d"></script>
+  <script src="js/app.js?v=20260623d"></script>
+  <script src="js/today.js?v=20260623d"></script>
+  <script src="js/schedule.js?v=20260623d"></script>
+  <script src="js/standings.js?v=20260623d"></script>
+  <script src="js/bracket.js?v=20260623d"></script>
+  <script src="js/analyzer.js?v=20260623d"></script>
+  <script src="js/matchdetail.js?v=20260623d"></script>
 
   <!-- Match Detail Modal -->
   <div class="modal-overlay" id="match-detail-modal" onclick="closeMatchDetail()">
@@ -208,8 +208,9 @@
   <!-- Team Profile Modal -->
   <div class="modal-overlay" id="team-profile-modal" onclick="closeTeamProfile()">
     <div class="tp-sheet" onclick="event.stopPropagation()">
-      <div class="tp-sheet-bar">
-        <button class="tp-close" onclick="closeTeamProfile()">✕ Close</button>
+      <div class="tp-sheet-bar tp-sheet-bar-titled">
+        <span class="tp-sheet-title">Team Profile</span>
+        <button class="tp-close-icon" onclick="closeTeamProfile()" aria-label="Close">✕</button>
       </div>
       <div id="team-profile-content" class="tp-content"></div>
     </div>

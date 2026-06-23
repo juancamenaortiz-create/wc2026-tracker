@@ -78,7 +78,7 @@ function closeTeamProfile() {
 // ── Rendering helpers ────────────────────────────────────────────────────────
 function tpLoading(team) {
   return `<div class="tp-loading">
-    <span class="tp-flag-lg">${getFlag(team)}</span>
+    <span class="cflag tp-flag-lg">${getFlag(team)}</span>
     <div class="tp-team-name">${displayName(team)}</div>
     <div class="tp-spinner"><span class="preview-spin">⟳</span> Loading profile…</div>
   </div>`;
@@ -88,11 +88,21 @@ function tpError(team, isTimeout = false) {
     ? 'Request timed out — try again on WiFi'
     : 'Profile unavailable — tap to retry';
   return `<div class="tp-loading">
-    <span class="tp-flag-lg">${getFlag(team)}</span>
+    <span class="cflag tp-flag-lg">${getFlag(team)}</span>
     <div class="tp-team-name">${displayName(team)}</div>
     <div class="tp-spinner" style="color:var(--muted)">${msg}</div>
     <button class="modal-btn" style="margin-top:12px" onclick="delete _teamCache['${team}'];openTeamProfile('${team}')">↻ Try Again</button>
   </div>`;
+}
+
+// Pin toggle from inside the profile header
+function tpTogglePin(team) {
+  toggleMyTeam(team);
+  const c = document.getElementById('team-profile-content');
+  const d = (typeof TEAM_PROFILES !== 'undefined' && TEAM_PROFILES[team])
+         || (_teamCache[team] && _teamCache[team].data);
+  if (c && d) c.innerHTML = tpContent(team, d);
+  if (typeof renderActiveTab === 'function') renderActiveTab();
 }
 
 function tpContent(team, d) {
@@ -130,12 +140,13 @@ function tpContent(team, d) {
 
   // WC titles
   const titles = d.wcHistory?.titles || 0;
-  const titlesHtml = titles > 0 ? `<span style="color:var(--gold)">${'🏆'.repeat(Math.min(titles,5))} ${titles} title${titles>1?'s':''}</span>` : '';
+  const trophySvg = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4.5h10V9a5 5 0 0 1-10 0V4.5Z"/><path d="M9.5 14.2 9 18.5h6l-.5-4.3M7.5 21h9"/></svg>';
+  const titlesHtml = titles > 0 ? `<span class="tp-titles">${trophySvg} ${titles} title${titles>1?'s':''}</span>` : '';
 
   // Tournament stats row
   const statsHtml = groupStats ? `
-    <div class="tp-section">
-      <div class="tp-section-title">2026 Tournament</div>
+    <div class="tp-label">2026 Tournament</div>
+    <div class="tp-card">
       <div class="tp-stats-grid">
         <div class="tp-stat"><span class="tp-stat-n">${groupStats.P}</span><span class="tp-stat-l">Played</span></div>
         <div class="tp-stat"><span class="tp-stat-n">${groupStats.W}</span><span class="tp-stat-l">Won</span></div>
@@ -148,25 +159,29 @@ function tpContent(team, d) {
 
   // Upcoming matches
   const upcomingHtml = upcoming.length ? `
-    <div class="tp-section">
-      <div class="tp-section-title">Upcoming</div>
+    <div class="tp-label">Upcoming</div>
+    <div class="tp-card">
       ${upcoming.map(m => {
         const opp = normName(m.t1) === normName(team) ? m.t2 : m.t1;
-        return `<div class="tp-upcoming-row">
-          <span class="tp-upcoming-opp">${getFlag(opp)} ${displayName(opp)}</span>
-          <span class="tp-upcoming-time">${formatGameTime(m.date, m.time)} ${getTZAbbr()}</span>
+        return `<div class="tp-up-row">
+          <span class="tp-up-team"><span class="cflag" style="width:20px;height:20px">${getFlag(opp)}</span>${displayName(opp)}</span>
+          <span class="tp-up-time">${formatShortDate(m.date)} · ${formatGameTime(m.date, m.time)} ${getTZAbbr()}</span>
         </div>`;
       }).join('')}
     </div>` : '';
 
+  const pinned = isMyTeam(team);
+  const escTeam = team.replace(/'/g, "\\'");
+
   return `
     <div class="tp-header">
-      <span class="tp-flag-lg">${getFlag(team)}</span>
-      <div>
+      <span class="cflag tp-flag-lg">${getFlag(team)}</span>
+      <div class="tp-head-info">
         <div class="tp-team-name">${displayName(team)}</div>
         <div class="tp-badges">
-          ${d.ranking ? `<span class="tp-badge">FIFA #${d.ranking}</span>` : ''}
-          ${d.confederation ? `<span class="tp-badge">${d.confederation}</span>` : ''}
+          ${d.ranking ? `<span class="tp-badge tp-badge-gold">FIFA #${d.ranking}</span>` : ''}
+          ${d.confederation ? `<span class="tp-badge tp-badge-neutral">${d.confederation}</span>` : ''}
+          <button class="tp-pin${pinned ? ' on' : ''}" onclick="tpTogglePin('${escTeam}')">★ ${pinned ? 'Pinned' : 'Pin'}</button>
         </div>
       </div>
     </div>
@@ -174,33 +189,29 @@ function tpContent(team, d) {
     ${statsHtml}
     ${upcomingHtml}
 
-    <div class="tp-section">
+    ${(d.manager || d.style) ? `<div class="tp-card tp-info">
       ${d.manager ? `<div class="tp-row"><span class="tp-row-lbl">Manager</span><span>${d.manager}</span></div>` : ''}
       ${d.style   ? `<div class="tp-row"><span class="tp-row-lbl">Style</span><span>${d.style}</span></div>` : ''}
-    </div>
-
-    ${playersHtml ? `<div class="tp-section">
-      <div class="tp-section-title">Key Players</div>
-      ${playersHtml}
     </div>` : ''}
 
-    ${d.wcHistory ? `<div class="tp-section">
-      <div class="tp-section-title">🏆 World Cup History</div>
+    ${playersHtml ? `<div class="tp-label">Key Players</div>
+    <div class="tp-card">${playersHtml}</div>` : ''}
+
+    ${d.wcHistory ? `<div class="tp-label">World Cup History</div>
+    <div class="tp-card tp-info">
       <div class="tp-row"><span class="tp-row-lbl">Appearances</span><span>${d.wcHistory.appearances}</span></div>
       ${titlesHtml ? `<div class="tp-row"><span class="tp-row-lbl">Titles</span><span>${titlesHtml}</span></div>` : ''}
       <div class="tp-row"><span class="tp-row-lbl">Best finish</span><span>${d.wcHistory.bestFinish || '—'}</span></div>
       ${d.wcHistory.notable ? `<div class="tp-notable">${d.wcHistory.notable}</div>` : ''}
     </div>` : ''}
 
-    ${form.length ? `<div class="tp-section">
-      <div class="tp-section-title">Form</div>
-      <div class="tp-form">${formHtml}</div>
-      ${d.recentForm && d.recentForm.length > 5 ? `<div class="tp-notable">${d.recentForm}</div>` : ''}
-    </div>` : ''}
+    ${form.length ? `<div class="tp-label">Form</div>
+    <div class="tp-form">${formHtml}</div>
+    ${d.recentForm && d.recentForm.length > 5 ? `<div class="tp-notable" style="padding:0 2px">${d.recentForm}</div>` : ''}` : ''}
 
-    ${(d.strengths || d.weaknesses) ? `<div class="tp-section">
-      ${d.strengths  ? `<div class="tp-sw"><span class="tp-sw-ico">💪</span><span><b>Strength</b> — ${d.strengths}</span></div>` : ''}
-      ${d.weaknesses ? `<div class="tp-sw"><span class="tp-sw-ico">⚠️</span><span><b>Watch</b> — ${d.weaknesses}</span></div>` : ''}
+    ${(d.strengths || d.weaknesses) ? `<div class="tp-card tp-sw-card">
+      ${d.strengths  ? `<div class="tp-sw"><span class="tp-sw-ico up">▲</span><span><b>Strength</b> — ${d.strengths}</span></div>` : ''}
+      ${d.weaknesses ? `<div class="tp-sw"><span class="tp-sw-ico down">▼</span><span><b>Watch</b> — ${d.weaknesses}</span></div>` : ''}
     </div>` : ''}
   `;
 }

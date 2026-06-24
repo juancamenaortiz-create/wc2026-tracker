@@ -1392,6 +1392,25 @@ img.emoji {
 .bp-ovr-banner {
   display: flex; align-items: center; justify-content: space-between;
   gap: 8px; padding: 7px 10px; border-radius: 8px; margin-bottom: 8px;
+}
+
+/* ── Projected bracket header (Analyzer · Bracket subtab) ── */
+.bp-proj-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  padding: 2px 16px 10px;
+}
+.bp-proj-title   { font-size: 13px; font-weight: 800; color: var(--white); }
+.bp-proj-sub     { font-size: 11px; color: #7e8794; margin-top: 2px; line-height: 1.4; }
+.bp-conf-legend  { display: flex; flex-direction: column; gap: 5px; align-items: flex-end; }
+.bp-conf-item    { display: inline-flex; align-items: center; gap: 4px; font-size: 9px; font-weight: 700; color: #6a727e; white-space: nowrap; }
+.bp-conf-dot     { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.conf-confirmed  { background: #e6c36a; }
+.conf-likely     { background: #f59e0b; }
+.conf-open       { background: #3a414c; }
+/* Round label confidence colors */
+.round-label.bp-confirmed { color: #e6c36a; }
+.round-label.bp-likely    { color: #f59e0b; }
+.round-label.bp-open      { color: #8a93a0; }
   background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.4);
   font-size: 11px; color: var(--amber); font-weight: 600;
 }

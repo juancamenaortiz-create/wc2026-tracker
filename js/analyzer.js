@@ -339,43 +339,73 @@ function resetAnalyzerOverrides() {
   if (content) renderAnalyzer(content);
 }
 
-// ── Bracket Predictor ─────────────────────────────────────────────────────
+// ── Bracket Predictor — horizontal bracket tree ────────────────────────────
 
 function renderBracketPredictor(container) {
-  const totalPicks   = Object.keys(STATE.bracketPicks).length;
-  const isPost       = isGroupStageOver();
-  const activeOvr    = !isPost ? Object.keys(ANALYZER_STATE.overrides || {}) : [];
-  const hasGroupOvr  = activeOvr.length > 0;
+  const numR32  = 16;
+  const slotR32 = R32_SLOT;
+  const TOTAL_H = numR32 * slotR32 + LABEL_H + 16;
 
-  const roundDefs = [
-    { label:'R32',        dates:'Jun 28–Jul 3', matches: R32_MATCHES },
-    { label:'R16',        dates:'Jul 4–7',      matches: KO_ROUNDS.filter(m => m.round === 'R16') },
-    { label:'QF',         dates:'Jul 9–11',     matches: KO_ROUNDS.filter(m => m.round === 'QF') },
-    { label:'SF',         dates:'Jul 14–15',    matches: KO_ROUNDS.filter(m => m.round === 'SF') },
-    { label:'3rd Place',  dates:'Jul 18',       matches: KO_ROUNDS.filter(m => m.round === '3rd Place') },
-    { label:'Final 🏆',   dates:'Jul 19',       matches: KO_ROUNDS.filter(m => m.round === 'Final') },
+  const koById = function(id) { return KO_ROUNDS.find(function(r){return r.id===id;}) || {}; };
+  const r16Info = [89,90,93,94,91,92,95,96].map(function(id){return Object.assign({matchId:id},koById(id));});
+  const roundCards = [
+    buildR32Cards(slotR32),
+    buildRoundCards(1, slotR32, 2,  r16Info),
+    buildRoundCards(2, slotR32, 4,  [97,98,99,100].map(function(id){return Object.assign({matchId:id},koById(id));})),
+    buildRoundCards(3, slotR32, 8,  [101,102].map(function(id){return Object.assign({matchId:id},koById(id));})),
+    buildRoundCards(4, slotR32, 16, [104].map(function(id){return Object.assign({matchId:id},koById(id));})),
   ];
 
-  let html = `
-    <div class="az-header">
-      ${hasGroupOvr ? `
-        <div class="bp-ovr-banner">
-          ⚡ Showing your group what-if scenario (${activeOvr.length} match${activeOvr.length>1?'es':''} overridden)
-          <button class="reset-btn" onclick="resetAnalyzerOverrides()">Clear</button>
-        </div>` : (!isPost ? '<div style="font-size:11px;color:var(--amber);padding:0 4px 8px">Available after Jun 27 · Previewing with projected qualifiers</div>' : '')}
-      ${totalPicks > 0 ? `<button class="reset-btn" style="margin-bottom:8px" onclick="resetBracketPicks()">Reset Bracket Picks (${totalPicks})</button>` : ''}
-    </div>`;
+  // Confidence per round: R32 = results in, R16 = likely, QF/SF/Final = open
+  const CONF = ['bp-confirmed','bp-likely','bp-open','bp-open','bp-open'];
 
-  roundDefs.forEach(({ label, dates, matches }) => {
-    if (matches.length === 0) return;
-    html += `<div class="bp-round-label" style="padding-left:4px">${label} <span class="bp-round-dates">${dates}</span></div>`;
-    const isSingle = matches.length <= 1;
-    html += `<div class="bp-grid${isSingle ? ' bp-single' : ''}">`;
-    matches.forEach(m => { html += buildBracketPickCard(m); });
-    html += '</div>';
+  // SVG connector lines
+  var svgLines = '';
+  for (var r = 0; r < 4; r++) {
+    for (var i = 0; i < roundCards[r].length; i += 2) {
+      var a    = roundCards[r][i];
+      var b    = roundCards[r][i + 1];
+      var next = roundCards[r + 1][Math.floor(i / 2)];
+      if (!a || !b || !next) continue;
+      var ax   = r * COL_STRIDE + CARD_W;
+      var ay   = a.midY, by = b.midY;
+      var nx   = (r + 1) * COL_STRIDE, ny = next.midY;
+      var midX = ax + COL_GAP / 2;
+      svgLines += '<polyline class="bracket-line" fill="none" points="'
+        + ax+','+ay+' '+midX+','+ay+' '+midX+','+by+' '+ax+','+by
+        +' '+midX+','+by+' '+midX+','+ny+' '+nx+','+ny+'"/>';
+    }
+  }
+
+  // Build column cards + round labels
+  var cardsHtml = '';
+  ROUNDS.forEach(function(round, r) {
+    var colX = r * COL_STRIDE;
+    var roundDate = roundLabelDate(roundCards[r]);
+    cardsHtml += '<div class="bracket-col" style="left:'+colX+'px" data-round="'+round+'">'
+      + '<div class="round-label '+CONF[r]+'">'+round
+      + (roundDate ? '<span class="round-date"> · '+roundDate+'</span>' : '')
+      + '</div>';
+    roundCards[r].forEach(function(card){ cardsHtml += buildBracketCard(card, r); });
+    cardsHtml += '</div>';
   });
 
-  container.innerHTML = html;
+  container.innerHTML =
+    '<div class="bp-proj-header">'
+    + '<div><div class="bp-proj-title">Projected bracket</div>'
+    + '<div class="bp-proj-sub">Based on current standings · swipe to explore later rounds</div></div>'
+    + '<div class="bp-conf-legend">'
+    + '<span class="bp-conf-item"><span class="bp-conf-dot conf-confirmed"></span>Confirmed</span>'
+    + '<span class="bp-conf-item"><span class="bp-conf-dot conf-likely"></span>Likely</span>'
+    + '<span class="bp-conf-item"><span class="bp-conf-dot conf-open"></span>Open</span>'
+    + '</div></div>'
+    + '<div class="bracket-scroll-wrap">'
+    + '<div class="bracket-wrap" style="width:'+TOTAL_W+'px;height:'+(TOTAL_H+90)+'px">'
+    + '<svg class="bracket-svg" width="'+TOTAL_W+'" height="'+TOTAL_H+'" style="position:absolute;top:0;left:0;pointer-events:none">'+svgLines+'</svg>'
+    + cardsHtml
+    + '</div></div>'
+    + buildThirdPlaceCard();
+
   if (typeof twemoji !== 'undefined') twemoji.parse(container);
 }
 

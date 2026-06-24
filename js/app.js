@@ -362,6 +362,12 @@ async function fetchFromESPN(overrideDates) {
           // Only STATUS_HALFTIME (exact break between halves) gets HT badge
           if (sn === 'STATUS_HALFTIME') substatus = 'HT';
           status = 'LIVE';
+        } else if (sn.includes('DELAY') || sn.includes('RAIN') ||
+                   sn.includes('POSTPONE') || sn.includes('SUSPEND') || sn.includes('CANCEL')) {
+          // Delayed / postponed / suspended — surface in UI with ESPN's reason string
+          status = 'DELAYED';
+          substatus = st.shortDetail || st.description || 'Delayed';
+          // Fall through to team matching — don't skip, we want to render this match
         } else {
           // Not started yet — still capture ESPN's authoritative kickoff time so we can
           // correct any wrong/stale time in the hand-typed SCHEDULE data. ESPN's comp.date

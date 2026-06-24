@@ -214,9 +214,10 @@ function buildMatchCard(match, now) {
   const status   = result ? result.status : 'NS';
   const score1   = result ? result.score1 : null;
   const score2   = result ? result.score2 : null;
-  const isLive   = status === 'LIVE';
-  const isFT     = status === 'FT';
-  const hasResult= isLive || isFT;
+  const isLive    = status === 'LIVE';
+  const isFT      = status === 'FT';
+  const isDelayed = status === 'DELAYED';
+  const hasResult = isLive || isFT;
 
   const isPSO   = !!(result?.substatus === 'PSO');
   const isDraw  = hasResult && !isPSO && score1 === score2;
@@ -225,10 +226,10 @@ function buildMatchCard(match, now) {
 
   const kickoffUTC = parseGameTimeCT(match.date, getMatchTime(match));
   const msUntil    = kickoffUTC - now;
-  const countdown  = (!isFT && !isLive && msUntil > 0) ? formatCountdown(msUntil) : null;
+  const countdown  = (!isFT && !isLive && !isDelayed && msUntil > 0) ? formatCountdown(msUntil) : null;
   const isMyCard   = STATE.myTeams.some(t => normName(t) === normName(match.t1) || normName(t) === normName(match.t2));
 
-  // Top-right status: FT / HT / LIVE clock / kickoff time / overdue
+  // Top-right status: FT / HT / LIVE clock / DELAYED / kickoff time / overdue
   let statusHtml = '';
   if (isFT) {
     const sub = result?.substatus;
@@ -240,6 +241,8 @@ function buildMatchCard(match, now) {
       const clockStr = result?.clock ? result.clock : 'LIVE';
       statusHtml = `<span class="mc-status-live"><span class="pulse-dot"></span>${clockStr}</span>`;
     }
+  } else if (isDelayed) {
+    statusHtml = '<span class="mc-status-delay">DELAYED</span>';
   } else {
     const t = getMatchTime(match);
     const tzAbbr = getTZAbbr();
@@ -251,7 +254,7 @@ function buildMatchCard(match, now) {
     }
   }
   const grpLabel = match.g ? `GROUP ${match.g}` : 'R32';
-  const isLiveCard = isLive || (!hasResult && msUntil < -300000);
+  const isLiveCard = isLive || (!hasResult && !isDelayed && msUntil < -300000);
 
   // Team rows — winner gold + bold, loser 45% opacity
   const cls1 = !isDraw && t1Wins ? 'winner' : (!isDraw && t2Wins ? 'loser' : '');
@@ -259,7 +262,10 @@ function buildMatchCard(match, now) {
   const s1html = hasResult ? `<span class="mc-score">${score1}</span>` : '';
   const s2html = hasResult ? `<span class="mc-score">${score2}</span>` : '';
 
-  return `<div class="mc-card${isMyCard ? ' my-team-card' : ''}${isLiveCard ? ' mc-card-live' : ''}">
+  // Delay reason note — shown below teams when game is delayed
+  const delayReason = isDelayed ? (result?.substatus || 'Match delayed') : '';
+
+  return `<div class="mc-card${isMyCard ? ' my-team-card' : ''}${isLiveCard ? ' mc-card-live' : ''}${isDelayed ? ' mc-card-delayed' : ''}">
   <div class="mc-top">
     <span class="mc-grp-pill">${grpLabel}</span>
     ${statusHtml}
@@ -277,12 +283,13 @@ function buildMatchCard(match, now) {
     ${s2html}
   </div>
   ${isFT && isPSO && result.penScore1 !== null ? `<div class="mc-pso-score">Pens · ${result.penScore1}–${result.penScore2}</div>` : ''}
-  ${(!hasResult && msUntil >= -300000) ? buildPreviewSection(match.id) : ''}
+  ${isDelayed ? `<div class="mc-delay-note">${delayReason}</div>` : ''}
+  ${(!hasResult && !isDelayed && msUntil >= -300000) ? buildPreviewSection(match.id) : ''}
   <div class="mc-foot">
     <span class="mc-city">${match.city}</span>
     ${hasResult ? `<span class="mc-detail-link" onclick="openMatchDetail(${match.id})">Match Centre &rsaquo;</span>` : ''}
     ${countdown ? `<span class="mc-countdown" data-kickoff="${kickoffUTC.getTime()}">${countdown}</span>` : ''}
-    ${(!hasResult && msUntil < -300000) ? '<span class="mc-espn-wait">⚡ Awaiting ESPN…</span>' : ''}
+    ${(!hasResult && !isDelayed && msUntil < -300000) ? '<span class="mc-espn-wait">⚡ Awaiting ESPN…</span>' : ''}
   </div>
 </div>`;
 }

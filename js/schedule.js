@@ -111,7 +111,7 @@ function buildScheduleRow(match) {
   const status = result ? result.status : 'NS';
   const score1 = result ? result.score1 : null;
   const score2 = result ? result.score2 : null;
-  const isLive = status === 'LIVE', isFT = status === 'FT';
+  const isLive = status === 'LIVE', isFT = status === 'FT', isDelayed = status === 'DELAYED';
   const isPSO = !!(result?.substatus === 'PSO');
 
   let w1 = '', w2 = '';
@@ -140,6 +140,8 @@ function buildScheduleRow(match) {
       : `<span class="srow-live"><span class="pulse-dot"></span>${result?.clock || 'LIVE'}</span>`;
   } else if (isFT) {
     mainStatus = `<span class="srow-ft">FT</span>`;
+  } else if (isDelayed) {
+    mainStatus = '<span class="srow-delay">DELAYED</span>';
   } else {
     const kickoff = (match.date && getMatchTime(match)) ? parseGameTimeCT(match.date, getMatchTime(match)) : null;
     const sinceKick = kickoff ? Date.now() - kickoff.getTime() : -1;
@@ -164,6 +166,7 @@ function buildScheduleRow(match) {
   }
 
   const clickable = isLive || isFT;
+  const delayBar = isDelayed ? `<div class="srow-delay-bar">${result?.substatus || 'Match delayed'}</div>` : '';
   return `<div class="srow${isMy1 || isMy2 ? ' my-t' : ''}${clickable ? ' srow-click' : ''}"${clickable ? ` onclick="openMatchDetail(${match.id})"` : ''}>
     <div class="srow-status">${statusCell}</div>
     <div class="srow-teams">
@@ -171,6 +174,7 @@ function buildScheduleRow(match) {
       <div class="srow-team ${w2}">${badge(match.t2)}<span class="srow-name">${displayName(t2Name)}</span>${isMy2 ? '<span class="srow-star">★</span>' : '<span data-star-team="' + (match.t2 || '') + '"></span>'}</div>
     </div>
     ${scoreCell}
+    ${delayBar}
   </div>`;
 }
 

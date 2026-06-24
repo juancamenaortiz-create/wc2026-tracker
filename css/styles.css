@@ -2234,31 +2234,48 @@ img.emoji {
 .sub-out { color: var(--red);   font-size: 11px; }
 .sub-in  { color: var(--green); font-size: 11px; }
 
-/* Lineups */
-.lu-team-headers {
-  display: flex; justify-content: space-between;
-  padding: 8px 12px; font-size: 11px; font-weight: 700;
-  color: var(--muted); border-bottom: 1px solid var(--border);
+/* ── Lineups (mockup Frame 13) ── */
+.lu-bench-wrap  { margin-top: 14px; }
+.lu-bench-title {
+  font-size: 11px; font-weight: 700; color: #7e8794;
+  text-transform: uppercase; letter-spacing: .07em; margin-bottom: 9px;
 }
-.lu-th-r { text-align: right; }
-.lu-form { font-size: 10px; background: rgba(212,175,55,.15); color: var(--gold); border-radius: 3px; padding: 1px 5px; }
-.lu-grid { padding: 4px 0; }
-.lu-row { display: grid; grid-template-columns: 1fr 1fr; }
-.lu-cell { padding: 3px 8px; border-bottom: 1px solid rgba(255,255,255,.03); }
-.lu-cell-r { border-left: 1px solid rgba(255,255,255,.05); }
-.lu-player { display: flex; align-items: center; gap: 4px; font-size: 11px; }
-.lu-player.lu-r { flex-direction: row-reverse; }
-.lu-player.lu-subbed .lu-name { color: var(--muted); }
-.lu-num { font-size: 10px; color: var(--dim); min-width: 14px; }
-.lu-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--white); }
-.lu-pos { font-size: 9px; color: var(--muted); background: var(--navy4); border-radius: 3px; padding: 1px 4px; flex-shrink: 0; }
-.lu-out-icon { font-size: 10px; color: var(--red); flex-shrink: 0; }
-
-.lu-bench-wrap { border-top: 1px solid var(--border); padding: 8px 12px; }
-.lu-bench-title { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
-.lu-bench-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
-.lu-bench-col-r { text-align: right; }
-.lu-bench-pill { display: inline-block; font-size: 10px; color: var(--muted); background: var(--navy4); border-radius: 4px; padding: 2px 6px; margin: 2px 2px; }
+.lu-bench-cols  { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.lu-bench-col-r { }
+.lu-bench-pill  {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 10.5px; font-weight: 600; color: #aeb6c2;
+  background: #1b1f27; border: 1px solid rgba(255,255,255,.07);
+  border-radius: 7px; padding: 4px 8px; margin: 0 5px 6px 0;
+}
+.lu-bench-pill-num { font-size: 9px; font-weight: 800; color: #7e8794; }
+/* Sub cards */
+.lu-subs-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 9px;
+}
+.lu-subs-legend { display: flex; align-items: center; gap: 12px; font-size: 9.5px; font-weight: 700; color: #9aa3af; }
+.lu-subs-legend-item { display: inline-flex; align-items: center; gap: 4px; }
+.lu-sub-card {
+  display: flex; align-items: center; gap: 9px;
+  padding: 7px 9px; background: #13161a;
+  border: 1px solid rgba(255,255,255,.06); border-radius: 10px; margin-bottom: 6px;
+}
+.lu-sub-min {
+  font-size: 10px; font-weight: 800; color: #aab2c0;
+  background: #1d212a; border-radius: 6px; padding: 3px 6px; flex-shrink: 0;
+}
+.lu-sub-names { flex: 1; min-width: 0; }
+.lu-sub-on  {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 11.5px; font-weight: 700; color: #e7eaf0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.lu-sub-off {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 10.5px; font-weight: 600; color: #8a93a0; margin-top: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 
 /* Player Stats Table */
 .ps-team-hdr { font-size: 11px; font-weight: 700; padding: 8px 12px 4px; color: var(--muted); }
@@ -2349,7 +2366,11 @@ td.ps-name { color: var(--white); font-weight: 600; }
 .facts-ht-score { color: var(--white); margin-left: 4px; }
 
 /* ── Pitch SVG wrap ── */
-.pitch-wrap { padding: 8px 0; }
+.pitch-wrap {
+  position: relative; border-radius: 14px; overflow: hidden;
+  background: linear-gradient(180deg,#11271b,#0d1d14);
+  border: 1px solid rgba(255,255,255,.06); margin-top: 8px;
+}
 
 /* ── MotM (ESPN) ── */
 .md-motm-box { }
@@ -2405,10 +2426,20 @@ td.ps-name { color: var(--white); font-weight: 600; }
 .lu-fm-team { display: flex; align-items: center; gap: 5px; }
 .lu-fm-team-r { flex-direction: row-reverse; }
 .lu-fm-flag { font-size: 14px; }
-.lu-fm-name { font-size: 11px; font-weight: 700; color: var(--white); }
+.lu-fm-name { font-size: 12px; font-weight: 700; color: var(--white); }
 .lu-fm-pill {
-  font-size: 10px; font-weight: 700; color: var(--gold);
-  background: var(--navy4); border: 1px solid var(--border);
+  font-size: 9.5px; font-weight: 800; color: #34d488;
+  background: rgba(32,189,118,.12); border: 1px solid rgba(32,189,118,.3);
+  white-space: nowrap;
+}
+.lu-fm-pill-away {
+  font-size: 9.5px; font-weight: 800; color: #9aa3af;
+  background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.1);
+  white-space: nowrap;
+}
+.lu-fm-pill-base {
+  border-radius: 6px; padding: 2px 7px;
+}
   border-radius: 10px; padding: 1px 7px;
 }
 

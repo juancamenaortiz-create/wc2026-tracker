@@ -402,53 +402,96 @@ function _tabLineup(result, summary) {
   if (!t1St.length && !t2St.length)
     return '<div class="md-empty">Lineup not available for this match.</div>';
 
-  var svg    = _buildPitch(t1St, t2St, t1P.formation, t2P.formation);
+  // Build sub minute lookup from plays (name → minute string)
+  var subMins = {};
+  var plays = (summary.plays || (summary.boxscore && summary.boxscore.plays) || []);
+  plays.forEach(function(p) {
+    var typeText = ((p.type && (p.type.text || p.type.name)) || '').toLowerCase();
+    if ((typeText.includes('sub') || typeText.includes('substitut')) && p.clock && p.clock.displayValue) {
+      var min  = p.clock.displayValue;
+      var ath  = p.participants || p.athletes || [];
+      var nameIn = (ath[1] && (ath[1].athlete && (ath[1].athlete.shortName || ath[1].athlete.displayName) || ath[1].shortName || ath[1].displayName)) || '';
+      if (nameIn) subMins[nameIn] = min;
+    }
+  });
+
+  var svg = _buildPitch(t1St, t2St, t1P.formation, t2P.formation);
+
   var bench1 = t1A.filter(function(a){return !a.starter;}),
       bench2 = t2A.filter(function(a){return !a.starter;});
 
-  function pill(a) {
+  function benchPill(a) {
     var n = (a.athlete && (a.athlete.shortName || a.athlete.displayName)) || '?';
-    return '<span class="lu-bench-pill">' + (a.jersey ? a.jersey + ' ' : '') + n + '</span>';
+    var num = a.jersey || '';
+    return '<span class="lu-bench-pill">'
+      + (num ? '<span class="lu-bench-pill-num">' + num + '</span>' : '')
+      + n + '</span>';
   }
-  var bench = (bench1.length || bench2.length)
-    ? '<div class="lu-bench-wrap"><div class="lu-bench-title">Bench</div><div class="lu-bench-cols"><div>' + bench1.map(pill).join('') + '</div><div class="lu-bench-col-r">' + bench2.map(pill).join('') + '</div></div></div>'
-    : '';
 
-  // Formation header row (flag + name + formation pill) — sits above the pitch
+  // Formation header
   var fmHeader = '<div class="lu-fm-header">'
-    + '<div class="lu-fm-team"><span class="lu-fm-flag">' + getFlag(result.team2) + '</span><span class="lu-fm-name">' + displayName(result.team2) + '</span>' + (t2P.formation ? '<span class="lu-fm-pill">' + t2P.formation + '</span>' : '') + '</div>'
-    + '<div class="lu-fm-team lu-fm-team-r">' + (t1P.formation ? '<span class="lu-fm-pill">' + t1P.formation + '</span>' : '') + '<span class="lu-fm-name">' + displayName(result.team1) + '</span><span class="lu-fm-flag">' + getFlag(result.team1) + '</span></div>'
+    + '<div class="lu-fm-team">'
+    +   '<span class="lu-fm-flag">' + getFlag(result.team1) + '</span>'
+    +   '<span class="lu-fm-name">' + displayName(result.team1) + '</span>'
+    +   (t1P.formation ? '<span class="lu-fm-pill lu-fm-pill-base">' + t1P.formation + '</span>' : '')
+    + '</div>'
+    + '<div class="lu-fm-team lu-fm-team-r">'
+    +   (t2P.formation ? '<span class="lu-fm-pill-away lu-fm-pill-base">' + t2P.formation + '</span>' : '')
+    +   '<span class="lu-fm-name">' + displayName(result.team2) + '</span>'
+    +   '<span class="lu-fm-flag">' + getFlag(result.team2) + '</span>'
+    + '</div>'
     + '</div>';
 
-  // Substitutions — who came on and who they replaced, paired by index
-  // (ESPN returns subbedIn and subbedOut lists in substitution order)
+  // Substitutions — card style with minute badge
   var subs1on  = t1A.filter(function(a){ return a.subbedIn; });
   var subs1off = t1A.filter(function(a){ return a.subbedOut || a.didSubOut; });
   var subs2on  = t2A.filter(function(a){ return a.subbedIn; });
   var subs2off = t2A.filter(function(a){ return a.subbedOut || a.didSubOut; });
 
-  function subPair(aOn, aOff) {
-    var nOn  = aOn  && ((aOn.athlete  && (aOn.athlete.shortName  || aOn.athlete.displayName))  || '');
-    var nOff = aOff && ((aOff.athlete && (aOff.athlete.shortName || aOff.athlete.displayName)) || '');
+  function subCard(aOn, aOff) {
+    var nOn  = (aOn  && ((aOn.athlete  && (aOn.athlete.shortName  || aOn.athlete.displayName))  || '')) || '';
+    var nOff = (aOff && ((aOff.athlete && (aOff.athlete.shortName || aOff.athlete.displayName)) || '')) || '';
     if (!nOn && !nOff) return '';
-    return '<div class="lu-sub-pair">'
-      + (nOn  ? '<span class="facts-sub-in">&#8593; '  + nOn  + '</span>' : '')
-      + (nOff ? '<span class="facts-sub-out">&#8595; ' + nOff + '</span>' : '')
-      + '</div>';
+    var min  = subMins[nOn] || '';
+    return '<div class="lu-sub-card">'
+      + (min ? '<span class="lu-sub-min">' + min + '\'</span>' : '')
+      + '<div class="lu-sub-names">'
+      + (nOn  ? '<div class="lu-sub-on">&#8593; '  + nOn  + '</div>' : '')
+      + (nOff ? '<div class="lu-sub-off">&#8595; ' + nOff + '</div>' : '')
+      + '</div></div>';
   }
-  var sr1 = subs1on.map(function(a,i){ return subPair(a, subs1off[i]); }).filter(Boolean).join('');
-  var sr2 = subs2on.map(function(a,i){ return subPair(a, subs2off[i]); }).filter(Boolean).join('');
+
+  var sr1 = subs1on.map(function(a,i){ return subCard(a, subs1off[i]); }).filter(Boolean).join('');
+  var sr2 = subs2on.map(function(a,i){ return subCard(a, subs2off[i]); }).filter(Boolean).join('');
+
+  var upArrow   = '<svg width="9" height="9" viewBox="0 0 24 24" fill="#34d488"><path d="M12 4l8 9h-5v7h-6v-7H4z"/></svg>';
+  var downArrow = '<svg width="9" height="9" viewBox="0 0 24 24" fill="#f0726b"><path d="M12 20l8-9h-5V4h-6v7H4z"/></svg>';
+
   var subsHtml = (sr1 || sr2) ? '<div class="lu-bench-wrap">'
-    + '<div class="lu-bench-title">Substitutions</div>'
+    + '<div class="lu-subs-header">'
+    + '<span class="lu-bench-title" style="margin-bottom:0">Substitutions</span>'
+    + '<span class="lu-subs-legend">'
+    + '<span class="lu-subs-legend-item">' + upArrow + ' On</span>'
+    + '<span class="lu-subs-legend-item">' + downArrow + ' Off</span>'
+    + '</span></div>'
     + '<div class="lu-bench-cols">'
     + '<div>' + (sr1 || '') + '</div>'
-    + '<div class="lu-bench-col-r">' + (sr2 || '') + '</div>'
+    + '<div>' + (sr2 || '') + '</div>'
     + '</div></div>' : '';
 
-  return fmHeader + '<div class="pitch-wrap">' + svg + '</div>' + bench + subsHtml;
+  var benchHtml = (bench1.length || bench2.length) ? '<div class="lu-bench-wrap">'
+    + '<div class="lu-bench-title">Bench</div>'
+    + '<div class="lu-bench-cols">'
+    + '<div>' + bench1.map(benchPill).join('') + '</div>'
+    + '<div>' + bench2.map(benchPill).join('') + '</div>'
+    + '</div></div>' : '';
+
+  return fmHeader
+    + '<div class="pitch-wrap">' + svg + '</div>'
+    + subsHtml + benchHtml;
 }
 
-// SVG pitch — emoji-sized circles (r=6), formation labels moved off-pitch into header row
+// SVG pitch — larger circles with jersey number + surname label
 
 function _buildPitch(homeA, awayA, homeFm, awayFm) {
   var W=260, H=390, half=H/2;
@@ -465,8 +508,6 @@ function _buildPitch(homeA, awayA, homeFm, awayFm) {
     var out = [], n = rs.length, idx = 0;
     rs.forEach(function(cnt, ri) {
       var t = n > 1 ? ri/(n-1) : 0.5;
-      // home: GK at bottom (y=335), FW near center (y=210)
-      // away: GK at top (y=50), FW near center (y=170)
       var y = isHome ? 335 - t*(335-210) : 50 + t*(170-50);
       for (var j=0; j<cnt; j++) {
         if (idx >= list.length) break;
@@ -477,40 +518,38 @@ function _buildPitch(homeA, awayA, homeFm, awayFm) {
     return out;
   }
 
-  // Draw player: emoji-sized circle + "NUM Name" text below
-  function draw(p, fill) {
-    var a    = p.a, x = p.x, y = p.y;
-    var name = ((a.athlete && (a.athlete.shortName || a.athlete.displayName)) || '?')
-                 .split(' ').pop().slice(0,7);
-    var num  = a.jersey || '';
-    var label = num ? num + ' ' + name : name;
-    var op   = (a.subbedOut || a.didSubOut) ? ' opacity=".45"' : '';
-    return '<g' + op + '>'
-      + '<circle cx="' + x + '" cy="' + y + '" r="6" fill="' + fill + '" stroke="rgba(255,255,255,.6)" stroke-width="1"/>'
-      + '<text x="' + x + '" y="' + (y+17) + '" text-anchor="middle" fill="rgba(255,255,255,.9)" font-size="7">' + label + '</text>'
+  // Draw player: circle with number + short surname below
+  function draw(p, isHome) {
+    var a = p.a, x = p.x, y = p.y;
+    var fullName = (a.athlete && (a.athlete.shortName || a.athlete.displayName)) || '?';
+    var surname  = fullName.split(' ').pop().slice(0, 8);
+    var num      = a.jersey || '';
+    var faded    = (a.subbedOut || a.didSubOut) ? ' opacity=".4"' : '';
+    var fill     = isHome ? '#1a3a28' : '#1b2330';
+    var stroke   = isHome ? '#20bd76' : '#6b7686';
+    var sw       = isHome ? '1.5' : '1.2';
+    return '<g' + faded + '>'
+      + '<circle cx="' + x + '" cy="' + y + '" r="11" fill="' + fill + '" stroke="' + stroke + '" stroke-width="' + sw + '"/>'
+      + (num ? '<text x="' + x + '" y="' + (y+3.5) + '" text-anchor="middle" fill="rgba(255,255,255,.9)" font-size="8" font-weight="700" font-family="inherit">' + num + '</text>' : '')
+      + '<text x="' + x + '" y="' + (y+22) + '" text-anchor="middle" fill="rgba(255,255,255,.78)" font-size="6.5" font-family="inherit">' + surname + '</text>'
       + '</g>';
   }
 
   var hp = calcPos(homeA, getRows(homeFm), true);
   var ap = calcPos(awayA, getRows(awayFm), false);
 
-  return '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:280px;display:block;margin:8px auto 0">'
-    // Pitch background
-    + '<rect width="' + W + '" height="' + H + '" fill="#2a5c1a" rx="6"/>'
-    // Pitch outline
-    + '<rect x="14" y="8" width="' + (W-28) + '" height="' + (H-16) + '" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="1"/>'
-    // Centre line
-    + '<line x1="14" y1="' + half + '" x2="' + (W-14) + '" y2="' + half + '" stroke="rgba(255,255,255,.3)" stroke-width="1"/>'
-    // Centre circle
-    + '<circle cx="' + (W/2) + '" cy="' + half + '" r="28" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="1"/>'
-    + '<circle cx="' + (W/2) + '" cy="' + half + '" r="2" fill="rgba(255,255,255,.4)"/>'
-    // Penalty areas
-    + '<rect x="' + (W/2-44) + '" y="8" width="88" height="46" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="1"/>'
-    + '<rect x="' + (W/2-44) + '" y="' + (H-54) + '" width="88" height="46" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="1"/>'
-    // Away players (red)
-    + ap.map(function(p){return draw(p,'#b52020');}).join('')
-    // Home players (blue)
-    + hp.map(function(p){return draw(p,'#1d4cb0');}).join('')
+  return '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block">'
+    // Pitch markings
+    + '<rect x="14" y="8" width="' + (W-28) + '" height="' + (H-16) + '" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1"/>'
+    + '<line x1="14" y1="' + half + '" x2="' + (W-14) + '" y2="' + half + '" stroke="rgba(255,255,255,.15)" stroke-width="1"/>'
+    + '<circle cx="' + (W/2) + '" cy="' + half + '" r="28" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1"/>'
+    + '<circle cx="' + (W/2) + '" cy="' + half + '" r="2" fill="rgba(255,255,255,.3)" stroke="none"/>'
+    + '<rect x="' + (W/2-44) + '" y="8" width="88" height="46" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1"/>'
+    + '<rect x="' + (W/2-44) + '" y="' + (H-54) + '" width="88" height="46" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1"/>'
+    // Away players
+    + ap.map(function(p){return draw(p,false);}).join('')
+    // Home players (drawn on top)
+    + hp.map(function(p){return draw(p,true);}).join('')
     + '</svg>';
 }
 

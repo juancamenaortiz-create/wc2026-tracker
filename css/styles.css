@@ -2430,6 +2430,25 @@ td.ps-name { color: var(--white); font-weight: 600; }
 }
 .mc-status-tz { font-size: 10px; font-weight: 600; color: var(--muted); }
 
+/* Delay / postponement badge */
+.mc-status-delay {
+  font-size: 10px; font-weight: 800; color: var(--amber);
+  background: rgba(245,158,11,.14); border-radius: 6px;
+  padding: 3px 8px; letter-spacing: .05em; white-space: nowrap;
+}
+/* Reason note below teams on delayed match cards */
+.mc-delay-note {
+  font-size: 11px; font-weight: 600; color: var(--amber);
+  margin-top: 10px; padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,.05);
+}
+/* Schedule row delay badge + full-span reason bar */
+.srow-delay { font-size: 10px; font-weight: 800; color: var(--amber); text-align: center; width: 100%; white-space: nowrap; }
+.srow-delay-bar { grid-column: 1 / -1; font-size: 11px; font-weight: 600; color: var(--amber); padding: 0 15px 9px; margin-top: -4px; }
+
+/* Logo image (replaces green tile) */
+.header-logo-img { width: 44px; height: 44px; border-radius: 11px; object-fit: cover; flex-shrink: 0; display: block; }
+
 .mc-card .mc-team {
   display: flex; align-items: center; gap: 11px;
   margin-bottom: 10px; opacity: 1;

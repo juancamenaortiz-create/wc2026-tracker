@@ -1699,15 +1699,15 @@ img.emoji {
 /* Detailed preview panel */
 .preview-panel {
   margin: 8px 0 0; padding: 0;
-  background: rgba(139,92,246,.07);
-  border: 1px solid rgba(139,92,246,.25);
+  background: rgba(230,195,106,.06);
+  border: 1px solid rgba(230,195,106,.22);
   border-radius: 10px; overflow: hidden;
   font-size: 12px; color: var(--white);
 }
-.pv-header { padding: 7px 12px 5px; border-bottom: 1px solid rgba(139,92,246,.2); }
+.pv-header { padding: 7px 12px 5px; border-bottom: 1px solid rgba(230,195,106,.18); }
 .pv-label {
   font-size: 9px; font-weight: 800;
-  color: #A78BFA; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--gold); letter-spacing: .07em; text-transform: uppercase;
 }
 .pv-text { margin: 0; padding: 10px 12px; font-size: 12px; line-height: 1.6; }
 .pv-team { padding: 10px 12px 8px; border-bottom: 1px solid rgba(255,255,255,.05); }

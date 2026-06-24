@@ -1528,39 +1528,67 @@ img.emoji {
 .stats-toggle.open          { color: var(--gold); border-color: rgba(212,175,55,0.3); }
 .sched-stats                { margin: 4px 0 0; }
 
-.match-stats-panel          { padding: 12px 6px 4px; }
+/* ── Match Stats panel (mockup Frame 12) ── */
+.match-stats-panel {
+  background: var(--card); border: 1px solid rgba(255,255,255,.06);
+  border-radius: 16px; padding: 6px 16px; margin-bottom: 14px;
+}
 .stat-row {
-  display: flex; align-items: center; gap: 6px;
-  margin-bottom: 11px;
+  display: flex; align-items: center; gap: 12px;
+  padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,.04);
 }
-/* Fixed-width outer column — NEVER changes size based on content or highlight state,
-   so the bar in the middle always lines up perfectly across every row. */
+.stat-row:last-child { border-bottom: none; }
+/* Fixed-width outer column keeps the centre bar perfectly aligned */
 .stat-val {
-  width: 58px; flex: 0 0 58px;
+  width: 44px; flex: 0 0 44px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 12px; font-weight: 700; color: var(--white);
+  font-size: 13px; font-weight: 600; color: #8a93a0;
 }
-.stat-mid                   { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-.stat-bar {
-  height: 5px; border-radius: 3px;
-  background: var(--dim); overflow: hidden; display: flex;
+.stat-val.lead { font-weight: 800; color: #34d488; }
+.stat-val.trail{ font-weight: 600; color: #8a93a0; }
+.stat-val.lead-r{ font-weight: 800; color: var(--white); }
+.stat-mid  { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.stat-bar  {
+  height: 6px; border-radius: 4px;
+  overflow: hidden; display: flex; gap: 2px;
 }
-.stat-bar-1 { height: 100%; background: var(--gold);   flex-shrink: 0; border-radius: 3px 0 0 3px; }
-.stat-bar-2 { height: 100%; background: var(--crimson); flex-shrink: 0; border-radius: 0 3px 3px 0; }
-
-/* Inner pill — sized to its own content, centered inside the fixed-width column above.
-   Because it's a separate inner element, its padding/width never disturbs row alignment. */
-.stat-val-inner {
-  display: inline-block; padding: 2px 9px; border-radius: 11px;
-  line-height: 1.4; white-space: nowrap;
-}
-.stat-pill-1 { background: var(--gold);    color: #1a1500; }
-.stat-pill-2 { background: var(--crimson); color: #ffffff; }
-
+.stat-bar-1 { height: 100%; background: #20bd76; flex-shrink: 0; border-radius: 4px 0 0 4px; }
+.stat-bar-2 { height: 100%; background: #3a414c; flex-shrink: 0; border-radius: 0 4px 4px 0; }
+.stat-val-inner { display: inline-block; }
+.stat-pill-1 {}
+.stat-pill-2 {}
 .stat-label {
-  font-size: 9px; color: var(--muted); text-align: center;
-  text-transform: uppercase; letter-spacing: 0.05em;
+  font-size: 10.5px; color: #8a93a0; font-weight: 600; text-align: center;
 }
+/* Stats legend row */
+.stat-legend {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+.stat-legend-title { font-size: 11px; font-weight: 700; color: #7e8794; text-transform: uppercase; letter-spacing: .07em; }
+.stat-legend-teams { display: flex; align-items: center; gap: 12px; font-size: 10px; font-weight: 700; color: #9aa3af; }
+.stat-legend-team  { display: inline-flex; align-items: center; gap: 5px; }
+.stat-legend-dot   { width: 9px; height: 9px; border-radius: 3px; }
+/* MotM card */
+.motm-card {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--card); border: 1px solid rgba(230,195,106,.25);
+  border-radius: 16px; padding: 13px 15px; margin-bottom: 14px;
+}
+.motm-avatar {
+  width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(150deg, #2a2616, #1a1a14);
+  border: 1px solid rgba(230,195,106,.4);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 800; color: #e6c36a;
+}
+.motm-body { flex: 1; min-width: 0; }
+.motm-label { font-size: 9.5px; font-weight: 800; color: #e6c36a; text-transform: uppercase; letter-spacing: .06em; }
+.motm-name  { font-size: 14px; font-weight: 800; color: var(--white); margin-top: 2px; }
+.motm-sub   { font-size: 11px; color: #7e8794; margin-top: 1px; }
+.motm-rating{ text-align: right; flex-shrink: 0; }
+.motm-rating-val { font-size: 20px; font-weight: 800; color: #e6c36a; line-height: 1; }
+.motm-rating-lbl { font-size: 8px; font-weight: 700; color: #6a727e; letter-spacing: .05em; margin-top: 2px; }
 
 /* ── Groups sub-nav ── */
 .groups-subnav {
@@ -1578,43 +1606,49 @@ img.emoji {
 .subnav-btn.active { color: var(--green); border-bottom-color: var(--green); }
 .subnav-btn:hover:not(.active) { color: var(--white); }
 
-/* ── Top Scorers list ── */
+/* ── Top Scorers list (mockup Frame 11) ── */
+.scorers-header { display: flex; align-items: flex-end; justify-content: space-between; margin: 4px 2px 12px; }
+.scorers-title   { font-size: 16px; font-weight: 800; color: var(--white); letter-spacing: -.02em; }
+.scorers-subtitle{ font-size: 11px; color: #7e8794; margin-top: 2px; }
+.scorers-shoe    { font-size: 18px; }
 .scorers-list {
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  overflow: hidden;
+  background: var(--card); border: 1px solid rgba(255,255,255,.06);
+  border-radius: 18px; overflow: hidden;
 }
 .scorer-row {
-  display: flex; align-items: center; gap: 8px;
-  padding: 9px 10px;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
+  display: flex; align-items: center; gap: 11px;
+  padding: 11px 14px; border-bottom: 1px solid rgba(255,255,255,.05);
 }
 .scorer-row:last-child { border-bottom: none; }
-.scorer-rank {
-  min-width: 26px; text-align: center; flex-shrink: 0;
-}
+.scorer-row.top1 { background: rgba(230,195,106,.04); }
+.scorer-rank { width: 22px; text-align: center; flex-shrink: 0; }
 .scorer-rank.medal { font-size: 16px; }
-.scorer-rank.num   { font-size: 11px; font-weight: 700; color: var(--muted); }
-.scorer-flag { font-size: 20px; flex-shrink: 0; }
-.scorer-info {
-  flex: 1; min-width: 0; display: flex;
-  flex-direction: column; gap: 1px;
+.scorer-rank.num   { font-size: 12px; font-weight: 800; color: #8a93a0; }
+.scorer-avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: linear-gradient(150deg, #252b35, #1a1f27);
+  border: 1px solid rgba(255,255,255,.1);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 800; color: #cdd3dc; flex-shrink: 0;
 }
+.scorer-row.top1 .scorer-avatar { box-shadow: 0 0 0 2.5px #e6c36a; }
+.scorer-info { flex: 1; min-width: 0; }
+.scorer-name-row { display: flex; align-items: center; gap: 7px; }
 .scorer-name {
-  font-size: 13px; font-weight: 600; color: var(--white);
+  font-size: 13.5px; font-weight: 700; color: var(--white);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.scorer-team { font-size: 10px; color: var(--muted); }
-.scorer-bar-wrap {
-  width: 56px; height: 4px; background: var(--dim);
-  border-radius: 2px; overflow: hidden; flex-shrink: 0;
+.scorer-abbr {
+  font-size: 9px; font-weight: 700; color: #9aa3af;
+  background: rgba(255,255,255,.06); border-radius: 4px;
+  padding: 2px 5px; flex-shrink: 0; white-space: nowrap;
 }
-.scorer-bar { height: 100%; background: var(--gold); border-radius: 2px; }
-.scorer-goals {
-  font-size: 16px; font-weight: 800; color: var(--gold);
-  min-width: 18px; text-align: right; flex-shrink: 0;
-}
+.scorer-bar-wrap { margin-top: 6px; height: 4px; border-radius: 3px; background: rgba(255,255,255,.07); overflow: hidden; }
+.scorer-bar { height: 100%; background: linear-gradient(90deg,#23c97e,#20bd76); border-radius: 3px; }
+.scorer-goals-wrap { text-align: right; flex-shrink: 0; }
+.scorer-goals { font-size: 18px; font-weight: 800; color: var(--white); line-height: 1; font-variant-numeric: tabular-nums; }
+.scorer-row.top1 .scorer-goals { color: #e6c36a; }
+.scorer-goals-lbl { font-size: 8.5px; font-weight: 700; color: #6a727e; letter-spacing: .04em; margin-top: 1px; }
 
 /* src-warn consolidated above near src-badge */
 

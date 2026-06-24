@@ -539,7 +539,6 @@ function _tabStats(result, summary, sched) {
   var se1 = (result.stats && result.stats.t1) || {},
       se2 = (result.stats && result.stats.t2) || {};
 
-  // Stat lookup
   function getSt(td, key) {
     var found = (td.statistics||[]).filter(function(s){return s.name===key;})[0];
     if (!found) return null;
@@ -547,7 +546,7 @@ function _tabStats(result, summary, sched) {
     return isNaN(v) ? null : v;
   }
 
-  // Stats bars
+  // Stats bars — green bar for home, dark for away
   var rows = _STAT_DEFS.map(function(def) {
     var v1 = getSt(t1S, def.key); if (v1 === null) v1 = se1[def.key];
     var v2 = getSt(t2S, def.key); if (v2 === null) v2 = se2[def.key];
@@ -557,24 +556,35 @@ function _tabStats(result, summary, sched) {
     var pct1  = Math.round((a/total)*100);
     var d = def.fmt || function(v){return Math.round(v);};
 
-    // Determine which side "wins" this stat — lower is better for fouls/cards/offsides
     var aLeads = def.inverse ? (a < b) : (a > b);
     var bLeads = def.inverse ? (b < a) : (b > a);
-    var aPill = aLeads ? ' stat-pill stat-pill-1' : '';
-    var bPill = bLeads ? ' stat-pill stat-pill-2' : '';
 
     return '<div class="stat-row">'
-      + '<span class="stat-val"><span class="stat-val-inner' + aPill + '">' + d(a) + '</span></span>'
-      + '<div class="stat-mid"><div class="stat-bar"><div class="stat-bar-1" style="width:' + pct1 + '%"></div><div class="stat-bar-2" style="width:' + (100-pct1) + '%"></div></div><span class="stat-label">' + def.label + '</span></div>'
-      + '<span class="stat-val"><span class="stat-val-inner' + bPill + '">' + d(b) + '</span></span>'
+      + '<span class="stat-val' + (aLeads ? ' lead' : '') + '">' + d(a) + '</span>'
+      + '<div class="stat-mid">'
+      +   '<div class="stat-bar"><div class="stat-bar-1" style="width:' + pct1 + '%"></div><div class="stat-bar-2" style="width:' + (100-pct1) + '%"></div></div>'
+      +   '<span class="stat-label">' + def.label + '</span>'
+      + '</div>'
+      + '<span class="stat-val' + (bLeads ? ' lead-r' : '') + '">' + d(b) + '</span>'
       + '</div>';
   }).filter(Boolean).join('');
 
-  var statsHtml = rows
-    ? '<div class="md-section"><div class="md-section-title">&#128202; Match Stats</div><div class="match-stats-panel">' + rows + '</div></div>'
-    : '';
+  // Team abbreviation helper
+  var ABBR = {'England':'ENG','France':'FRA','Argentina':'ARG','Brazil':'BRA','Spain':'ESP','Germany':'GER','Netherlands':'NED','Portugal':'POR','United States':'USA','Mexico':'MEX','Uruguay':'URU','Colombia':'COL','Croatia':'CRO','Japan':'JPN','Senegal':'SEN','Morocco':'MAR','Ecuador':'ECU','Denmark':'DEN','Switzerland':'SUI','Belgium':'BEL','Poland':'POL','South Korea':'KOR','Australia':'AUS','Canada':'CAN'};
+  function abbr(name){return ABBR[name]||(displayName(name).slice(0,3).toUpperCase());}
 
-  // ESPN match leaders
+  var statsHtml = '';
+  if (rows) {
+    var legend = '<div class="stat-legend">'
+      + '<span class="stat-legend-title">Match Stats</span>'
+      + '<span class="stat-legend-teams">'
+      + '<span class="stat-legend-team"><span class="stat-legend-dot" style="background:#20bd76"></span>' + abbr(result.team1) + '</span>'
+      + '<span class="stat-legend-team"><span class="stat-legend-dot" style="background:#3a414c"></span>' + abbr(result.team2) + '</span>'
+      + '</span></div>';
+    statsHtml = legend + '<div class="match-stats-panel">' + rows + '</div>';
+  }
+
+  // Match leaders
   var leaders = (summary && summary.leaders) || [];
   var lRows = leaders.map(function(cat) {
     var cl = (cat.leaders||[]).slice(0,3);
@@ -599,7 +609,7 @@ function _tabStats(result, summary, sched) {
     ? '<div class="md-section"><div class="md-section-title">&#11088; Match Leaders</div><div class="md-leaders">' + lRows + '</div></div>'
     : '';
 
-  // MotM picker — organized by team
+  // MotM — show gold card if picked, otherwise show picker
   var motmKey = 'wc2026_motm_' + (sched ? sched.id : '');
   var saved   = localStorage.getItem(motmKey) || '';
 
@@ -609,30 +619,43 @@ function _tabStats(result, summary, sched) {
   var t1PA = _getAth(t1P||{}).filter(function(a){return a.starter||a.subbedIn;});
   var t2PA = _getAth(t2P||{}).filter(function(a){return a.starter||a.subbedIn;});
 
-  function makeBtn(a) {
-    var n = (a.athlete && (a.athlete.shortName||a.athlete.displayName)) || '';
-    if (!n) return '';
-    var picked = saved === n;
-    return '<button class="motm-pick-btn' + (picked?' motm-picked':'') + '" onclick="pickMotM(\'' + n.replace(/\\/g,'\\\\').replace(/'/g,"\\'") + '\')">'
-      + (picked ? '&#11088; ' : '') + n
-      + '</button>';
-  }
+  function ini(n){var p=n.trim().split(/\s+/);return(p[0][0]+(p[p.length-1][0]||'')).toUpperCase();}
 
-  var btns1 = t1PA.map(makeBtn).filter(Boolean).join('');
-  var btns2 = t2PA.map(makeBtn).filter(Boolean).join('');
-  var pickerHtml = '';
-  if (btns1 || btns2) {
-    var titleStr = '&#127775; Your Man of the Match'
-      + (saved ? ' &middot; <span style="color:var(--gold)">' + saved + '</span>' : '');
-    pickerHtml = '<div class="md-section">'
-      + '<div class="md-section-title">' + titleStr + '</div>'
-      + '<div class="motm-picker-wrap">'
-      + (btns1 ? '<div class="motm-team-label">' + getFlag(result.team1) + ' ' + displayName(result.team1) + '</div><div class="motm-options">' + btns1 + '</div>' : '')
-      + (btns2 ? '<div class="motm-team-label motm-team-label-2">' + getFlag(result.team2) + ' ' + displayName(result.team2) + '</div><div class="motm-options">' + btns2 + '</div>' : '')
+  var motmHtml = '';
+  if (saved) {
+    // Show gold card for picked MotM
+    var allPl = t1PA.concat(t2PA);
+    var pickedA = allPl.filter(function(a){
+      var n=(a.athlete&&(a.athlete.shortName||a.athlete.displayName))||'';
+      return n===saved;
+    })[0];
+    var pickedTeam = t1PA.indexOf(pickedA)>=0 ? result.team1 : result.team2;
+    motmHtml = '<div class="motm-card">'
+      + '<div class="motm-avatar">' + ini(saved) + '</div>'
+      + '<div class="motm-body">'
+      + '<div class="motm-label">&#11088; Your Man of the Match</div>'
+      + '<div class="motm-name">' + saved + '</div>'
+      + '<div class="motm-sub">' + displayName(pickedTeam) + ' &middot; <span style="color:#34d488;cursor:pointer" onclick="pickMotM(\'' + saved.replace(/'/g,"\\'") + '\')">Change pick</span></div>'
       + '</div></div>';
+  } else if (t1PA.length || t2PA.length) {
+    function makeBtn(a) {
+      var n = (a.athlete && (a.athlete.shortName||a.athlete.displayName)) || '';
+      if (!n) return '';
+      return '<button class="motm-pick-btn" onclick="pickMotM(\'' + n.replace(/'/g,"\\'") + '\')">' + n + '</button>';
+    }
+    var btns1 = t1PA.map(makeBtn).filter(Boolean).join('');
+    var btns2 = t2PA.map(makeBtn).filter(Boolean).join('');
+    if (btns1 || btns2) {
+      motmHtml = '<div class="md-section">'
+        + '<div class="md-section-title">&#127775; Pick your Man of the Match</div>'
+        + '<div class="motm-picker-wrap">'
+        + (btns1 ? '<div class="motm-team-label">' + getFlag(result.team1) + ' ' + displayName(result.team1) + '</div><div class="motm-options">' + btns1 + '</div>' : '')
+        + (btns2 ? '<div class="motm-team-label motm-team-label-2">' + getFlag(result.team2) + ' ' + displayName(result.team2) + '</div><div class="motm-options">' + btns2 + '</div>' : '')
+        + '</div></div>';
+    }
   }
 
-  return statsHtml + leadersHtml + pickerHtml;
+  return statsHtml + leadersHtml + motmHtml;
 }
 
 // ── Compatibility stubs ────────────────────────────────────────────────────────

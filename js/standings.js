@@ -81,37 +81,77 @@ function buildScorersHTML() {
   const scorers = buildTopScorers();
 
   if (!scorers.length) {
-    return `<div class="empty-state" style="margin-top:24px">
+    return `<div class="scorers-header"><div><div class="scorers-title">Top Scorers</div><div class="scorers-subtitle">Golden Boot race</div></div><span class="scorers-shoe">👟</span></div>
+    <div class="empty-state" style="margin-top:24px">
       ⚽<br>Goals will appear here once matches are played.
     </div>`;
   }
 
-  const maxGoals = scorers[0].goals;
-  let rank = 0, prev = -1, html = '<div class="scorers-list">';
+  const maxGoals    = scorers[0].goals;
+  const totalGames  = (STATE.results.groupMatches || []).filter(m => m.score1 != null).length;
 
+  // derive a short abbreviation from the team name
+  const ABBR_MAP = {
+    'Argentina':'ARG','Australia':'AUS','Belgium':'BEL','Brazil':'BRA',
+    'Canada':'CAN','Colombia':'COL','Croatia':'CRO','Denmark':'DEN',
+    'Ecuador':'ECU','Egypt':'EGY','England':'ENG','France':'FRA',
+    'Germany':'GER','Ghana':'GHA','Iran':'IRN','Italy':'ITA',
+    'Japan':'JPN','Mexico':'MEX','Morocco':'MAR','Netherlands':'NED',
+    'Nigeria':'NGA','Norway':'NOR','Poland':'POL','Portugal':'POR',
+    'Qatar':'QAT','Saudi Arabia':'KSA','Senegal':'SEN','Serbia':'SRB',
+    'South Korea':'KOR','Spain':'ESP','Sweden':'SWE','Switzerland':'SUI',
+    'Tunisia':'TUN','United States':'USA','Uruguay':'URU','Wales':'WAL',
+  };
+  function teamAbbr(teamName) {
+    if (ABBR_MAP[teamName]) return ABBR_MAP[teamName];
+    const d = displayName(teamName);
+    if (ABBR_MAP[d]) return ABBR_MAP[d];
+    const w = d.trim().split(/\s+/);
+    if (w.length === 1) return d.slice(0,3).toUpperCase();
+    return (w[0][0] + w[1].slice(0,2)).toUpperCase();
+  }
+
+  // player initials from full name
+  function initials(name) {
+    const p = name.trim().split(/\s+/);
+    return (p[0][0] + (p[p.length - 1][0] || '')).toUpperCase();
+  }
+
+  let rank = 0, prev = -1, html = '';
   scorers.forEach((s, i) => {
     if (s.goals !== prev) { rank = i + 1; prev = s.goals; }
-    const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : null;
-    const rankEl = medal
+    const medal   = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : null;
+    const rankEl  = medal
       ? `<span class="scorer-rank medal">${medal}</span>`
       : `<span class="scorer-rank num">${rank}</span>`;
-    const barPct = Math.round((s.goals / maxGoals) * 100);
+    const barPct  = Math.round((s.goals / maxGoals) * 100);
+    const topOne  = rank === 1 ? ' top1' : '';
 
-    html += `<div class="scorer-row">
+    html += `<div class="scorer-row${topOne}">
       ${rankEl}
-      <span class="scorer-flag">${getFlag(s.team)}</span>
+      <span class="scorer-avatar">${initials(s.name)}</span>
       <div class="scorer-info">
-        <span class="scorer-name">${s.name}</span>
-        <span class="scorer-team">${displayName(s.team)}</span>
+        <div class="scorer-name-row">
+          <span class="scorer-name">${s.name}</span>
+          <span class="scorer-abbr">${teamAbbr(s.team)}</span>
+        </div>
+        <div class="scorer-bar-wrap"><div class="scorer-bar" style="width:${barPct}%"></div></div>
       </div>
-      <div class="scorer-bar-wrap">
-        <div class="scorer-bar" style="width:${barPct}%"></div>
+      <div class="scorer-goals-wrap">
+        <div class="scorer-goals">${s.goals}</div>
+        <div class="scorer-goals-lbl">GOALS</div>
       </div>
-      <span class="scorer-goals">${s.goals}</span>
     </div>`;
   });
 
-  return html + '</div>';
+  return `<div class="scorers-header">
+    <div>
+      <div class="scorers-title">Top Scorers</div>
+      <div class="scorers-subtitle">Golden Boot race · ${totalGames} match${totalGames === 1 ? '' : 'es'} played</div>
+    </div>
+    <span class="scorers-shoe">👟</span>
+  </div>
+  <div class="scorers-list">${html}</div>`;
 }
 
 // ── 3rd Place Race renderer ──────────────────────────────────────────────

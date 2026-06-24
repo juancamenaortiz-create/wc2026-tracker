@@ -566,9 +566,9 @@ function updateStatusUI() {
     const time = STATE.lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const src  = STATE.lastSource;
     const srcBadge = src === 'Claude'
-      ? `<span class="src-badge src-claude" title="ESPN unavailable — using Claude API">Claude ⚠</span>`
+      ? `<span class="src-badge src-warn" title="ESPN unavailable — using Claude AI as fallback">⚠ Fallback</span>`
       : src === 'ESPN'
-      ? `<span class="src-badge src-espn" title="Live data from ESPN (free)">ESPN ✓</span>`
+      ? `<span class="src-badge src-espn" title="Live scores from ESPN">✓</span>`
       : '';
     const unmatched = STATE.espnUnmatched || [];
     const warnBadge = unmatched.length
@@ -1022,7 +1022,7 @@ function openSettings() {
   }
   const sourceBadge = document.getElementById('setting-source-badge');
   if (sourceBadge) {
-    sourceBadge.textContent = onClaudeFallback ? 'Claude ⚠' : 'ESPN ✓';
+    sourceBadge.textContent = onClaudeFallback ? '⚠ Fallback' : '✓';
     sourceBadge.classList.toggle('warn', onClaudeFallback);
   }
 

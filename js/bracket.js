@@ -85,16 +85,19 @@ function renderBracket(container) {
         </svg>
         ${cardsHtml}
       </div>
-      <div class="bracket-edge-fade"></div>
+      <div class="bracket-edge-fade" style="display:none"></div>
     </div>
     ${thirdHtml}`;
   if (typeof twemoji !== 'undefined') twemoji.parse(container);
 }
 
-// Earliest valid date among a round's cards → "Jul 1"
+// Returns a date range for a round's cards — "Jul 1" if all same day, "Jun 28 – Jul 3" if spanning multiple
 function roundLabelDate(cards) {
   const dates = cards.map(c => c.date).filter(d => d && d.includes('-')).sort();
-  return dates.length ? formatPillDate(dates[0]) : '';
+  if (!dates.length) return '';
+  const first = formatPillDate(dates[0]);
+  const last  = formatPillDate(dates[dates.length - 1]);
+  return first === last ? first : first + '\u2013' + last;
 }
 
 function buildR32Cards(slotH) {

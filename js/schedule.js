@@ -94,12 +94,16 @@ function scrollScheduleToToday(sortedDates) {
               || sortedDates[sortedDates.length - 1];
   const el = document.getElementById(`sched-date-${target}`);
   const scroller = document.getElementById('tab-content');
-  if (el && scroller) {
-    requestAnimationFrame(() => {
-      const top = el.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop;
-      scroller.scrollTop = Math.max(0, top - 8);
-    });
-  }
+  if (!el || !scroller) return;
+  // Defer until layout is fully settled after innerHTML write,
+  // and account for the sticky sched-top header's actual height.
+  setTimeout(() => {
+    const stickyHdr = scroller.querySelector('.sched-top');
+    const hdrH = stickyHdr ? stickyHdr.offsetHeight : 72;
+    const elTop = el.getBoundingClientRect().top;
+    const scrollerTop = scroller.getBoundingClientRect().top;
+    scroller.scrollTop = Math.max(0, elTop - scrollerTop + scroller.scrollTop - hdrH - 8);
+  }, 60);
 }
 
 function buildScheduleRow(match) {
@@ -126,21 +130,28 @@ function buildScheduleRow(match) {
     : `<span class="srow-badge srow-badge-tbd">?</span>`;
 
   // ── Status cell (left column) ──
-  let statusCell;
+  // In group view, stack a compact date label above the time/status
+  const showDate = SCHEDULE_STATE.view === 'group' && match.date;
+
+  let mainStatus;
   if (isLive) {
-    statusCell = (result?.substatus === 'HT')
+    mainStatus = (result?.substatus === 'HT')
       ? '<span class="srow-live">HT</span>'
       : `<span class="srow-live"><span class="pulse-dot"></span>${result?.clock || 'LIVE'}</span>`;
   } else if (isFT) {
-    statusCell = `<span class="srow-ft">FT</span>`;
+    mainStatus = `<span class="srow-ft">FT</span>`;
   } else {
     const kickoff = (match.date && getMatchTime(match)) ? parseGameTimeCT(match.date, getMatchTime(match)) : null;
     const sinceKick = kickoff ? Date.now() - kickoff.getTime() : -1;
     const overdue = sinceKick > 300000 && sinceKick < 4 * 60 * 60 * 1000; // only flag near kickoff
-    statusCell = overdue
+    mainStatus = overdue
       ? '<span class="srow-live"><span class="pulse-dot"></span>LIVE?</span>'
       : `<span class="srow-time">${formatGameTime(match.date, getMatchTime(match))}</span>`;
   }
+
+  const statusCell = showDate
+    ? `<div class="srow-timecol"><span class="srow-date">${formatPillDate(match.date)}</span>${mainStatus}</div>`
+    : mainStatus;
 
   // ── Score cell (right column) ──
   let scoreCell;
@@ -156,8 +167,8 @@ function buildScheduleRow(match) {
   return `<div class="srow${isMy1 || isMy2 ? ' my-t' : ''}${clickable ? ' srow-click' : ''}"${clickable ? ` onclick="openMatchDetail(${match.id})"` : ''}>
     <div class="srow-status">${statusCell}</div>
     <div class="srow-teams">
-      <div class="srow-team ${w1}">${badge(match.t1)}<span class="srow-name">${displayName(t1Name)}</span></div>
-      <div class="srow-team ${w2}">${badge(match.t2)}<span class="srow-name">${displayName(t2Name)}</span></div>
+      <div class="srow-team ${w1}">${badge(match.t1)}<span class="srow-name">${displayName(t1Name)}</span>${isMy1 ? '<span class="srow-star">★</span>' : '<span data-star-team="' + (match.t1 || '') + '"></span>'}</div>
+      <div class="srow-team ${w2}">${badge(match.t2)}<span class="srow-name">${displayName(t2Name)}</span>${isMy2 ? '<span class="srow-star">★</span>' : '<span data-star-team="' + (match.t2 || '') + '"></span>'}</div>
     </div>
     ${scoreCell}
   </div>`;

@@ -59,6 +59,7 @@ function buildGroupStandingCard(g) {
       <span class="gstd-team">
         <span class="gstd-badge">${getFlag(team.name)}</span>
         <span class="gstd-name team-link" onclick="openTeamProfile('${team.name}')">${displayName(team.name)}</span>
+        ${isMyTeam(team.name) ? '<span class="gstd-star">★</span>' : ''}
       </span>
       <span class="gstd-p">${team.P}</span>
       <span class="gstd-gd ${gdCls}">${gdStr}</span>

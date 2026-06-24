@@ -2,48 +2,77 @@
 function buildPreviewSection(matchId) {
   const p = STATE.aiPreviews[matchId];
   if (!p) {
-    return `<button class="preview-btn" onclick="fetchMatchPreview(${matchId})">🤖 AI Preview &rsaquo;</button>`;
+    return `<button class="preview-btn" onclick="fetchMatchPreview(${matchId})">AI Preview &rsaquo;</button>`;
   }
   if (p.loading) {
-    return `<div class="preview-loading"><span class="preview-spin">⟳</span> Generating preview…</div>`;
+    return `<div class="preview-loading"><span class="preview-spin">⟳</span> Generating…</div>`;
   }
-  if (p.data) return buildDetailedPreview(p.data);
-  if (p.text) return `<div class="preview-panel"><span class="pv-label">🤖 AI Preview</span><p class="pv-text">${p.text}</p></div>`;
-  return `<button class="preview-btn preview-retry" onclick="delete STATE.aiPreviews[${matchId}]; fetchMatchPreview(${matchId})">⟳ Retry Preview &rsaquo;</button>`;
+  if (p.data) {
+    const m = SCHEDULE.find(x => x.id === matchId)
+           || (typeof R32_MATCHES !== 'undefined' && R32_MATCHES.find(x => x.id === matchId));
+    return buildDetailedPreview(p.data, m);
+  }
+  if (p.text) return '<div class="preview-panel"><div class="pv-hed"><span class="pv-hed-lbl">AI Preview</span></div><div class="pv-body"><p class="pv-txt">' + p.text + '</p></div></div>';
+  return `<button class="preview-btn preview-retry" onclick="delete STATE.aiPreviews[${matchId}]; fetchMatchPreview(${matchId})">Retry &rsaquo;</button>`;
 }
 
-function buildDetailedPreview(d) {
-  const teamBlock = (t) => {
-    if (!t) return '';
-    const players = (t.players||[]).map(pl =>
-      `<li><strong>${pl.name}</strong> — ${pl.reason}</li>`
-    ).join('');
-    return `<div class="pv-team">
-      <div class="pv-team-hdr">
-        <span class="pv-flag">${getFlag(t.name)}</span>
-        <span class="pv-tname">${displayName(t.name)}</span>
-      </div>
-      ${t.form ? `<p class="pv-form">${t.form}</p>` : ''}
-    </div>`;
-  };
+function buildDetailedPreview(d, match) {
   const h2h = d.h2h || {};
-  return `<div class="preview-panel">
-    <div class="pv-header"><span class="pv-label">🤖 AI Preview</span></div>
-    ${d.stakes ? `<div class="pv-row pv-stakes"><span class="pv-ico">📊</span><span class="pv-row-body"><span class="pv-row-lbl">Stakes</span> ${d.stakes}</span></div>` : ''}
-    ${d.form && (d.form.team1 || d.form.team2) ? `<div class="pv-row">
-      <span class="pv-ico">📋</span>
-      <span class="pv-row-body">
-        <span class="pv-row-lbl">Tournament Form</span>
-        ${d.form.team1 ? `<div class="pv-form-line">${getFlag(d.team1?.name||'')} ${d.form.team1}</div>` : ''}
-        ${d.form.team2 ? `<div class="pv-form-line">${getFlag(d.team2?.name||'')} ${d.form.team2}</div>` : ''}
-      </span>
-    </div>` : `<div class="pv-vs-divider">${teamBlock(d.team1)}${teamBlock(d.team2)}</div>`}
-    ${d.tactical_battle ? `<div class="pv-row"><span class="pv-ico">⚙️</span><span class="pv-row-body"><span class="pv-row-lbl">Tactical Battle</span> ${d.tactical_battle}</span></div>` : ''}
-    ${d.key_duel ? `<div class="pv-row"><span class="pv-ico">⚔️</span><span class="pv-row-body"><span class="pv-row-lbl">Key Duel</span> <b>${d.key_duel.player1}</b> vs <b>${d.key_duel.player2}</b> — ${d.key_duel.why}</span></div>` : ''}
-    ${h2h.summary ? `<div class="pv-row pv-h2h-row"><span class="pv-ico">🔁</span><span class="pv-row-body"><span class="pv-row-lbl">Head to Head</span> ${h2h.summary}${h2h.edge ? `<br><span class="pv-h2h-last">${h2h.edge}</span>` : ''}</span></div>` : ''}
-    ${d.x_factor ? `<div class="pv-row"><span class="pv-ico">⚡</span><span class="pv-row-body"><span class="pv-row-lbl">X Factor</span> ${d.x_factor}</span></div>` : ''}
-    ${d.prediction ? `<div class="pv-row pv-prediction"><span class="pv-ico">🎯</span><span class="pv-row-body"><span class="pv-row-lbl">Prediction</span> <b>${d.prediction.score}</b> — ${d.prediction.reasoning}</span></div>` : ''}
-  </div>`;
+  const t1  = match ? displayName(match.t1) : (d.team1 && d.team1.name ? d.team1.name : '');
+  const t2  = match ? displayName(match.t2) : (d.team2 && d.team2.name ? d.team2.name : '');
+
+  // Wrap a labelled section block; skip entirely when inner is empty
+  function blk(label, inner) {
+    return inner ? '<div class="pv-blk"><span class="pv-lbl">' + label + '</span>' + inner + '</div>' : '';
+  }
+
+  var stakesHtml = d.stakes
+    ? '<p class="pv-txt">' + d.stakes + '</p>' : '';
+
+  var formRows = '';
+  if (d.form) {
+    if (d.form.team1) formRows += '<div class="pv-formrow"><span class="pv-formteam">' + t1 + '</span><span class="pv-formtxt">' + d.form.team1 + '</span></div>';
+    if (d.form.team2) formRows += '<div class="pv-formrow"><span class="pv-formteam">' + t2 + '</span><span class="pv-formtxt">' + d.form.team2 + '</span></div>';
+  }
+  var formHtml = formRows ? '<div class="pv-formrows">' + formRows + '</div>' : '';
+
+  var tactHtml = d.tactical_battle
+    ? '<p class="pv-txt">' + d.tactical_battle + '</p>' : '';
+
+  var duelHtml = '';
+  if (d.key_duel) {
+    duelHtml = '<div class="pv-duel"><span class="pv-duel-p">' + d.key_duel.player1 + '</span><span class="pv-duel-vs">vs</span><span class="pv-duel-p">' + d.key_duel.player2 + '</span></div>';
+    if (d.key_duel.why) duelHtml += '<p class="pv-txt">' + d.key_duel.why + '</p>';
+  }
+
+  var h2hHtml = '';
+  if (h2h.summary) {
+    h2hHtml = '<p class="pv-txt">' + h2h.summary + '</p>';
+    if (h2h.edge) h2hHtml += '<p class="pv-edge">' + h2h.edge + '</p>';
+  }
+
+  var xfHtml = d.x_factor
+    ? '<p class="pv-txt">' + d.x_factor + '</p>' : '';
+
+  var predHtml = '';
+  if (d.prediction) {
+    predHtml = '<div class="pv-pred">'
+      + '<div class="pv-pred-top"><span class="pv-lbl">Prediction</span><span class="pv-pred-score">' + (d.prediction.score || '') + '</span></div>'
+      + (d.prediction.reasoning ? '<p class="pv-txt">' + d.prediction.reasoning + '</p>' : '')
+      + '</div>';
+  }
+
+  return '<div class="preview-panel">'
+    + '<div class="pv-hed"><span class="pv-hed-lbl">AI Preview</span></div>'
+    + '<div class="pv-body">'
+    + blk('Stakes', stakesHtml)
+    + blk('Tournament Form', formHtml)
+    + blk('Tactical Battle', tactHtml)
+    + blk('Key Duel', duelHtml)
+    + blk('Head to Head', h2hHtml)
+    + blk('X Factor', xfHtml)
+    + predHtml
+    + '</div></div>';
 }
 
 

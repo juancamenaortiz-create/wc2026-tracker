@@ -893,7 +893,11 @@ function loadPreviewCache() {
     const today  = getTodayCT();
     // Evict previews for past match days
     const fresh  = {};
-    Object.entries(cached).forEach(([id, entry]) => { if (entry.matchDate >= today) fresh[id] = entry; });
+    Object.entries(cached).forEach(([id, entry]) => {
+      // Only keep entries with parsed p.data — discard old p.text-only entries
+      // (those were cached before the JSON extraction fix and contain raw text)
+      if (entry.matchDate >= today && entry.data) fresh[id] = entry;
+    });
     STATE.aiPreviews = fresh;
     localStorage.setItem('wc2026_previews', JSON.stringify(fresh));
   } catch(e) { STATE.aiPreviews = {}; }

@@ -362,12 +362,6 @@ async function fetchFromESPN(overrideDates) {
           // Only STATUS_HALFTIME (exact break between halves) gets HT badge
           if (sn === 'STATUS_HALFTIME') substatus = 'HT';
           status = 'LIVE';
-        } else if (sn.includes('DELAY') || sn.includes('RAIN') ||
-                   sn.includes('POSTPONE') || sn.includes('SUSPEND') || sn.includes('CANCEL')) {
-          // Delayed / postponed / suspended — surface in UI with ESPN's reason string
-          status = 'DELAYED';
-          substatus = st.shortDetail || st.description || 'Delayed';
-          // Fall through to team matching — don't skip, we want to render this match
         } else {
           // Not started yet — still capture ESPN's authoritative kickoff time so we can
           // correct any wrong/stale time in the hand-typed SCHEDULE data. ESPN's comp.date
@@ -572,9 +566,9 @@ function updateStatusUI() {
     const time = STATE.lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const src  = STATE.lastSource;
     const srcBadge = src === 'Claude'
-      ? `<span class="src-badge src-warn" title="ESPN unavailable — using Claude AI as fallback">⚠ Fallback</span>`
+      ? `<span class="src-badge src-claude" title="ESPN unavailable — using Claude API">Claude ⚠</span>`
       : src === 'ESPN'
-      ? `<span class="src-badge src-espn" title="Live scores from ESPN">✓</span>`
+      ? `<span class="src-badge src-espn" title="Live data from ESPN (free)">ESPN ✓</span>`
       : '';
     const unmatched = STATE.espnUnmatched || [];
     const warnBadge = unmatched.length
@@ -893,11 +887,7 @@ function loadPreviewCache() {
     const today  = getTodayCT();
     // Evict previews for past match days
     const fresh  = {};
-    Object.entries(cached).forEach(([id, entry]) => {
-      // Only keep entries with parsed p.data — discard old p.text-only entries
-      // (those were cached before the JSON extraction fix and contain raw text)
-      if (entry.matchDate >= today && entry.data) fresh[id] = entry;
-    });
+    Object.entries(cached).forEach(([id, entry]) => { if (entry.matchDate >= today) fresh[id] = entry; });
     STATE.aiPreviews = fresh;
     localStorage.setItem('wc2026_previews', JSON.stringify(fresh));
   } catch(e) { STATE.aiPreviews = {}; }
@@ -1032,7 +1022,7 @@ function openSettings() {
   }
   const sourceBadge = document.getElementById('setting-source-badge');
   if (sourceBadge) {
-    sourceBadge.textContent = onClaudeFallback ? '⚠ Fallback' : '✓';
+    sourceBadge.textContent = onClaudeFallback ? 'Claude ⚠' : 'ESPN ✓';
     sourceBadge.classList.toggle('warn', onClaudeFallback);
   }
 

@@ -120,70 +120,66 @@ function build3rdPlaceHTML() {
   const teams = Object.keys(GROUP_TEAMS).map(g => {
     const st = calculateStandings(g);
     const t  = st[2]; // index 2 = 3rd place
-    return t ? { group:g, name:t.name, P:t.P, Pts:t.Pts, GD:t.GD, GF:t.GF } : null;
+    return t ? { group: g, name: t.name, P: t.P, Pts: t.Pts, GD: t.GD, GF: t.GF } : null;
   }).filter(Boolean);
 
   // Rank by FIFA 3rd-place tiebreakers: Pts → GD → GF
-  teams.sort((a,b) => b.Pts-a.Pts || b.GD-a.GD || b.GF-a.GF);
+  teams.sort((a, b) => b.Pts - a.Pts || b.GD - a.GD || b.GF - a.GF);
 
-  const anyPlayed = teams.some(t => t.P > 0);
+  const anyPlayed     = teams.some(t => t.P > 0);
+  const advanceCount  = 8;
+  const eliminated    = teams.length - advanceCount;
 
   const isFinalRound  = getTodayCT() >= '2026-06-24' && getTodayCT() <= '2026-06-27';
   const isAfterGroups = getTodayCT() >  '2026-06-27';
   const note = isAfterGroups
-    ? 'Group stage complete — 8 teams qualified via 3rd place.'
+    ? `Group stage complete — ${advanceCount} teams qualified via 3rd place.`
     : isFinalRound
-    ? '🔥 Final group round — standings updating live!'
-    : 'Top 8 of 12 third-place teams advance · Final places decided Jun 27.';
+    ? '🔥 Final group round — places updating live.'
+    : `Top ${advanceCount} of ${teams.length} third-placed teams advance to the Round of 32 · final places decided Jun 27.`;
 
-  let html = `
-  <div class="third-title">3rd Place Race</div>
-  <div class="third-note">${note}</div>
-  <div class="third-list">
-    <div class="third-col-hdr">
-      <span></span>
-      <span></span>
-      <span></span>
-      <span class="th-name">Team</span>
-      <span class="th-stat">P</span>
-      <span class="th-stat">Pts</span>
-      <span class="th-stat">GD</span>
-      <span class="th-stat">GF</span>
-      <span></span>
-    </div>`;
-
+  let rows = '';
   teams.forEach((t, i) => {
-    const rank       = i + 1;
-    const advancing  = rank <= 8;
-    const cutoff     = rank === 9;
-    const gdStr      = t.GD > 0 ? `+${t.GD}` : `${t.GD}`;
-    const noGames    = t.P === 0;
+    const rank      = i + 1;
+    const advancing = rank <= advanceCount;
+    const noGames   = t.P === 0;
+    const gdStr     = t.GD > 0 ? `+${t.GD}` : `${t.GD}`;
+    const gdCls     = t.GD > 0 ? 'pos' : t.GD < 0 ? 'neg' : '';
 
-    if (cutoff) {
-      html += `<div class="third-cutoff">
-        <span>──</span><span class="third-cutoff-txt">Not qualifying (${12 - 8} teams)</span><span>──</span>
+    if (rank === advanceCount + 1 && eliminated > 0) {
+      rows += `<div class="third-cutoff">
+        <span class="third-cutoff-line"></span>
+        <span class="third-cutoff-txt">Cutoff · bottom ${eliminated} eliminated</span>
+        <span class="third-cutoff-line"></span>
       </div>`;
     }
 
-    html += `<div class="third-row ${advancing ? 'third-in' : 'third-out'} ${noGames ? 'third-idle' : ''}">
+    rows += `<div class="third-row ${advancing ? 'third-in' : 'third-out'}${noGames ? ' third-idle' : ''}">
       <span class="third-rank">${rank}</span>
-      <span class="third-grp-badge">${t.group}</span>
-      <span class="flag">${getFlag(t.name)}</span>
-      <span class="third-name">${displayName(t.name)}</span>
-      <span class="th-stat dim">${noGames ? '–' : t.P}</span>
-      <span class="th-stat bold">${noGames ? '–' : t.Pts}</span>
-      <span class="th-stat ${t.GD>0?'pos':t.GD<0?'neg':'dim'}">${noGames ? '–' : gdStr}</span>
-      <span class="th-stat dim">${noGames ? '–' : t.GF}</span>
-      <span class="third-status">${noGames ? '' : advancing ? '✅' : '❌'}</span>
+      <span class="third-grp">${t.group}</span>
+      <span class="third-team">
+        <span class="gstd-badge">${getFlag(t.name)}</span>
+        <span class="third-name team-link" onclick="openTeamProfile('${t.name}')">${displayName(t.name)}</span>
+      </span>
+      <span class="th-stat">${noGames ? '–' : t.P}</span>
+      <span class="th-stat ${gdCls}">${noGames ? '–' : gdStr}</span>
+      <span class="th-stat pts">${noGames ? '–' : t.Pts}</span>
     </div>`;
   });
 
-  if (!anyPlayed) {
-    html += `<div class="empty-state" style="padding:24px">
-      ⚽ Standings will update as group matches are played.
-    </div>`;
-  }
+  const empty = !anyPlayed
+    ? `<div class="empty-state" style="padding:24px">⚽ Standings will update as group matches are played.</div>`
+    : '';
 
-  html += '</div>'; // close .third-list
-  return html;
+  return `
+  <div class="third-title">3rd Place Race</div>
+  <div class="third-note">${note}</div>
+  <div class="third-list">
+    <div class="third-colhdr">
+      <span></span><span class="c">GRP</span><span>TEAM</span>
+      <span class="c">P</span><span class="c">GD</span><span class="c">PTS</span>
+    </div>
+    ${rows}${empty}
+  </div>
+  <div class="gstd-legend"><span class="gstd-legend-bar"></span>Qualifies for Round of 32</div>`;
 }

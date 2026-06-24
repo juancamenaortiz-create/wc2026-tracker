@@ -1618,52 +1618,65 @@ img.emoji {
 
 /* src-warn consolidated above near src-badge */
 
-/* ── 3rd Place Race ── */
-.third-title { font-size: 15px; font-weight: 800; color: var(--white); margin-bottom: 4px; }
-.third-note  { font-size: 11px; color: var(--muted); margin-bottom: 10px; line-height: 1.4; }
-.third-col-hdr {
-  display: grid;
-  grid-template-columns: 22px 26px 22px 1fr 24px 30px 30px 26px 22px;
-  gap: 2px; padding: 4px 8px 4px;
-  border-bottom: 1px solid var(--border);
-  font-size: 9px; font-weight: 700; color: var(--muted);
-  text-transform: uppercase; letter-spacing: .06em;
-}
-.third-list       { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+/* ── 3rd Place Race (mockup Frame 10) ── */
+.third-title { font-size: 16px; font-weight: 800; color: var(--white); letter-spacing: -.02em; margin: 4px 2px 3px; }
+.third-note  { font-size: 11px; color: #7e8794; margin: 0 2px 12px; line-height: 1.45; }
+.third-list  { background: var(--card); border: 1px solid rgba(255,255,255,.06); border-radius: 18px; overflow: hidden; }
+
+.third-colhdr,
 .third-row {
   display: grid;
-  grid-template-columns: 22px 26px 22px 1fr 24px 30px 30px 26px 22px;
-  align-items: center; gap: 2px;
-  padding: 7px 8px;
+  grid-template-columns: 20px 22px 1fr 22px 32px 28px;
+  gap: 6px;
+}
+.third-colhdr {
+  padding: 9px 14px;
+  font-size: 10px; font-weight: 700; color: #6a727e; letter-spacing: .04em;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.third-colhdr .c { text-align: center; }
+
+.third-row {
+  padding: 8px 14px; align-items: center;
   border-bottom: 1px solid rgba(255,255,255,.04);
   border-left: 3px solid transparent;
 }
 .third-row:last-child { border-bottom: none; }
-.third-row.third-in   { border-left-color: var(--green); }
-.third-row.third-out  { border-left-color: var(--red); opacity: .85; }
-.third-row.third-idle { opacity: .5; }
-.third-rank       { font-size: 11px; color: var(--muted); font-weight: 700; }
-.third-grp-badge  {
-  font-size: 10px; font-weight: 800; color: var(--gold);
-  background: rgba(212,175,55,.12); border-radius: 3px;
-  text-align: center; padding: 1px 3px;
+.third-row.third-in  { border-left-color: var(--green); background: rgba(32,189,118,.04); }
+.third-row.third-out { opacity: .62; }
+.third-row.third-idle{ opacity: .5; }
+
+.third-rank { font-size: 11px; font-weight: 800; color: #6a727e; }
+.third-row.third-in .third-rank { color: var(--green); }
+
+.third-grp {
+  font-size: 9px; font-weight: 800; color: #9aa3af;
+  background: rgba(255,255,255,.06); border-radius: 5px;
+  padding: 2px 0; text-align: center;
 }
-.third-name       { font-size: 12px; font-weight: 600; color: var(--white);
-                    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.th-name          { font-size: 9px; }
-.th-stat          { font-size: 11px; text-align: center; }
-.th-stat.bold     { color: var(--white); font-weight: 700; }
-.th-stat.dim      { color: var(--muted); }
-.th-stat.pos      { color: var(--green); font-weight: 600; }
-.th-stat.neg      { color: #f87171; font-weight: 600; }
-.third-status     { font-size: 12px; text-align: center; }
-.third-cutoff     {
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  padding: 7px 8px; font-size: 10px; color: var(--muted);
-  background: rgba(239,68,68,.06); border-top: 1px solid rgba(239,68,68,.2);
-  border-bottom: 1px solid rgba(239,68,68,.2);
+
+.third-team  { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.third-name  {
+  font-size: 12.5px; font-weight: 600; color: #aeb6c2;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer;
 }
-.third-cutoff-txt { font-weight: 600; letter-spacing: .04em; }
+.third-row.third-in .third-name { font-weight: 700; color: var(--white); }
+
+.third-row .th-stat { font-size: 11px; text-align: center; color: #7e8794; }
+.third-row .th-stat.pos { color: #34d488; font-weight: 600; }
+.third-row .th-stat.neg { color: #f0726b; font-weight: 600; }
+.third-row .th-stat.pts { font-size: 13px; font-weight: 800; color: #aeb6c2; }
+.third-row.third-in .th-stat.pts { color: var(--white); }
+
+.third-cutoff {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 14px; background: rgba(240,84,75,.05);
+}
+.third-cutoff-line { flex: 1; height: 1px; background: rgba(240,84,75,.22); }
+.third-cutoff-txt  {
+  font-size: 9px; font-weight: 800; color: #f0726b;
+  text-transform: uppercase; letter-spacing: .06em; white-space: nowrap;
+}
 
 /* Scrollable 3-item sub-nav */
 .groups-subnav { overflow-x: auto; scrollbar-width: none; }

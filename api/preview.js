@@ -67,15 +67,25 @@ export default async function handler(req, res) {
       .join('\n')
       .trim();
 
-    // Try to parse as JSON
+    // Try to parse as JSON — model sometimes adds preamble before the JSON fence
     try {
-      // Strip any accidental markdown fences
-      const clean = text.replace(/^```[\w]*\n?/m, '').replace(/```$/m, '').trim();
-      const parsed = JSON.parse(clean);
+      // Strategy 1: extract content between ```json ... ``` fences
+      let jsonStr = null;
+      const fenceMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (fenceMatch) {
+        jsonStr = fenceMatch[1].trim();
+      } else {
+        // Strategy 2: find the outermost { } JSON object in the text
+        const start = text.indexOf('{');
+        const end   = text.lastIndexOf('}');
+        if (start !== -1 && end > start) jsonStr = text.slice(start, end + 1);
+      }
+      if (!jsonStr) throw new SyntaxError('No JSON found in response');
+      const parsed = JSON.parse(jsonStr);
       return res.status(200).json({ data: parsed });
     } catch(parseErr) {
-      // If JSON parse fails, return as plain text fallback
-      console.warn('preview.js: JSON parse failed, returning text fallback');
+      // If JSON parse still fails, return as plain text fallback
+      console.warn('preview.js: JSON parse failed:', parseErr.message);
       return res.status(200).json({ text: text || null });
     }
   } catch (err) {

@@ -1696,58 +1696,67 @@ img.emoji {
 }
 .preview-spin { display: inline-block; animation: spin 1s linear infinite; font-size: 14px; }
 
-/* Detailed preview panel */
+/* ══ AI PREVIEW PANEL — premium editorial design ══ */
 .preview-panel {
-  margin: 8px 0 0; padding: 0;
-  background: rgba(230,195,106,.06);
-  border: 1px solid rgba(230,195,106,.22);
-  border-radius: 10px; overflow: hidden;
-  font-size: 12px; color: var(--white);
+  margin: 12px 0 0;
+  background: rgba(230,195,106,.05);
+  border: 1px solid rgba(230,195,106,.18);
+  border-radius: 14px;
+  overflow: hidden;
 }
-.pv-header { padding: 7px 12px 5px; border-bottom: 1px solid rgba(230,195,106,.18); }
-.pv-label {
-  font-size: 9px; font-weight: 800;
-  color: var(--gold); letter-spacing: .07em; text-transform: uppercase;
+.pv-hed {
+  padding: 10px 14px 9px;
+  border-bottom: 1px solid rgba(255,255,255,.05);
 }
-.pv-text { margin: 0; padding: 10px 12px; font-size: 12px; line-height: 1.6; }
-.pv-team { padding: 10px 12px 8px; border-bottom: 1px solid rgba(255,255,255,.05); }
-.pv-team-hdr {
-  display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 6px;
+.pv-hed-lbl {
+  font-size: 10px; font-weight: 800;
+  color: var(--gold); letter-spacing: .09em; text-transform: uppercase;
 }
-.pv-flag  { font-size: 18px; }
-.pv-tname { font-size: 13px; font-weight: 700; color: var(--white); }
-.pv-rank  {
-  font-size: 10px; font-weight: 700; color: var(--gold);
-  background: rgba(212,175,55,.12); border-radius: 4px; padding: 1px 6px;
+.pv-body { padding: 14px 14px 4px; }
+
+/* Section block — label above body, no borders, spacing is the separator */
+.pv-blk { margin-bottom: 16px; }
+.pv-lbl {
+  display: block;
+  font-size: 10px; font-weight: 700; color: #6a727e;
+  text-transform: uppercase; letter-spacing: .06em;
+  margin-bottom: 5px;
 }
-.pv-role  {
-  font-size: 10px; color: var(--muted);
-  background: rgba(255,255,255,.06); border-radius: 4px; padding: 1px 6px;
+.pv-txt {
+  margin: 0;
+  font-size: 13px; color: #aab2c0; line-height: 1.6;
 }
-.pv-form { font-size: 11px; color: var(--muted); margin: 0 0 7px; line-height: 1.5; }
-.pv-row  { display: flex; gap: 7px; align-items: flex-start; margin-bottom: 5px; font-size: 11px; }
-.pv-ico  { font-size: 13px; flex-shrink: 0; margin-top: 1px; }
-.pv-row-body { flex: 1; color: var(--muted); line-height: 1.5; }
-.pv-row-lbl  { font-weight: 700; color: var(--white); margin-right: 4px; }
-.pv-players  { margin: 3px 0 0; padding: 0 0 0 14px; }
-.pv-players li { margin-bottom: 2px; }
-.pv-vs-divider {
-  text-align: center; padding: 4px;
-  font-size: 11px; font-weight: 700; color: var(--dim);
-  background: rgba(0,0,0,.15);
-  border-top: 1px solid rgba(255,255,255,.04);
-  border-bottom: 1px solid rgba(255,255,255,.04);
+.pv-edge {
+  margin: 6px 0 0;
+  font-size: 12px; color: #7e8794; line-height: 1.45; font-style: italic;
 }
-.pv-context {
-  display: flex; gap: 7px; align-items: flex-start;
-  padding: 8px 12px; font-size: 11px;
-  background: rgba(14,165,233,.06);
-  border-top: 1px solid rgba(14,165,233,.15);
-  color: var(--muted); line-height: 1.5;
+
+/* Tournament Form rows: team name bold left, result text right */
+.pv-formrows { display: flex; flex-direction: column; gap: 6px; }
+.pv-formrow  { display: flex; gap: 10px; align-items: baseline; }
+.pv-formteam {
+  font-size: 12px; font-weight: 700; color: var(--white);
+  white-space: nowrap; min-width: 64px; flex-shrink: 0;
 }
-.preview-error {
-  margin: 8px 0 0; padding: 6px 10px;
-  font-size: 11px; color: var(--muted); text-align: center;
+.pv-formtxt  { font-size: 12px; color: #8a93a0; line-height: 1.5; }
+
+/* Key Duel: player names large + bold, "vs" small grey */
+.pv-duel {
+  display: flex; align-items: center; gap: 9px;
+  flex-wrap: wrap; margin-bottom: 7px;
+}
+.pv-duel-p  { font-size: 15px; font-weight: 700; color: var(--white); }
+.pv-duel-vs { font-size: 11px; font-weight: 600; color: #6a727e; }
+
+/* Prediction: label + big gold score inline, reasoning below */
+.pv-pred { margin-bottom: 14px; }
+.pv-pred-top {
+  display: flex; align-items: center;
+  justify-content: space-between; margin-bottom: 6px;
+}
+.pv-pred-score {
+  font-size: 22px; font-weight: 800; color: var(--gold);
+  font-variant-numeric: tabular-nums; letter-spacing: -.02em;
 }
 
 /* ── Overdue match (kickoff passed, no ESPN data yet) ── */
@@ -1970,8 +1979,7 @@ img.emoji {
 .bc-pso { font-size: 9px; color: var(--amber); font-weight: 700; margin-left: 2px; }
 
 /* ── H2H preview row ── */
-.pv-h2h-row { border-top: 1px solid rgba(255,255,255,.05); padding-top: 8px !important; }
-.pv-h2h-last { font-style: italic; color: var(--dim); font-size: 10px; margin-top: 2px; display: block; }
+/* (pv-h2h-row and pv-h2h-last consolidated into pv-blk / pv-edge above) */
 
 /* ── Halftime badge ── */
 .mc-ht {
@@ -2370,9 +2378,7 @@ td.ps-name { color: var(--white); font-weight: 600; }
                 font-weight: 700; }
 
 /* ── AI Preview — updated layout ── */
-.pv-stakes     { background: rgba(212,175,55,.07); border-radius: 6px; padding: 6px 8px; }
-.pv-prediction { background: rgba(192,24,46,.07);  border-radius: 6px; padding: 6px 8px; }
-.pv-form-line  { font-size: 11px; color: var(--muted); margin-top: 3px; }
+/* (pv-stakes, pv-prediction, pv-form-line removed — section tints replaced by spacing + typography) */
 
 
 /* ════════════════════════════════════════════════════════

@@ -339,25 +339,72 @@ function resetAnalyzerOverrides() {
   if (content) renderAnalyzer(content);
 }
 
-// ── Bracket Predictor — horizontal bracket tree ────────────────────────────
+// ── Bracket Predictor — horizontal bracket tree with pick interaction ──────
+
+// One clickable team row inside an Analyzer bracket pick card
+function buildAzPickRow(matchId, team, slotLabel, isWinner, isLoser, isFT) {
+  if (!team) {
+    var lbl = (slotLabel || 'TBD').replace('W-M', 'W').replace('L-M', 'L');
+    return '<div class="bc-team">'
+      + '<span class="bc-badge empty"></span>'
+      + '<span class="bc-name tbd">' + lbl + '</span>'
+      + '</div>';
+  }
+  var clickable = !isFT;
+  var safeTeam = team.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  var onclick = clickable ? 'onclick="pickBracket(' + matchId + ',\'' + safeTeam + '\')"' : '';
+  var rowCls = 'bc-team az-pick-row'
+    + (isWinner ? ' az-pick-winner' : '')
+    + (isLoser  ? ' az-pick-loser'  : '');
+  var check = isWinner ? '<span class="az-pick-check">✓</span>' : '';
+  return '<div class="' + rowCls + '" ' + onclick
+    + (clickable ? ' style="cursor:pointer"' : '') + '>'
+    + '<span class="bc-badge">' + getFlag(team) + '</span>'
+    + '<span class="bc-name">' + displayName(team) + '</span>'
+    + check
+    + '</div>';
+}
+
+// Full bracket card with pick interactivity — drops in place of buildBracketCard
+function buildAzBracketCard(card) {
+  var matchId = card.matchId;
+  var result  = matchId ? getAnyMatchResult(matchId) : null;
+  var isFT    = !!(result && result.status === 'FT');
+
+  var t1 = null, t2 = null;
+  if (matchId) {
+    var teams = getKOMatchTeams(matchId);
+    t1 = teams[0]; t2 = teams[1];
+  }
+  if (result && result.team1) t1 = result.team1;
+  if (result && result.team2) t2 = result.team2;
+
+  // getKOWinner respects real results first, then bracketPicks
+  var picked   = matchId ? getKOWinner(matchId) : null;
+  var w1 = !!(picked && t1 && picked === t1);
+  var w2 = !!(picked && t2 && picked === t2);
+
+  return '<div class="bracket-card" style="top:' + card.y + 'px;width:' + CARD_W + 'px">'
+    + buildAzPickRow(matchId, t1, card.slot1, w1, !w1 && w2, isFT)
+    + '<div class="bc-divider"></div>'
+    + buildAzPickRow(matchId, t2, card.slot2, w2, !w2 && w1, isFT)
+    + '</div>';
+}
 
 function renderBracketPredictor(container) {
-  const numR32  = 16;
-  const slotR32 = R32_SLOT;
-  const TOTAL_H = numR32 * slotR32 + LABEL_H + 16;
+  var numR32  = 16;
+  var slotR32 = R32_SLOT;
+  var TOTAL_H = numR32 * slotR32 + LABEL_H + 16;
 
-  const koById = function(id) { return KO_ROUNDS.find(function(r){return r.id===id;}) || {}; };
-  const r16Info = [89,90,93,94,91,92,95,96].map(function(id){return Object.assign({matchId:id},koById(id));});
-  const roundCards = [
+  var koById = function(id) { return KO_ROUNDS.find(function(r){return r.id===id;}) || {}; };
+  var r16Info = [89,90,93,94,91,92,95,96].map(function(id){return Object.assign({matchId:id},koById(id));});
+  var roundCards = [
     buildR32Cards(slotR32),
     buildRoundCards(1, slotR32, 2,  r16Info),
     buildRoundCards(2, slotR32, 4,  [97,98,99,100].map(function(id){return Object.assign({matchId:id},koById(id));})),
     buildRoundCards(3, slotR32, 8,  [101,102].map(function(id){return Object.assign({matchId:id},koById(id));})),
     buildRoundCards(4, slotR32, 16, [104].map(function(id){return Object.assign({matchId:id},koById(id));})),
   ];
-
-  // Confidence per round: R32 = results in, R16 = likely, QF/SF/Final = open
-  const CONF = ['bp-confirmed','bp-likely','bp-open','bp-open','bp-open'];
 
   // SVG connector lines
   var svgLines = '';
@@ -377,28 +424,30 @@ function renderBracketPredictor(container) {
     }
   }
 
-  // Build column cards + round labels
+  // Build column cards + round labels — using pick-enabled cards
   var cardsHtml = '';
   ROUNDS.forEach(function(round, r) {
     var colX = r * COL_STRIDE;
     var roundDate = roundLabelDate(roundCards[r]);
     cardsHtml += '<div class="bracket-col" style="left:'+colX+'px" data-round="'+round+'">'
-      + '<div class="round-label '+CONF[r]+'">'+round
+      + '<div class="round-label">'+round
       + (roundDate ? '<span class="round-date"> · '+roundDate+'</span>' : '')
       + '</div>';
-    roundCards[r].forEach(function(card){ cardsHtml += buildBracketCard(card, r); });
+    roundCards[r].forEach(function(card){ cardsHtml += buildAzBracketCard(card); });
     cardsHtml += '</div>';
   });
 
+  var totalPicks = Object.keys(STATE.bracketPicks).length;
+  var resetBtn   = totalPicks > 0
+    ? '<button class="reset-btn" onclick="resetBracketPicks()">Reset picks ('+totalPicks+')</button>'
+    : '';
+
   container.innerHTML =
     '<div class="bp-proj-header">'
-    + '<div><div class="bp-proj-title">Projected bracket</div>'
-    + '<div class="bp-proj-sub">Based on current standings · swipe to explore later rounds</div></div>'
-    + '<div class="bp-conf-legend">'
-    + '<span class="bp-conf-item"><span class="bp-conf-dot conf-confirmed"></span>Confirmed</span>'
-    + '<span class="bp-conf-item"><span class="bp-conf-dot conf-likely"></span>Likely</span>'
-    + '<span class="bp-conf-item"><span class="bp-conf-dot conf-open"></span>Open</span>'
-    + '</div></div>'
+    + '<div><div class="bp-proj-title">Bracket Predictor</div>'
+    + '<div class="bp-proj-sub">Tap any team to pick the winner · picks carry forward to later rounds</div></div>'
+    + resetBtn
+    + '</div>'
     + '<div class="bracket-scroll-wrap">'
     + '<div class="bracket-wrap" style="width:'+TOTAL_W+'px;height:'+(TOTAL_H+90)+'px">'
     + '<svg class="bracket-svg" width="'+TOTAL_W+'" height="'+TOTAL_H+'" style="position:absolute;top:0;left:0;pointer-events:none">'+svgLines+'</svg>'
@@ -466,6 +515,24 @@ function getRemainingMatches(group) {
   });
 }
 
+// Returns a Set of team names currently occupying the top 8 third-place spots
+// across all 12 groups, using FIFA tiebreakers (Pts → GD → GF).
+function getTop8Thirds() {
+  var thirds = Object.keys(GROUP_TEAMS).map(function(g) {
+    var st = calculateStandings(g);
+    if (st.length < 3) return null;
+    var t = st[2]; // index 2 = 3rd place team
+    return { name: t.name, Pts: t.Pts, GD: t.GD, GF: t.GF };
+  }).filter(Boolean);
+
+  thirds.sort(function(a, b) {
+    return (b.Pts - a.Pts) || (b.GD - a.GD) || (b.GF - a.GF);
+  });
+
+  var top8 = new Set(thirds.slice(0, 8).map(function(t) { return t.name; }));
+  return top8;
+}
+
 // Enumerate all 3^N outcome combinations for remaining matches,
 // track best and worst possible rank for each team.
 function calcQualStatus(group) {
@@ -473,11 +540,22 @@ function calcQualStatus(group) {
   const rem      = getRemainingMatches(group);
   const numRem   = rem.length;
 
+  // Current top-8 third-place teams across all groups (live, not projected)
+  const top8Thirds = getTop8Thirds();
+
   // If group is fully played, read standings directly
   if (numRem === 0) {
     const st = calculateStandings(group);
     const status = {};
-    st.forEach((t, i) => { status[t.name] = i < 2 ? 'qualified' : 'eliminated'; });
+    st.forEach((t, i) => {
+      if (i < 2) {
+        status[t.name] = 'qualified';
+      } else if (i === 2 && top8Thirds.has(t.name)) {
+        status[t.name] = 'qualified-3rd'; // qualifying via best-third path
+      } else {
+        status[t.name] = 'eliminated';
+      }
+    });
     return status;
   }
 
@@ -504,23 +582,39 @@ function calcQualStatus(group) {
 
   const status = {};
   teams.forEach(t => {
-    if (worst[t] <= 2)  status[t] = 'qualified';   // top 2 in every scenario
-    else if (best[t] > 2) status[t] = 'eliminated'; // never top 2 in any scenario
-    else                   status[t] = 'alive';      // possible either way
+    if (worst[t] <= 2) {
+      // Top 2 in every possible scenario — mathematically through
+      status[t] = 'qualified';
+    } else if (best[t] > 3) {
+      // Can't even finish 3rd in the best case — out
+      status[t] = 'eliminated';
+    } else if (best[t] <= 2) {
+      // Can reach top 2 in some scenarios (also might be 3rd/4th in others)
+      status[t] = 'alive';
+    } else {
+      // best[t] === 3: can only finish 3rd at best (never top 2)
+      // Check if currently sitting in the top 8 thirds
+      if (top8Thirds.has(t)) {
+        status[t] = 'qualified-3rd'; // currently qualifying via best-third path
+      } else {
+        status[t] = 'alive'; // 3rd but outside top 8 for now — still in contention
+      }
+    }
   });
   return status;
 }
 
 function buildCalculatorHTML() {
   const groups  = Object.keys(GROUP_TEAMS);
-  let qualified = 0, eliminated = 0, alive = 0;
+  let qualified = 0, via3rd = 0, eliminated = 0, alive = 0;
 
   // Pre-compute all group statuses
   const allStatus = {};
   groups.forEach(g => {
     allStatus[g] = calcQualStatus(g);
     Object.values(allStatus[g]).forEach(s => {
-      if (s === 'qualified')  qualified++;
+      if (s === 'qualified')       qualified++;
+      else if (s === 'qualified-3rd') via3rd++;
       else if (s === 'eliminated') eliminated++;
       else alive++;
     });
@@ -529,6 +623,7 @@ function buildCalculatorHTML() {
   // Summary bar
   let html = `<div class="calc-summary">
     <span class="calc-sum-pill calc-q">${qualified} qualified</span>
+    ${via3rd > 0 ? `<span class="calc-sum-pill calc-q3">${via3rd} via 3rd</span>` : ''}
     <span class="calc-sum-pill calc-e">${eliminated} eliminated</span>
     <span class="calc-sum-pill calc-a">${alive} in contention</span>
   </div>
@@ -537,8 +632,7 @@ function buildCalculatorHTML() {
   groups.forEach(g => {
     const st       = allStatus[g];
     const rem      = getRemainingMatches(g).length;
-    const played   = 6 - rem; // total group matches = 6 (C(4,2))
-    const round    = played <= 2 ? 1 : played <= 4 ? 2 : 3;
+    const played   = 6 - rem;
     const standings = calculateStandings(g);
 
     html += `<div class="calc-card">
@@ -549,12 +643,15 @@ function buildCalculatorHTML() {
 
     standings.forEach((team, idx) => {
       const s = st[team.name] || 'alive';
-      const rowCls = s === 'qualified' ? 'calc-row-q' : s === 'eliminated' ? 'calc-row-e' : '';
+      const rowCls = (s === 'qualified' || s === 'qualified-3rd') ? 'calc-row-q'
+                   : s === 'eliminated' ? 'calc-row-e' : '';
       const badge  = s === 'qualified'
         ? '<span class="calc-badge calc-bq">Q</span>'
-        : s === 'eliminated'
-          ? '<span class="calc-badge calc-be">✕</span>'
-          : `<span class="calc-badge calc-ba">${team.Pts}p</span>`;
+        : s === 'qualified-3rd'
+          ? '<span class="calc-badge calc-bq3">3Q</span>'
+          : s === 'eliminated'
+            ? '<span class="calc-badge calc-be">✕</span>'
+            : `<span class="calc-badge calc-ba">${team.Pts}p</span>`;
 
       html += `<div class="calc-row ${rowCls}">
         <span class="calc-rank">${idx+1}</span>

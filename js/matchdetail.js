@@ -89,6 +89,27 @@ async function _mdFetch(espnId) {
 
 // ── Shell (header + tab bar) ──────────────────────────────────────────────────
 
+// Build a stacked goal list for one team in the header (shown below the flag).
+// Uses result.events which are available immediately from the scoreboard parse.
+function _mdGoalList(events, tid) {
+  if (!events || !events.length) return '';
+  var goals = events.filter(function(e) { return e.g && e.tid === tid; });
+  if (!goals.length) return '';
+  var sorted = goals.slice().sort(function(a, b) {
+    return parseEventMin(a.min) - parseEventMin(b.min);
+  });
+  return '<div class="md-goal-list">'
+    + sorted.map(function(g) {
+        var extra = g.og ? ' <span class="facts-og">OG</span>'
+                  : g.pk ? ' <span class="facts-pk">P</span>' : '';
+        return '<div class="md-goal-item">'
+          + (g.p || '') + extra
+          + ' <span class="md-goal-min">' + (g.min || '') + '</span>'
+          + '</div>';
+      }).join('')
+    + '</div>';
+}
+
 function _mdShell(result, sched) {
   var t1  = (result && result.team1) || sched.t1;
   var t2  = (result && result.team2) || sched.t2;
@@ -96,6 +117,10 @@ function _mdShell(result, sched) {
   var score = has
     ? result.score1 + '<span class="md-score-sep">&ndash;</span>' + result.score2
     : '<span class="md-score-sep">vs</span>';
+
+  // Goal lists for header (only shown for played/live matches)
+  var t1Goals = (has && result.events) ? _mdGoalList(result.events, result.tid1) : '';
+  var t2Goals = (has && result.events) ? _mdGoalList(result.events, result.tid2) : '';
 
   // Status pill
   var statusTxt, statusCls;
@@ -118,12 +143,23 @@ function _mdShell(result, sched) {
     return '<button class="md-tab-btn' + (MD_TAB===t[0]?' active':'') + '" data-tab="' + t[0] + '" onclick="setMDTab(\'' + t[0] + '\')">' + t[1] + '</button>';
   }).join('');
 
+  var s1 = t1.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  var s2 = t2.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+
   return '<div class="md-header">'
     + '<div class="md-round-label">' + round + ' &middot; ' + formatDate(sched.date) + '</div>'
     + '<div class="md-teams">'
-    +   '<div class="md-team"><span class="md-flag-badge">' + getFlag(t1) + '</span><span class="md-tname">' + displayName(t1) + '</span></div>'
+    +   '<div class="md-team md-team-link" onclick="openTeamProfile(\'' + s1 + '\')">'
+    +     '<span class="md-flag-badge">' + getFlag(t1) + '</span>'
+    +     '<span class="md-tname">' + displayName(t1) + '</span>'
+    +     t1Goals
+    +   '</div>'
     +   '<div class="md-score-block"><div class="md-score">' + score + '</div></div>'
-    +   '<div class="md-team"><span class="md-flag-badge">' + getFlag(t2) + '</span><span class="md-tname">' + displayName(t2) + '</span></div>'
+    +   '<div class="md-team md-team-link" onclick="openTeamProfile(\'' + s2 + '\')">'
+    +     '<span class="md-flag-badge">' + getFlag(t2) + '</span>'
+    +     '<span class="md-tname">' + displayName(t2) + '</span>'
+    +     t2Goals
+    +   '</div>'
     + '</div>'
     + '<div class="md-status-wrap"><span class="md-status-pill ' + statusCls + '">' + statusTxt + '</span></div>'
     + '<div class="md-city">' + sched.city + '</div>'

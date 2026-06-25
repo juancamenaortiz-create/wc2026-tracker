@@ -2,6 +2,17 @@
 
 const GROUPS_STATE = { expanded: null, subTab: 'groups' };
 
+// Animate scorer bars after render — works from any entry point
+function _animateScorerBars(container) {
+  const bars = (container || document).querySelectorAll('.scorer-bar[data-w]');
+  if (!bars.length) return;
+  setTimeout(function() {
+    bars.forEach(function(b, i) {
+      setTimeout(function() { b.style.width = b.dataset.w + '%'; }, i * 25);
+    });
+  }, 30);
+}
+
 function setGroupsSubTab(tab) {
   GROUPS_STATE.subTab = tab;
   const c = document.getElementById('tab-content');
@@ -14,15 +25,7 @@ function setGroupsSubTab(tab) {
       void wrap.offsetWidth;
       wrap.classList.add('subtab-enter');
     }
-    // JS-driven scorer bar fill (CSS transition is more reliable than keyframe vars on mobile)
-    const bars = target.querySelectorAll('.scorer-bar[data-w]');
-    if (bars.length) {
-      setTimeout(function() {
-        bars.forEach(function(b, i) {
-          setTimeout(function() { b.style.width = b.dataset.w + '%'; }, i * 25);
-        });
-      }, 30);
-    }
+    _animateScorerBars(target);
   }
 }
 
@@ -40,6 +43,7 @@ function renderGroups(container) {
 
   if (sub === 'scorers') {
     container.innerHTML = top + '<div class="gstd-wrap">' + buildScorersHTML() + '</div>';
+    _animateScorerBars(container);
     return;
   }
   if (sub === 'third') {

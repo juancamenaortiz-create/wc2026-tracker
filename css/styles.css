@@ -2686,7 +2686,7 @@ td.ps-name { color: var(--white); font-weight: 600; }
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
 }
 
-/* preview-ready / preview-open color states defined near .preview-btn above */
+.mc-foot-row .preview-btn { margin: 0; } /* align with Match Centre › on same line */
 .tab-switching .today-wrap > .mc-card { animation: fadeSlideUp 0.24s ease-out both; }
 .tab-switching .today-wrap > .mc-card:nth-child(3) { animation-delay: 0ms;   }
 .tab-switching .today-wrap > .mc-card:nth-child(4) { animation-delay: 55ms;  }

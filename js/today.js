@@ -20,14 +20,15 @@ function buildPreviewToggle(matchId) {
   if (p && p.loading) return ''; // spinner shown above instead
   const hasData = p && (p.data || p.text);
   if (!hasData) {
-    // Not yet fetched (or fetch failed silently) — show fetch trigger
     if (p && !p.data && !p.text && !p.loading) {
-      return '<button class="preview-btn preview-retry" onclick="delete STATE.aiPreviews[' + matchId + ']; toggleMatchPreview(' + matchId + ')">Retry Preview &rsaquo;</button>';
+      return '<button class="preview-btn" onclick="delete STATE.aiPreviews[' + matchId + ']; toggleMatchPreview(' + matchId + ')">Retry Preview &rsaquo;</button>';
     }
+    // Not yet fetched — muted so it doesn't compete with generated previews
     return '<button class="preview-btn" onclick="toggleMatchPreview(' + matchId + ')">AI Preview &rsaquo;</button>';
   }
+  // Has data — green when closed (ready to read), muted when open (showing "hide")
   const isOpen = !!p.open;
-  return '<button class="preview-btn' + (isOpen ? ' preview-open' : '') + '" onclick="toggleMatchPreview(' + matchId + ')">'
+  return '<button class="preview-btn' + (isOpen ? ' preview-open' : ' preview-ready') + '" onclick="toggleMatchPreview(' + matchId + ')">'
     + (isOpen ? 'Hide Preview \u2191' : 'AI Preview &rsaquo;')
     + '</button>';
 }

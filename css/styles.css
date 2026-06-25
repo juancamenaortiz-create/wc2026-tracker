@@ -1767,12 +1767,16 @@ img.emoji {
   display: inline-flex; align-items: center; gap: 5px;
   margin: 10px 0 0; padding: 0;
   background: none; border: none; cursor: pointer;
-  font-size: 11px; font-weight: 700; color: var(--green);
+  font-size: 11px; font-weight: 700; color: var(--muted);
   font-family: inherit; transition: color 0.2s;
 }
-.preview-btn:hover { background: none; color: #34d488; }
-.preview-btn.preview-retry { background: none; border: none; color: var(--muted); }
-.preview-btn.preview-retry:hover { color: var(--white); }
+.preview-btn:hover { background: none; color: var(--white); }
+/* Preview generated — green signals it's ready to read */
+.preview-btn.preview-ready       { color: var(--green); }
+.preview-btn.preview-ready:hover { color: #34d488; }
+/* Preview open — muted "Hide" link */
+.preview-btn.preview-open       { color: var(--muted); }
+.preview-btn.preview-open:hover { color: var(--white); }
 
 .preview-loading {
   display: flex; align-items: center; justify-content: center; gap: 6px;
@@ -2682,9 +2686,7 @@ td.ps-name { color: var(--white); font-weight: 600; }
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
 }
 
-/* AI Preview toggle open state */
-.preview-btn.preview-open { color: var(--muted); }
-.preview-btn.preview-open:hover { color: var(--white); }
+/* preview-ready / preview-open color states defined near .preview-btn above */
 .tab-switching .today-wrap > .mc-card { animation: fadeSlideUp 0.24s ease-out both; }
 .tab-switching .today-wrap > .mc-card:nth-child(3) { animation-delay: 0ms;   }
 .tab-switching .today-wrap > .mc-card:nth-child(4) { animation-delay: 55ms;  }

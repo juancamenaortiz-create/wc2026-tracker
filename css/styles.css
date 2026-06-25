@@ -2707,19 +2707,46 @@ td.ps-name { color: var(--white); font-weight: 600; }
 .tab-switching .schedule-wrap > .sched-card:nth-child(10) { animation-delay: 405ms; }
 
 /* ── Groups tab: pair stagger (2-col grid) ── */
-.tab-switching .groups-grid > .gstd-card { animation: fadeSlideUp 0.22s ease-out both; }
-.tab-switching .groups-grid > .gstd-card:nth-child(1),
-.tab-switching .groups-grid > .gstd-card:nth-child(2)  { animation-delay: 0ms;   }
-.tab-switching .groups-grid > .gstd-card:nth-child(3),
-.tab-switching .groups-grid > .gstd-card:nth-child(4)  { animation-delay: 65ms;  }
-.tab-switching .groups-grid > .gstd-card:nth-child(5),
-.tab-switching .groups-grid > .gstd-card:nth-child(6)  { animation-delay: 130ms; }
-.tab-switching .groups-grid > .gstd-card:nth-child(7),
-.tab-switching .groups-grid > .gstd-card:nth-child(8)  { animation-delay: 195ms; }
-.tab-switching .groups-grid > .gstd-card:nth-child(9),
-.tab-switching .groups-grid > .gstd-card:nth-child(10) { animation-delay: 260ms; }
-.tab-switching .groups-grid > .gstd-card:nth-child(11),
-.tab-switching .groups-grid > .gstd-card:nth-child(12) { animation-delay: 325ms; }
+/* ── Groups tab: gstd-cards stagger in pairs (gstd-wrap is the direct parent) ── */
+.tab-switching .gstd-wrap > .gstd-card { animation: fadeSlideUp 0.22s ease-out both; }
+.tab-switching .gstd-wrap > .gstd-card:nth-child(1),
+.tab-switching .gstd-wrap > .gstd-card:nth-child(2)  { animation-delay: 0ms;   }
+.tab-switching .gstd-wrap > .gstd-card:nth-child(3),
+.tab-switching .gstd-wrap > .gstd-card:nth-child(4)  { animation-delay: 65ms;  }
+.tab-switching .gstd-wrap > .gstd-card:nth-child(5),
+.tab-switching .gstd-wrap > .gstd-card:nth-child(6)  { animation-delay: 130ms; }
+.tab-switching .gstd-wrap > .gstd-card:nth-child(7),
+.tab-switching .gstd-wrap > .gstd-card:nth-child(8)  { animation-delay: 195ms; }
+.tab-switching .gstd-wrap > .gstd-card:nth-child(9),
+.tab-switching .gstd-wrap > .gstd-card:nth-child(10) { animation-delay: 260ms; }
+.tab-switching .gstd-wrap > .gstd-card:nth-child(11),
+.tab-switching .gstd-wrap > .gstd-card:nth-child(12) { animation-delay: 325ms; }
+
+/* Also animate subtab switches within groups tab */
+.subtab-enter.gstd-wrap > .gstd-card { animation: fadeSlideUp 0.22s ease-out both; }
+.subtab-enter.gstd-wrap > .gstd-card:nth-child(1),
+.subtab-enter.gstd-wrap > .gstd-card:nth-child(2)  { animation-delay: 0ms;   }
+.subtab-enter.gstd-wrap > .gstd-card:nth-child(3),
+.subtab-enter.gstd-wrap > .gstd-card:nth-child(4)  { animation-delay: 65ms;  }
+.subtab-enter.gstd-wrap > .gstd-card:nth-child(5),
+.subtab-enter.gstd-wrap > .gstd-card:nth-child(6)  { animation-delay: 130ms; }
+.subtab-enter.gstd-wrap > .gstd-card:nth-child(7),
+.subtab-enter.gstd-wrap > .gstd-card:nth-child(8)  { animation-delay: 195ms; }
+.subtab-enter.gstd-wrap > .gstd-card:nth-child(9),
+.subtab-enter.gstd-wrap > .gstd-card:nth-child(10) { animation-delay: 260ms; }
+.subtab-enter.gstd-wrap > .gstd-card:nth-child(11),
+.subtab-enter.gstd-wrap > .gstd-card:nth-child(12) { animation-delay: 325ms; }
+
+/* ── Analyzer tab: .az-content wrapper animates on subtab switch ── */
+.az-content.subtab-enter { animation: fadeSlideUp 0.24s ease-out both; }
+
+/* ── Scorer bars: JS-driven width transition (more reliable than CSS variables in keyframes) ── */
+.scorer-bar { transition: width 0.65s cubic-bezier(.22,.68,0,1); }
+
+/* ── Stats bars: remove anim-bar (not reliable on mobile) — back to static width ── */
+/* .anim-bar removed; stat bars use plain style="width:X%" again */
+
+
 
 /* ── Modal sheet: slide-up on open ── */
 .tp-sheet { transform: translateY(56px); transition: transform 0.32s cubic-bezier(.22,.68,0,1.2); }

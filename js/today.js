@@ -333,12 +333,12 @@ function buildMatchCard(match, now) {
   ${pvPanel}
   <div class="mc-foot">
     <div class="mc-foot-row">
-      <span class="mc-city">${match.city}</span>
+      ${pvToggle || '<span></span>'}
       ${hasResult ? `<span class="mc-detail-link" onclick="openMatchDetail(${match.id})">Match Centre &rsaquo;</span>` : ''}
       ${countdown ? `<span class="mc-countdown" data-kickoff="${kickoffUTC.getTime()}">${countdown}</span>` : ''}
       ${(!hasResult && !isDelayed && msUntil < -300000) ? '<span class="mc-espn-wait">⚡ Awaiting ESPN\u2026</span>' : ''}
     </div>
-    ${pvToggle ? `<div>${pvToggle}</div>` : ''}
+    <span class="mc-city">${match.city}</span>
   </div>
 </div>`;
 }

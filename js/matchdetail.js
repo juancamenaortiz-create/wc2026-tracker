@@ -626,7 +626,7 @@ function _tabStats(result, summary, sched) {
     return isNaN(v) ? null : v;
   }
 
-  // Stats bars — green bar for home, dark for away (animated fill on appear)
+  // Stats bars — green bar for home, dark for away
   var barIdx = 0;
   var rows = _STAT_DEFS.map(function(def) {
     var v1 = getSt(t1S, def.key); if (v1 === null) v1 = se1[def.key];
@@ -638,14 +638,13 @@ function _tabStats(result, summary, sched) {
     var d = def.fmt || function(v){return Math.round(v);};
     var aLeads = def.inverse ? (a < b) : (a > b);
     var bLeads = def.inverse ? (b < a) : (b > a);
-    var delay1 = barIdx * 55, delay2 = barIdx * 55 + 25;
     barIdx++;
     return '<div class="stat-row">'
       + '<span class="stat-val' + (aLeads ? ' lead' : '') + '">' + d(a) + '</span>'
       + '<div class="stat-mid">'
       +   '<div class="stat-bar">'
-      +     '<div class="stat-bar-1 anim-bar" style="--bar-w:' + pct1 + '%;animation-delay:' + delay1 + 'ms"></div>'
-      +     '<div class="stat-bar-2 anim-bar" style="--bar-w:' + (100-pct1) + '%;animation-delay:' + delay2 + 'ms"></div>'
+      +     '<div class="stat-bar-1" style="width:' + pct1 + '%"></div>'
+      +     '<div class="stat-bar-2" style="width:' + (100-pct1) + '%"></div>'
       +   '</div>'
       +   '<span class="stat-label">' + def.label + '</span>'
       + '</div>'

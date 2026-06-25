@@ -8,12 +8,20 @@ function setGroupsSubTab(tab) {
   const target = STATE.demoMode ? (document.getElementById('tab-inner') || c) : c;
   if (target) {
     renderGroups(target);
-    // Animate the new content in
     const wrap = target.querySelector('.gstd-wrap');
     if (wrap) {
       wrap.classList.remove('subtab-enter');
       void wrap.offsetWidth;
       wrap.classList.add('subtab-enter');
+    }
+    // JS-driven scorer bar fill (CSS transition is more reliable than keyframe vars on mobile)
+    const bars = target.querySelectorAll('.scorer-bar[data-w]');
+    if (bars.length) {
+      setTimeout(function() {
+        bars.forEach(function(b, i) {
+          setTimeout(function() { b.style.width = b.dataset.w + '%'; }, i * 25);
+        });
+      }, 30);
     }
   }
 }
@@ -145,7 +153,7 @@ function buildScorersHTML() {
           <span class="scorer-name">${s.name}</span>
           <span class="scorer-abbr">${teamAbbr(s.team)}</span>
         </div>
-        <div class="scorer-bar-wrap"><div class="scorer-bar" style="width:${barPct}%"></div></div>
+        <div class="scorer-bar-wrap"><div class="scorer-bar" data-w="${barPct}" style="width:0"></div></div>
       </div>
       <div class="scorer-goals-wrap">
         <div class="scorer-goals">${s.goals}</div>

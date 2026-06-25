@@ -22,7 +22,17 @@ function setAnalyzerMode(mode) {
 function setAnalyzerTab(tab) {
   ANALYZER_STATE.tab = tab;
   const content = document.getElementById('tab-content');
-  if (content) renderAnalyzer(STATE.demoMode ? document.getElementById('tab-inner') || content : content);
+  const target = STATE.demoMode ? (document.getElementById('tab-inner') || content) : content;
+  if (target) {
+    renderAnalyzer(target);
+    // Animate the content div below the subnav
+    const azContent = target.querySelector('.az-content');
+    if (azContent) {
+      azContent.classList.remove('subtab-enter');
+      void azContent.offsetWidth;
+      azContent.classList.add('subtab-enter');
+    }
+  }
 }
 
 function renderAnalyzer(container) {
@@ -36,14 +46,12 @@ function renderAnalyzer(container) {
   </div>`;
 
   if (tab === 'bracket') {
-    container.innerHTML = subnav;
-    const wrap = document.createElement('div');
-    container.appendChild(wrap);
-    renderBracketPredictor(wrap);
+    container.innerHTML = subnav + '<div class="az-content"></div>';
+    renderBracketPredictor(container.querySelector('.az-content'));
     return;
   }
   if (tab === 'calculator') {
-    container.innerHTML = subnav + buildCalculatorHTML();
+    container.innerHTML = subnav + '<div class="az-content">' + buildCalculatorHTML() + '</div>';
     return;
   }
 
@@ -53,9 +61,8 @@ function renderAnalyzer(container) {
   const overrides = ANALYZER_STATE.overrides;
 
   // Groups what-if: inject subnav first, then the existing groups UI
-  container.innerHTML = subnav;
-  const groupsWrap = document.createElement('div');
-  container.appendChild(groupsWrap);
+  container.innerHTML = subnav + '<div class="az-content"></div>';
+  const groupsWrap = container.querySelector('.az-content');
   // Render into groupsWrap below (replaces container usage)
 
   // Group selector pills

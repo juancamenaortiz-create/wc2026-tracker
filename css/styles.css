@@ -2631,3 +2631,66 @@ td.ps-name { color: var(--white); font-weight: 600; }
 .md-back-btn:hover { color: var(--white); border-color: rgba(255,255,255,.15); }
 .md-sheet-title { font-size: 14px; font-weight: 700; color: var(--white); }
 
+
+/* ══════════════════════════════════════════════════════════════
+   ANIMATIONS — premium micro-motion system
+   Only fires on deliberate tab switches (via .tab-switching class,
+   which expires after 650ms so background refreshes don't re-animate)
+   ══════════════════════════════════════════════════════════════ */
+
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(13px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Today tab: match cards stagger (offset 2: datestrip + summary first) ── */
+.tab-switching .today-wrap > .mc-card { animation: fadeSlideUp 0.24s ease-out both; }
+.tab-switching .today-wrap > .mc-card:nth-child(3) { animation-delay: 0ms;   }
+.tab-switching .today-wrap > .mc-card:nth-child(4) { animation-delay: 55ms;  }
+.tab-switching .today-wrap > .mc-card:nth-child(5) { animation-delay: 110ms; }
+.tab-switching .today-wrap > .mc-card:nth-child(6) { animation-delay: 165ms; }
+.tab-switching .today-wrap > .mc-card:nth-child(7) { animation-delay: 220ms; }
+.tab-switching .today-wrap > .mc-card:nth-child(8) { animation-delay: 275ms; }
+
+/* ── Schedule tab: date cards stagger ── */
+.tab-switching .schedule-wrap > .sched-card { animation: fadeSlideUp 0.22s ease-out both; }
+.tab-switching .schedule-wrap > .sched-card:nth-child(1)  { animation-delay: 0ms;   }
+.tab-switching .schedule-wrap > .sched-card:nth-child(2)  { animation-delay: 45ms;  }
+.tab-switching .schedule-wrap > .sched-card:nth-child(3)  { animation-delay: 90ms;  }
+.tab-switching .schedule-wrap > .sched-card:nth-child(4)  { animation-delay: 135ms; }
+.tab-switching .schedule-wrap > .sched-card:nth-child(5)  { animation-delay: 180ms; }
+.tab-switching .schedule-wrap > .sched-card:nth-child(6)  { animation-delay: 225ms; }
+.tab-switching .schedule-wrap > .sched-card:nth-child(7)  { animation-delay: 270ms; }
+.tab-switching .schedule-wrap > .sched-card:nth-child(8)  { animation-delay: 315ms; }
+.tab-switching .schedule-wrap > .sched-card:nth-child(9)  { animation-delay: 360ms; }
+.tab-switching .schedule-wrap > .sched-card:nth-child(10) { animation-delay: 405ms; }
+
+/* ── Groups tab: pair stagger (2-col grid) ── */
+.tab-switching .groups-grid > .gstd-card { animation: fadeSlideUp 0.22s ease-out both; }
+.tab-switching .groups-grid > .gstd-card:nth-child(1),
+.tab-switching .groups-grid > .gstd-card:nth-child(2)  { animation-delay: 0ms;   }
+.tab-switching .groups-grid > .gstd-card:nth-child(3),
+.tab-switching .groups-grid > .gstd-card:nth-child(4)  { animation-delay: 65ms;  }
+.tab-switching .groups-grid > .gstd-card:nth-child(5),
+.tab-switching .groups-grid > .gstd-card:nth-child(6)  { animation-delay: 130ms; }
+.tab-switching .groups-grid > .gstd-card:nth-child(7),
+.tab-switching .groups-grid > .gstd-card:nth-child(8)  { animation-delay: 195ms; }
+.tab-switching .groups-grid > .gstd-card:nth-child(9),
+.tab-switching .groups-grid > .gstd-card:nth-child(10) { animation-delay: 260ms; }
+.tab-switching .groups-grid > .gstd-card:nth-child(11),
+.tab-switching .groups-grid > .gstd-card:nth-child(12) { animation-delay: 325ms; }
+
+/* ── Modal sheet: slide-up on open ── */
+.tp-sheet { transform: translateY(56px); transition: transform 0.32s cubic-bezier(.22,.68,0,1.2); }
+.modal-overlay.open .tp-sheet { transform: translateY(0); }
+
+/* ── Micro-interactions ── */
+.mc-card { transition: transform 0.12s; }
+.mc-card:active { transform: scale(0.984); }
+.dchip:active { transform: scale(0.92); transition: transform 0.08s; }
+.srow-click:active { background: rgba(255,255,255,.04); }
+.tab-btn { transition: color 0.18s; }
+.tab-btn:active { transform: scale(0.88); transition: transform 0.08s; }
+#refresh-btn, #settings-btn { transition: opacity 0.2s, transform 0.1s; }
+#refresh-btn:active, #settings-btn:active { transform: scale(0.88); }
+.preview-btn { transition: color 0.15s; }

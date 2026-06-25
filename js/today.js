@@ -87,15 +87,43 @@ function toggleUpcoming() {
 
 // ── Date strip helpers ──────────────────────────────────────────────────
 function getAllMatchDates() {
-  return [...new Set(SCHEDULE.map(m => m.date))].filter(Boolean).sort();
+  const ko = [
+    ...(typeof R32_MATCHES !== 'undefined' ? R32_MATCHES : []),
+    ...(typeof KO_ROUNDS   !== 'undefined' ? KO_ROUNDS   : []),
+  ];
+  return [...new Set([...SCHEDULE, ...ko].map(m => m.date))].filter(Boolean).sort();
 }
+
+// Readable label for an unresolved KO slot ("1st-A" → "1st Grp A")
+function _koSlotLabel(slot) {
+  if (!slot) return 'TBD';
+  const g = slot.match(/^(1st|2nd)-([A-L])$/);
+  if (g) return g[1] + ' Grp ' + g[2];
+  if (/^3rd-/.test(slot)) return 'Best 3rd';
+  return 'TBD';
+}
+
 function matchesForDate(date) {
-  return SCHEDULE.filter(m => m.date === date);
+  const group = SCHEDULE.filter(m => m.date === date);
+  const ko = [
+    ...(typeof R32_MATCHES !== 'undefined' ? R32_MATCHES : []),
+    ...(typeof KO_ROUNDS   !== 'undefined' ? KO_ROUNDS   : []),
+  ].filter(m => m.date === date).map(m => {
+    const teams = getKOMatchTeams(m.id);
+    const t1 = teams[0] || _koSlotLabel(m.slot1);
+    const t2 = teams[1] || _koSlotLabel(m.slot2);
+    return Object.assign({}, m, { t1: t1, t2: t2 });
+  });
+  return [...group, ...ko];
 }
+
 function selectTodayDate(date) {
   TODAY_STATE.selectedDate = date;
   const c = document.getElementById('tab-content');
-  if (c) renderToday(STATE.demoMode ? document.getElementById('tab-inner') || c : c);
+  if (c) {
+    _triggerTabAnim(c);
+    renderToday(STATE.demoMode ? document.getElementById('tab-inner') || c : c);
+  }
 }
 
 function getUpcomingDays(afterDate, numDays) {
@@ -253,7 +281,7 @@ function buildMatchCard(match, now) {
       statusHtml = `<span class="mc-status-time">${formatGameTime(match.date, t)} <span class="mc-status-tz">${tzAbbr}</span></span>`;
     }
   }
-  const grpLabel = match.g ? `GROUP ${match.g}` : 'R32';
+  const grpLabel = match.g ? `GROUP ${match.g}` : (match.round || 'KO');
   const isLiveCard = isLive || (!hasResult && !isDelayed && msUntil < -300000);
 
   // Team rows — winner gold + bold, loser 45% opacity

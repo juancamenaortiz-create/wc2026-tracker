@@ -587,12 +587,23 @@ function updateStatusUI() {
 }
 
 // ── Tab Navigation ────────────────────────────
+// Marks the tab container for entrance animation — expires after 650ms
+// so background refreshes don't re-trigger the stagger effect.
+function _triggerTabAnim(el) {
+  if (!el) return;
+  el.classList.remove('tab-switching');
+  void el.offsetWidth; // force reflow so animation replays
+  el.classList.add('tab-switching');
+  setTimeout(function() { el.classList.remove('tab-switching'); }, 650);
+}
+
 function navigateTo(tab) {
   STATE.activeTab = tab;
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   if (tab === 'schedule' && typeof SCHEDULE_STATE !== 'undefined') {
     SCHEDULE_STATE.scrollToToday = true; // fresh tab open — jump to today's matches
   }
+  _triggerTabAnim(document.getElementById('tab-content'));
   renderActiveTab();
 }
 

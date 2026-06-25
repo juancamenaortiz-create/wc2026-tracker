@@ -29,7 +29,12 @@ function setMDTab(tab) {
   });
   var el = document.getElementById('md-tab-content');
   if (el && MD_DATA) {
-    try { el.innerHTML = _mdTab(tab); } catch(e) { el.innerHTML = '<div class="md-empty">Error loading section.</div>'; }
+    try {
+      el.classList.remove('subtab-enter');
+      void el.offsetWidth; // force reflow
+      el.innerHTML = _mdTab(tab);
+      el.classList.add('subtab-enter');
+    } catch(e) { el.innerHTML = '<div class="md-empty">Error loading section.</div>'; }
     if (typeof twemoji !== 'undefined') twemoji.parse(el);
   }
 }
@@ -621,7 +626,8 @@ function _tabStats(result, summary, sched) {
     return isNaN(v) ? null : v;
   }
 
-  // Stats bars — green bar for home, dark for away
+  // Stats bars — green bar for home, dark for away (animated fill on appear)
+  var barIdx = 0;
   var rows = _STAT_DEFS.map(function(def) {
     var v1 = getSt(t1S, def.key); if (v1 === null) v1 = se1[def.key];
     var v2 = getSt(t2S, def.key); if (v2 === null) v2 = se2[def.key];
@@ -630,14 +636,17 @@ function _tabStats(result, summary, sched) {
     var total = def.isPct ? 100 : (a+b||1);
     var pct1  = Math.round((a/total)*100);
     var d = def.fmt || function(v){return Math.round(v);};
-
     var aLeads = def.inverse ? (a < b) : (a > b);
     var bLeads = def.inverse ? (b < a) : (b > a);
-
+    var delay1 = barIdx * 55, delay2 = barIdx * 55 + 25;
+    barIdx++;
     return '<div class="stat-row">'
       + '<span class="stat-val' + (aLeads ? ' lead' : '') + '">' + d(a) + '</span>'
       + '<div class="stat-mid">'
-      +   '<div class="stat-bar"><div class="stat-bar-1" style="width:' + pct1 + '%"></div><div class="stat-bar-2" style="width:' + (100-pct1) + '%"></div></div>'
+      +   '<div class="stat-bar">'
+      +     '<div class="stat-bar-1 anim-bar" style="--bar-w:' + pct1 + '%;animation-delay:' + delay1 + 'ms"></div>'
+      +     '<div class="stat-bar-2 anim-bar" style="--bar-w:' + (100-pct1) + '%;animation-delay:' + delay2 + 'ms"></div>'
+      +   '</div>'
       +   '<span class="stat-label">' + def.label + '</span>'
       + '</div>'
       + '<span class="stat-val' + (bLeads ? ' lead-r' : '') + '">' + d(b) + '</span>'

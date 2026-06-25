@@ -1,19 +1,35 @@
-// AI Preview section — shown on upcoming (NS) match cards
+// AI Preview section — panel only (no button). Button is in buildPreviewToggle.
 function buildPreviewSection(matchId) {
   const p = STATE.aiPreviews[matchId];
-  if (!p) {
-    return `<button class="preview-btn" onclick="fetchMatchPreview(${matchId})">AI Preview &rsaquo;</button>`;
-  }
-  if (p.loading) {
-    return `<div class="preview-loading"><span class="preview-spin">⟳</span> Generating…</div>`;
-  }
+  if (!p) return '';
+  if (p.loading) return '<div class="preview-loading"><span class="preview-spin">⟳</span> Generating\u2026</div>';
+  if (!p.open) return '';
   if (p.data) {
     const m = SCHEDULE.find(x => x.id === matchId)
            || (typeof R32_MATCHES !== 'undefined' && R32_MATCHES.find(x => x.id === matchId));
     return buildDetailedPreview(p.data, m);
   }
   if (p.text) return '<div class="preview-panel"><div class="pv-hed"><span class="pv-hed-lbl">AI Preview</span></div><div class="pv-body"><p class="pv-txt">' + p.text + '</p></div></div>';
-  return `<button class="preview-btn preview-retry" onclick="delete STATE.aiPreviews[${matchId}]; fetchMatchPreview(${matchId})">Retry &rsaquo;</button>`;
+  return '';
+}
+
+// Toggle button — "AI Preview ›" when closed, "Hide Preview ↑" when open.
+// Shown in the mc-foot-preview row for all non-delayed matches.
+function buildPreviewToggle(matchId) {
+  const p = STATE.aiPreviews[matchId];
+  if (p && p.loading) return ''; // spinner shown above instead
+  const hasData = p && (p.data || p.text);
+  if (!hasData) {
+    // Not yet fetched (or fetch failed silently) — show fetch trigger
+    if (p && !p.data && !p.text && !p.loading) {
+      return '<button class="preview-btn preview-retry" onclick="delete STATE.aiPreviews[' + matchId + ']; toggleMatchPreview(' + matchId + ')">Retry Preview &rsaquo;</button>';
+    }
+    return '<button class="preview-btn" onclick="toggleMatchPreview(' + matchId + ')">AI Preview &rsaquo;</button>';
+  }
+  const isOpen = !!p.open;
+  return '<button class="preview-btn' + (isOpen ? ' preview-open' : '') + '" onclick="toggleMatchPreview(' + matchId + ')">'
+    + (isOpen ? 'Hide Preview \u2191' : 'AI Preview &rsaquo;')
+    + '</button>';
 }
 
 function buildDetailedPreview(d, match) {
@@ -290,8 +306,10 @@ function buildMatchCard(match, now) {
   const s1html = hasResult ? `<span class="mc-score">${score1}</span>` : '';
   const s2html = hasResult ? `<span class="mc-score">${score2}</span>` : '';
 
-  // Delay reason note — shown below teams when game is delayed
-  const delayReason = isDelayed ? (result?.substatus || 'Match delayed') : '';
+  // Preview panel (shown for all matches when data is available + open)
+  const pvPanel  = !isDelayed ? buildPreviewSection(match.id) : '';
+  // Toggle button shown in footer for all non-delayed matches
+  const pvToggle = !isDelayed ? buildPreviewToggle(match.id) : '';
 
   return `<div class="mc-card${isMyCard ? ' my-team-card' : ''}${isLiveCard ? ' mc-card-live' : ''}${isDelayed ? ' mc-card-delayed' : ''}">
   <div class="mc-top">
@@ -312,12 +330,15 @@ function buildMatchCard(match, now) {
   </div>
   ${isFT && isPSO && result.penScore1 !== null ? `<div class="mc-pso-score">Pens · ${result.penScore1}–${result.penScore2}</div>` : ''}
   ${isDelayed ? `<div class="mc-delay-note">${delayReason}</div>` : ''}
-  ${(!hasResult && !isDelayed && msUntil >= -300000) ? buildPreviewSection(match.id) : ''}
+  ${pvPanel}
   <div class="mc-foot">
-    <span class="mc-city">${match.city}</span>
-    ${hasResult ? `<span class="mc-detail-link" onclick="openMatchDetail(${match.id})">Match Centre &rsaquo;</span>` : ''}
-    ${countdown ? `<span class="mc-countdown" data-kickoff="${kickoffUTC.getTime()}">${countdown}</span>` : ''}
-    ${(!hasResult && !isDelayed && msUntil < -300000) ? '<span class="mc-espn-wait">⚡ Awaiting ESPN…</span>' : ''}
+    <div class="mc-foot-row">
+      <span class="mc-city">${match.city}</span>
+      ${hasResult ? `<span class="mc-detail-link" onclick="openMatchDetail(${match.id})">Match Centre &rsaquo;</span>` : ''}
+      ${countdown ? `<span class="mc-countdown" data-kickoff="${kickoffUTC.getTime()}">${countdown}</span>` : ''}
+      ${(!hasResult && !isDelayed && msUntil < -300000) ? '<span class="mc-espn-wait">⚡ Awaiting ESPN\u2026</span>' : ''}
+    </div>
+    ${pvToggle ? `<div>${pvToggle}</div>` : ''}
   </div>
 </div>`;
 }

@@ -2584,8 +2584,8 @@ td.ps-name { color: var(--white); font-weight: 600; }
 .mc-card .mc-team.loser .mc-score { color: #aeb6c2; }
 
 .mc-foot {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 8px; margin-top: 12px; padding-top: 11px;
+  /* layout moved to animation section — flex-column with mc-foot-row inside */
+  margin-top: 12px; padding-top: 11px;
   border-top: 1px solid rgba(255,255,255,.05);
 }
 .mc-foot .mc-city {
@@ -2643,7 +2643,48 @@ td.ps-name { color: var(--white); font-weight: 600; }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ── Today tab: match cards stagger (offset 2: datestrip + summary first) ── */
+/* ── Bracket tab: columns stagger by round ── */
+.tab-switching .bracket-col { animation: fadeSlideUp 0.28s ease-out both; }
+.tab-switching .bracket-col[data-round="R32"]   { animation-delay: 0ms;   }
+.tab-switching .bracket-col[data-round="R16"]   { animation-delay: 80ms;  }
+.tab-switching .bracket-col[data-round="QF"]    { animation-delay: 160ms; }
+.tab-switching .bracket-col[data-round="SF"]    { animation-delay: 240ms; }
+.tab-switching .bracket-col[data-round="Final"] { animation-delay: 320ms; }
+
+/* ── Analyzer tab: az-wrap + calc cards in pairs ── */
+.tab-switching .az-wrap { animation: fadeSlideUp 0.25s ease-out both; }
+.tab-switching .calc-grid > .calc-card { animation: fadeSlideUp 0.22s ease-out both; }
+.tab-switching .calc-grid > .calc-card:nth-child(odd)  { animation-delay: 0ms;  }
+.tab-switching .calc-grid > .calc-card:nth-child(even) { animation-delay: 55ms; }
+
+/* ── Subtab content switch (Match Centre tabs, Groups subtabs) ── */
+@keyframes fadeSlideUpSm {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.subtab-enter { animation: fadeSlideUpSm 0.2s ease-out both; }
+
+/* ── Stats bars fill animation ── */
+@keyframes barFill {
+  from { width: 0; }
+  to   { width: var(--bar-w, 0%); }
+}
+.anim-bar { width: 0 !important; animation: barFill 0.65s cubic-bezier(.22,.68,0,1) forwards; }
+
+/* ── mc-foot: column layout for city row + preview toggle row ── */
+.mc-foot {
+  display: flex; flex-direction: column;
+  margin-top: 12px; padding-top: 11px;
+  border-top: 1px solid rgba(255,255,255,.05);
+  gap: 8px;
+}
+.mc-foot-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+}
+
+/* AI Preview toggle open state */
+.preview-btn.preview-open { color: var(--muted); }
+.preview-btn.preview-open:hover { color: var(--white); }
 .tab-switching .today-wrap > .mc-card { animation: fadeSlideUp 0.24s ease-out both; }
 .tab-switching .today-wrap > .mc-card:nth-child(3) { animation-delay: 0ms;   }
 .tab-switching .today-wrap > .mc-card:nth-child(4) { animation-delay: 55ms;  }

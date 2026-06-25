@@ -5,7 +5,17 @@ const GROUPS_STATE = { expanded: null, subTab: 'groups' };
 function setGroupsSubTab(tab) {
   GROUPS_STATE.subTab = tab;
   const c = document.getElementById('tab-content');
-  if (c) renderGroups(STATE.demoMode ? document.getElementById('tab-inner') || c : c);
+  const target = STATE.demoMode ? (document.getElementById('tab-inner') || c) : c;
+  if (target) {
+    renderGroups(target);
+    // Animate the new content in
+    const wrap = target.querySelector('.gstd-wrap');
+    if (wrap) {
+      wrap.classList.remove('subtab-enter');
+      void wrap.offsetWidth;
+      wrap.classList.add('subtab-enter');
+    }
+  }
 }
 
 function renderGroups(container) {

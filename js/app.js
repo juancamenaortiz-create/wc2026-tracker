@@ -587,14 +587,28 @@ function updateStatusUI() {
 }
 
 // ── Tab Navigation ────────────────────────────
-// Marks the tab container for entrance animation — expires after 650ms
+// Marks the tab container for entrance animation — expires after 900ms
 // so background refreshes don't re-trigger the stagger effect.
 function _triggerTabAnim(el) {
   if (!el) return;
   el.classList.remove('tab-switching');
   void el.offsetWidth; // force reflow so animation replays
   el.classList.add('tab-switching');
-  setTimeout(function() { el.classList.remove('tab-switching'); }, 650);
+  setTimeout(function() { el.classList.remove('tab-switching'); }, 900);
+}
+
+// Toggle the AI Preview panel open/closed. If no data yet, triggers the fetch.
+function toggleMatchPreview(matchId) {
+  const p = STATE.aiPreviews[matchId];
+  if (!p || (!p.data && !p.text && !p.loading)) {
+    fetchMatchPreview(matchId);
+    return;
+  }
+  if (p.loading) return; // already fetching
+  p.open = !p.open;
+  const c = document.getElementById('tab-content');
+  const target = STATE.demoMode ? (document.getElementById('tab-inner') || c) : c;
+  if (target) renderToday(target);
 }
 
 function navigateTo(tab) {
@@ -958,9 +972,9 @@ async function fetchMatchPreview(matchId) {
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const respData = await resp.json();
     const entry = respData.data
-      ? { data: respData.data }
+      ? { data: respData.data, open: true }
       : respData.text
-        ? { text: respData.text }
+        ? { text: respData.text, open: true }
         : { error: respData.error || 'Preview unavailable' };
     STATE.aiPreviews[matchId] = entry;
     if (entry.data || entry.text) savePreviewCache(matchId, entry, match.date);

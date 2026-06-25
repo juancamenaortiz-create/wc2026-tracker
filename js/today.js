@@ -73,7 +73,18 @@ function buildDetailedPreview(d, match) {
 
   var predHtml = '';
   if (d.prediction) {
-    var predScore = d.prediction.score || '';
+    // New schema: explicit per-team integers (unambiguous)
+    // Fallback: old "score" string split — may be wrong for cached entries
+    var g1, g2;
+    if (d.prediction.team1_goals != null && d.prediction.team2_goals != null) {
+      g1 = d.prediction.team1_goals;
+      g2 = d.prediction.team2_goals;
+    } else if (d.prediction.score) {
+      var parts = d.prediction.score.split('-');
+      g1 = parts[0] ? parts[0].trim() : '?';
+      g2 = parts[1] ? parts[1].trim() : '?';
+    } else { g1 = '?'; g2 = '?'; }
+    var predScore = g1 + '\u2013' + g2;
     predHtml = '<div class="pv-pred">'
       + '<span class="pv-lbl">Prediction</span>'
       + '<div class="pv-pred-score-row">'

@@ -207,6 +207,11 @@ function exportResults() {
 }
 
 function init() {
+  // One-time clear: wipe old previews that used ambiguous score format
+  if (!localStorage.getItem('wc2026_pred_v2')) {
+    localStorage.removeItem('wc2026_previews');
+    localStorage.setItem('wc2026_pred_v2', '1');
+  }
   try { STATE.myTeams = JSON.parse(localStorage.getItem('wc2026_myteams') || '[]'); } catch(e) { STATE.myTeams = []; }
   loadPreviewCache();
   try {

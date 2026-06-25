@@ -35,7 +35,7 @@ export default async function handler(req, res) {
     + '  "key_duel": { "player1": "<player from ' + team1 + '>", "player2": "<player from ' + team2 + '>", "why": "<why this 1v1 is key>" },\n'
     + '  "h2h": { "summary": "<last 2-3 meetings with scores and year, or first ever meeting>", "edge": "<who has the historical edge>" },\n'
     + '  "x_factor": "<one unexpected element that could swing this match>",\n'
-    + '  "prediction": { "score": "<X-Y where X = ' + team1 + ' goals and Y = ' + team2 + ' goals — e.g. if ' + team1 + ' wins 2-1 write 2-1, if ' + team2 + ' wins 2-1 write 1-2>", "reasoning": "<2 sentences based on form and tactical analysis>" }\n'
+    + '  "prediction": { "team1_goals": <integer, goals scored by ' + team1 + '>, "team2_goals": <integer, goals scored by ' + team2 + '>, "reasoning": "<2 sentences based on form and tactical analysis>" }\n'
     + '}\n\n'
     + 'Be specific, factual, current. Return ONLY the JSON.';
 

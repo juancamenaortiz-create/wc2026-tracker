@@ -2197,6 +2197,9 @@ img.emoji {
 .md-round-label { font-size: 11px; font-weight: 700; color: #7e8794; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 16px; }
 .md-teams { display: flex; align-items: flex-start; justify-content: center; gap: 16px; }
 .md-team { width: 96px; display: flex; flex-direction: column; align-items: center; gap: 9px; }
+.md-team-link { cursor: pointer; transition: opacity .15s; }
+.md-team-link:active { opacity: .7; }
+.md-team-link:hover .md-tname { color: var(--green); }
 .md-flag-badge {
   width: 48px; height: 48px; border-radius: 50%; overflow: hidden;
   position: relative; display: inline-flex; align-items: center; justify-content: center;
@@ -2207,6 +2210,10 @@ img.emoji {
   transform: translate(-50%,-50%); object-fit: cover; border-radius: 0; background: none;
 }
 .md-tname { font-size: 13px; font-weight: 700; color: #f3f5f9; text-align: center; }
+/* Stacked goal list in Match Centre header (#13) */
+.md-goal-list { display: flex; flex-direction: column; align-items: center; gap: 2px; margin-top: -2px; width: 100%; }
+.md-goal-item { font-size: 10.5px; color: #aab2c0; text-align: center; white-space: nowrap; line-height: 1.5; }
+.md-goal-min  { font-size: 9.5px; color: #6a727e; }
 .md-score-block { padding-top: 6px; flex-shrink: 0; }
 .md-score {
   font-size: 36px; font-weight: 800; color: #f3f5f9; line-height: 1;

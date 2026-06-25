@@ -934,6 +934,14 @@ img.emoji {
 .bc-team.winner .bc-score { color: var(--gold); }
 .bc-team.my-t   .bc-name { color: var(--gold); }
 
+/* Analyzer bracket predictor — pick interaction */
+.az-pick-row { transition: background .12s; }
+.az-pick-row:hover { background: rgba(255,255,255,.06); border-radius: 0; }
+.az-pick-winner { background: rgba(32,189,118,.1); }
+.az-pick-winner .bc-name { color: var(--green); font-weight: 700; }
+.az-pick-loser  { opacity: .38; }
+.az-pick-check  { font-size: 10px; font-weight: 800; color: var(--green); margin-left: auto; flex-shrink: 0; }
+
 .bc-badge {
   width: 18px; height: 18px; flex-shrink: 0; border-radius: 50%; overflow: hidden;
   position: relative; display: inline-flex; align-items: center; justify-content: center;
@@ -2093,6 +2101,7 @@ img.emoji {
   letter-spacing: .04em; border: 1px solid transparent;
 }
 .calc-sum-pill.calc-q  { background: rgba(32,189,118,.14);  color: #34d488; border-color: rgba(32,189,118,.35); }
+.calc-sum-pill.calc-q3 { background: rgba(230,195,106,.12); color: var(--gold); border-color: rgba(230,195,106,.35); }
 .calc-sum-pill.calc-e  { background: rgba(240,84,75,.12);   color: #f0726b; border-color: rgba(240,84,75,.3); }
 .calc-sum-pill.calc-a  { background: rgba(245,158,11,.12);  color: #f0b54b; border-color: rgba(245,158,11,.3); }
 
@@ -2134,9 +2143,10 @@ img.emoji {
   padding: 2px 6px; border-radius: 4px;
   flex-shrink: 0; letter-spacing: .05em;
 }
-.calc-bq { background: rgba(32,189,118,.22);  color: #34d488; }
-.calc-be { background: rgba(239,68,68,.15);  color: #f87171; }
-.calc-ba { background: var(--surface);        color: var(--muted); }
+.calc-bq  { background: rgba(32,189,118,.22);  color: #34d488; }
+.calc-bq3 { background: rgba(230,195,106,.18); color: var(--gold); }
+.calc-be  { background: rgba(239,68,68,.15);   color: #f87171; }
+.calc-ba  { background: var(--surface);         color: var(--muted); }
 
 /* ── Match Summary: Timeline ── */
 .match-summary-wrap { border-top: 1px solid var(--border); }

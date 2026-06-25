@@ -1838,13 +1838,21 @@ img.emoji {
 
 /* Prediction: label + big gold score inline, reasoning below */
 .pv-pred { margin-bottom: 14px; }
-.pv-pred-top {
-  display: flex; align-items: center;
-  justify-content: space-between; margin-bottom: 6px;
+/* Score row: team name — big score — team name */
+.pv-pred-score-row {
+  display: flex; align-items: center; gap: 8px;
+  margin: 5px 0 8px;
 }
+.pv-pred-team {
+  flex: 1; font-size: 11px; font-weight: 700; color: #6a727e;
+  text-align: right; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.pv-pred-team-r { text-align: left; }
 .pv-pred-score {
   font-size: 22px; font-weight: 800; color: var(--gold);
   font-variant-numeric: tabular-nums; letter-spacing: -.02em;
+  flex-shrink: 0;
 }
 
 /* ── Overdue match (kickoff passed, no ESPN data yet) ── */

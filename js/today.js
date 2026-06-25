@@ -73,8 +73,14 @@ function buildDetailedPreview(d, match) {
 
   var predHtml = '';
   if (d.prediction) {
+    var predScore = d.prediction.score || '';
     predHtml = '<div class="pv-pred">'
-      + '<div class="pv-pred-top"><span class="pv-lbl">Prediction</span><span class="pv-pred-score">' + (d.prediction.score || '') + '</span></div>'
+      + '<span class="pv-lbl">Prediction</span>'
+      + '<div class="pv-pred-score-row">'
+      +   '<span class="pv-pred-team">' + (t1 || '') + '</span>'
+      +   '<span class="pv-pred-score">' + predScore + '</span>'
+      +   '<span class="pv-pred-team pv-pred-team-r">' + (t2 || '') + '</span>'
+      + '</div>'
       + (d.prediction.reasoning ? '<p class="pv-txt">' + d.prediction.reasoning + '</p>' : '')
       + '</div>';
   }

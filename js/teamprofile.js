@@ -234,19 +234,6 @@ function tpContent(team, d) {
       </div>
     </div>` : '';
 
-  // Upcoming matches
-  const upcomingHtml = upcoming.length ? `
-    <div class="tp-label">Upcoming</div>
-    <div class="tp-card">
-      ${upcoming.map(m => {
-        const opp = normName(m.t1) === normName(team) ? m.t2 : m.t1;
-        return `<div class="tp-up-row">
-          <span class="tp-up-team"><span class="cflag" style="width:20px;height:20px">${getFlag(opp)}</span>${displayName(opp)}</span>
-          <span class="tp-up-time">${formatShortDate(m.date)} · ${formatGameTime(m.date, m.time)} ${getTZAbbr()}</span>
-        </div>`;
-      }).join('')}
-    </div>` : '';
-
   const pinned = isMyTeam(team);
   const escTeam = team.replace(/'/g, "\\'");
 

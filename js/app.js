@@ -1099,14 +1099,19 @@ let _3rdCache = { key: null, result: null };
 
 // Returns { [slotGroups]: teamName } e.g. { 'CEFHI': 'Mexico', ... }
 function getThirdPlaceAssignments(ovr) {
-  const key = JSON.stringify(ovr || {});
+  // Cache key includes result count + overrides so it busts when live scores update
+  const resultFingerprint = (STATE.results.groupMatches || []).filter(m => m.status === 'FT').length;
+  const key = resultFingerprint + '|' + JSON.stringify(ovr || {});
   if (_3rdCache.key === key) return _3rdCache.result;
 
   // 1. Rank all 12 third-place teams by Pts → GD → GF
+  //    Only include groups that have played ≥2 games (enough data to project)
   const thirds = Object.keys(GROUP_TEAMS).map(g => {
     const s  = calculateStandings(g, ovr);
     const t  = s[2];
-    return t && t.P > 0 ? { group: g, team: t.name, pts: t.Pts, gd: t.GD, gf: t.GF } : null;
+    // Require at least 2 games played in this group for a meaningful projection
+    const gamesPlayed = s[0] ? (s[0].P || 0) : 0;
+    return (t && gamesPlayed >= 1) ? { group: g, team: t.name, pts: t.Pts, gd: t.GD, gf: t.GF } : null;
   }).filter(Boolean).sort((a,b) => b.pts-a.pts || b.gd-a.gd || b.gf-a.gf);
 
   // 2. Take best 8 (or however many have played)

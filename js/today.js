@@ -128,15 +128,6 @@ function getAllMatchDates() {
   return [...new Set([...SCHEDULE, ...ko].map(m => m.date))].filter(Boolean).sort();
 }
 
-// Readable label for an unresolved KO slot ("1st-A" → "1st Grp A")
-function _koSlotLabel(slot) {
-  if (!slot) return 'TBD';
-  const g = slot.match(/^(1st|2nd)-([A-L])$/);
-  if (g) return g[1] + ' Grp ' + g[2];
-  if (/^3rd-/.test(slot)) return 'Best 3rd';
-  return 'TBD';
-}
-
 function matchesForDate(date) {
   const group = SCHEDULE.filter(m => m.date === date);
   const ko = [

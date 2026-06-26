@@ -1150,6 +1150,16 @@ function getThirdPlaceAssignments(ovr) {
   return result;
 }
 
+// Human-readable fallback label for an unresolved KO slot string
+// Used in schedule and today tabs when teams aren't determined yet
+function _koSlotLabel(slot) {
+  if (!slot) return 'TBD';
+  const g = slot.match(/^(1st|2nd)-([A-L])$/);
+  if (g) return g[1] + ' Grp ' + g[2];
+  if (/^3rd-/.test(slot)) return 'Best 3rd';
+  return 'TBD';
+}
+
 function resolveKOSlot(slot) {
   // Pass any active what-if overrides from the group analyzer through to standings.
   // ANALYZER_STATE is defined in analyzer.js (loads after app.js) but is always

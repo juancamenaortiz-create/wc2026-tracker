@@ -122,9 +122,18 @@ function buildScheduleRow(match) {
     else                                            { w1 = 'draw';   w2 = 'draw'; }
   }
 
-  const isMy1 = isMyTeam(match.t1 || ''), isMy2 = isMyTeam(match.t2 || '');
-  const t1Name = match.t1 || match.slot1 || 'TBD';
-  const t2Name = match.t2 || match.slot2 || 'TBD';
+  // For KO matches, resolve slot labels ("2nd-A") to actual team names via standings
+  let t1Name, t2Name;
+  if (match.isKnockout) {
+    const resolved = getKOMatchTeams(match.id);
+    t1Name = resolved[0] || _koSlotLabel(match.slot1) || 'TBD';
+    t2Name = resolved[1] || _koSlotLabel(match.slot2) || 'TBD';
+  } else {
+    t1Name = match.t1 || 'TBD';
+    t2Name = match.t2 || 'TBD';
+  }
+
+  const isMy1 = isMyTeam(t1Name), isMy2 = isMyTeam(t2Name);
   const badge = (team) => team
     ? `<span class="srow-badge">${getFlag(team)}</span>`
     : `<span class="srow-badge srow-badge-tbd">?</span>`;

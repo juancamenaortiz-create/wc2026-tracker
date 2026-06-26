@@ -106,23 +106,100 @@ function tpTogglePin(team) {
 }
 
 function tpContent(team, d) {
-  // Current tournament stats
-  let groupStats = null;
+  // Current tournament stats + group position
+  let groupStats = null, groupLetter = '', groupPos = 0;
   for (const [g, teams] of Object.entries(GROUP_TEAMS)) {
     if (teams.some(t => normName(t) === normName(team))) {
       const st = calculateStandings(g);
       groupStats = st.find(s => normName(s.name) === normName(team)) || null;
+      groupLetter = g;
+      groupPos = st.findIndex(s => normName(s.name) === normName(team)) + 1;
       break;
     }
   }
 
-  // Upcoming matches
-  const upcoming = SCHEDULE.filter(m =>
+  // KO tournament status — find the team in R32/KO rounds
+  function getKOInfo() {
+    const roundNames = { R32: 'Round of 32', R16: 'Round of 16', QF: 'Quarterfinals', SF: 'Semifinals', Final: 'Final' };
+    const allKO = [
+      ...(typeof R32_MATCHES !== 'undefined' ? R32_MATCHES : []),
+      ...(typeof KO_ROUNDS   !== 'undefined' ? KO_ROUNDS   : []),
+    ];
+    for (const m of allKO) {
+      const [t1, t2] = getKOMatchTeams(m.id);
+      const isT1 = t1 && normName(t1) === normName(team);
+      const isT2 = t2 && normName(t2) === normName(team);
+      if (!isT1 && !isT2) continue;
+      const result = getKnockoutResult(m.id);
+      const isFT   = result && result.status === 'FT';
+      if (!isFT) {
+        // Upcoming KO match
+        return { type: 'upcoming', match: m, opponent: isT1 ? t2 : t1,
+                 roundName: roundNames[m.round] || m.round || 'Knockout' };
+      }
+      const winner = getKOWinner(m.id);
+      if (!winner || normName(winner) !== normName(team)) {
+        return { type: 'eliminated', roundName: roundNames[m.round] || m.round || 'Knockout' };
+      }
+      // Won this round — loop continues to find the next match
+    }
+    return null;
+  }
+  const koInfo = getKOInfo();
+
+  // Upcoming GROUP matches (not yet played)
+  const upcomingGroup = SCHEDULE.filter(m =>
     (normName(m.t1) === normName(team) || normName(m.t2) === normName(team)) &&
     !STATE.results.groupMatches.some(r =>
       normName(r.team1) === normName(m.t1) && normName(r.team2) === normName(m.t2) && r.status === 'FT'
     )
   ).slice(0, 3);
+
+  // Standing badge (during group stage)
+  const ordinal = ['', '1st', '2nd', '3rd', '4th'];
+  let standingHtml = '';
+  if (groupStats && groupLetter) {
+    let qualLabel, qualCls;
+    if (groupPos <= 2) { qualLabel = 'Qualified'; qualCls = 'tp-qual-q'; }
+    else if (groupPos === 3) { qualLabel = 'In contention'; qualCls = 'tp-qual-c'; }
+    else { qualLabel = 'Eliminated'; qualCls = 'tp-qual-e'; }
+    standingHtml = `<div class="tp-label">Current Standing</div>
+    <div class="tp-card tp-standing-row">
+      <span class="tp-standing-pos">${ordinal[groupPos] || groupPos + 'th'} in Group ${groupLetter}</span>
+      <span class="tp-qual-badge ${qualCls}">${qualLabel}</span>
+    </div>`;
+  }
+
+  // Next game section — group games first, then KO
+  let nextHtml = '';
+  if (koInfo && koInfo.type === 'eliminated') {
+    nextHtml = `<div class="tp-label">Tournament Status</div>
+    <div class="tp-card tp-status-eliminated">
+      <span class="tp-elim-icon">✕</span>
+      Eliminated in ${koInfo.roundName}
+    </div>`;
+  } else if (koInfo && koInfo.type === 'upcoming') {
+    const m = koInfo.match;
+    const opp = koInfo.opponent;
+    nextHtml = `<div class="tp-label">Next · ${koInfo.roundName}</div>
+    <div class="tp-card">
+      <div class="tp-up-row">
+        <span class="tp-up-team"><span class="cflag" style="width:20px;height:20px">${getFlag(opp)}</span>${displayName(opp)}</span>
+        <span class="tp-up-time">${formatShortDate(m.date)} · ${formatGameTime(m.date, m.time)} ${getTZAbbr()}</span>
+      </div>
+    </div>`;
+  } else if (upcomingGroup.length) {
+    nextHtml = `<div class="tp-label">Upcoming</div>
+    <div class="tp-card">
+      ${upcomingGroup.map(m => {
+        const opp = normName(m.t1) === normName(team) ? m.t2 : m.t1;
+        return `<div class="tp-up-row">
+          <span class="tp-up-team"><span class="cflag" style="width:20px;height:20px">${getFlag(opp)}</span>${displayName(opp)}</span>
+          <span class="tp-up-time">${formatShortDate(m.date)} · ${formatGameTime(m.date, m.time)} ${getTZAbbr()}</span>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
 
   // Form dots
   const form = (d.recentForm || '').replace(/[^WDLP]/g, '').split('').slice(0,5);
@@ -187,7 +264,8 @@ function tpContent(team, d) {
     </div>
 
     ${statsHtml}
-    ${upcomingHtml}
+    ${standingHtml}
+    ${nextHtml}
 
     ${(d.manager || d.style) ? `<div class="tp-card tp-info">
       ${d.manager ? `<div class="tp-row"><span class="tp-row-lbl">Manager</span><span>${d.manager}</span></div>` : ''}

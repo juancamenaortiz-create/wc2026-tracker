@@ -227,11 +227,17 @@ function init() {
 
   // Re-check on tab focus — fetch if stale
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && isMatchDay()) {
-      const age = STATE.lastUpdated ? (Date.now() - STATE.lastUpdated.getTime()) : Infinity;
-      if (age > getRefreshInterval()) {
-        if (_refreshTimer) clearTimeout(_refreshTimer);
-        fetchScores();
+    if (!document.hidden) {
+      // Collapse any open AI Preview panels when returning to the app
+      Object.keys(STATE.aiPreviews).forEach(id => {
+        if (STATE.aiPreviews[id]) STATE.aiPreviews[id].open = false;
+      });
+      if (isMatchDay()) {
+        const age = STATE.lastUpdated ? (Date.now() - STATE.lastUpdated.getTime()) : Infinity;
+        if (age > getRefreshInterval()) {
+          if (_refreshTimer) clearTimeout(_refreshTimer);
+          fetchScores();
+        }
       }
     }
   });
@@ -925,9 +931,8 @@ function loadPreviewCache() {
     const fresh  = {};
     Object.entries(cached).forEach(([id, entry]) => {
       // Only keep entries with parsed p.data — discard old p.text-only entries
-      // (those were cached before the JSON extraction fix and contain raw text)
-      // Always start closed on load — user opens explicitly with the toggle
-      if (entry.matchDate >= today && entry.data) fresh[id] = Object.assign({}, entry, { open: false });
+      // open/loading are never saved to cache so they're always falsy on load
+      if (entry.matchDate >= today && entry.data) fresh[id] = entry;
     });
     STATE.aiPreviews = fresh;
     localStorage.setItem('wc2026_previews', JSON.stringify(fresh));
@@ -936,7 +941,10 @@ function loadPreviewCache() {
 function savePreviewCache(matchId, entry, matchDate) {
   try {
     const cached = JSON.parse(localStorage.getItem('wc2026_previews') || '{}');
-    cached[matchId] = { ...entry, matchDate };
+    // Never persist the open/loading state — those are ephemeral UI states
+    // that should always start fresh on next load
+    const { open: _o, loading: _l, ...toSave } = entry;
+    cached[matchId] = { ...toSave, matchDate };
     localStorage.setItem('wc2026_previews', JSON.stringify(cached));
   } catch(e) {}
 }

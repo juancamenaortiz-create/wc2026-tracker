@@ -926,7 +926,8 @@ function loadPreviewCache() {
     Object.entries(cached).forEach(([id, entry]) => {
       // Only keep entries with parsed p.data — discard old p.text-only entries
       // (those were cached before the JSON extraction fix and contain raw text)
-      if (entry.matchDate >= today && entry.data) fresh[id] = entry;
+      // Always start closed on load — user opens explicitly with the toggle
+      if (entry.matchDate >= today && entry.data) fresh[id] = Object.assign({}, entry, { open: false });
     });
     STATE.aiPreviews = fresh;
     localStorage.setItem('wc2026_previews', JSON.stringify(fresh));

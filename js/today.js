@@ -139,7 +139,13 @@ function matchesForDate(date) {
     const t2 = teams[1] || _koSlotLabel(m.slot2);
     return Object.assign({}, m, { t1: t1, t2: t2 });
   });
-  return [...group, ...ko];
+  // Sort by actual kickoff time so noon games don't appear after evening games
+  return [...group, ...ko].sort((a, b) => {
+    try {
+      const ta = getMatchTime(a), tb = getMatchTime(b);
+      return parseGameTimeCT(a.date, ta).getTime() - parseGameTimeCT(b.date, tb).getTime();
+    } catch(e) { return 0; }
+  });
 }
 
 function selectTodayDate(date) {

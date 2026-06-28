@@ -332,6 +332,7 @@ function espnToApp(n) { return ESPN_NAMES[n] || n || ''; }
 
 async function fetchFromESPN(overrideDates) {
   const found = [];
+  const koFound = []; // KO match results (R32, R16, QF, SF, Final)
   const unmatched = []; // collect any ESPN teams we can't match
   const utcStr = d => `${d.getUTCFullYear()}${String(d.getUTCMonth()+1).padStart(2,'0')}${String(d.getUTCDate()).padStart(2,'0')}`;
 
@@ -414,9 +415,58 @@ async function fetchFromESPN(overrideDates) {
           (normName(m.t1)===normName(n2) && normName(m.t2)===normName(n1))
         );
         if (!m) {
-          // Team name not in SCHEDULE — log it so it's visible
-          const label = `${n1} vs ${n2}`;
-          if (!unmatched.includes(label)) unmatched.push(label);
+          // Not in group schedule — check R32 and KO rounds
+          const allKO = [
+            ...(typeof R32_MATCHES !== 'undefined' ? R32_MATCHES : []),
+            ...(typeof KO_ROUNDS   !== 'undefined' ? KO_ROUNDS   : []),
+          ];
+          let koMatch = null;
+          for (const km of allKO) {
+            const [kt1, kt2] = getKOMatchTeams(km.id);
+            if (!kt1 || !kt2) continue;
+            if ((normName(kt1)===normName(n1) && normName(kt2)===normName(n2)) ||
+                (normName(kt1)===normName(n2) && normName(kt2)===normName(n1))) {
+              koMatch = km; break;
+            }
+          }
+          if (!koMatch) {
+            const label = `${n1} vs ${n2}`;
+            if (!unmatched.includes(label)) unmatched.push(label);
+            continue;
+          }
+          // Found a KO match — build result using same logic as group matches below
+          const [kt1, kt2] = getKOMatchTeams(koMatch.id);
+          const flipKO = normName(kt1) === normName(n2);
+          const homeId = home.team?.id || '';
+          const awayId = away.team?.id || '';
+          const eventsKO = (comp.details || [])
+            .filter(d => d.scoringPlay || d.yellowCard || d.redCard)
+            .map(d => ({
+              min: d.clock?.displayValue || '',
+              tid: d.team?.id || '',
+              p:   d.athletesInvolved?.[0]?.shortName || '',
+              g:   !!(d.scoringPlay), y: !!(d.yellowCard), r: !!(d.redCard),
+              og:  !!(d.ownGoal),
+              pk:  !!(d.penaltyKick || d.scoringType?.abbreviation === 'PK' ||
+                      d.type?.text?.toLowerCase().includes('penalty')),
+            }));
+          const dHome = eventsKO.filter(e=>e.g&&e.tid===homeId).length;
+          const dAway = eventsKO.filter(e=>e.g&&e.tid===awayId).length;
+          const ks1 = Math.max(parseInt(home.score)||0, dHome);
+          const ks2 = Math.max(parseInt(away.score)||0, dAway);
+          const homePenKO = parseInt(home.shootoutScore ?? home.penaltyAggregateScore ?? null);
+          const awayPenKO = parseInt(away.shootoutScore ?? away.penaltyAggregateScore ?? null);
+          koFound.push({
+            matchId: koMatch.id, team1: kt1, team2: kt2, espnId: ev.id,
+            score1: flipKO ? ks2 : ks1, score2: flipKO ? ks1 : ks2,
+            status, substatus, round: koMatch.round || 'R32', date: koMatch.date,
+            clock:  comp.status?.displayClock || '',
+            events: eventsKO,
+            tid1: flipKO ? awayId : homeId,
+            tid2: flipKO ? homeId : awayId,
+            penScore1: isNaN(homePenKO) ? null : (flipKO ? awayPenKO : homePenKO),
+            penScore2: isNaN(awayPenKO) ? null : (flipKO ? homePenKO : awayPenKO),
+          });
           continue;
         }
         const flip = normName(m.t1) === normName(n2);
@@ -485,7 +535,7 @@ async function fetchFromESPN(overrideDates) {
     } catch(_) { /* skip date */ }
   }
   // Return what we found — empty list is valid on non-match days
-  return { groupMatches: found, knockoutMatches: [], unmatched };
+  return { groupMatches: found, knockoutMatches: koFound, unmatched };
 }
 
 // Merge fresh results into cached ones (keeps history, updates changed scores)
@@ -524,8 +574,9 @@ async function fetchScores() {
     // Fire notifications before merging (need old state vs new state)
 
     // Merge fresh data into existing cache so history isn't lost
-    const merged = mergeResults(STATE.results.groupMatches, fresh.groupMatches);
-    STATE.results       = { groupMatches: merged, knockoutMatches: fresh.knockoutMatches || [] };
+    const merged   = mergeResults(STATE.results.groupMatches,   fresh.groupMatches);
+    const mergedKO = mergeResults(STATE.results.knockoutMatches || [], fresh.knockoutMatches || []);
+    STATE.results       = { groupMatches: merged, knockoutMatches: mergedKO };
     STATE.lastUpdated   = new Date();
     STATE.lastSource    = source;
     STATE.espnUnmatched = fresh.unmatched || [];

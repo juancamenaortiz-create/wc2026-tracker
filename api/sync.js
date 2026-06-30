@@ -150,34 +150,60 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'dates array required' });
     }
 
-    // Load current KV data
-    const stored  = await kv.get('wc2026:results') || { matches: [] };
-    let   matches = stored.matches || [];
-    const schedule = SCHEDULE;
-
-    const synced = [], unmatched = [];
-    for (const ds of dates.slice(0, 15)) { // max 15 dates per call
+    try {
+      // Load current KV data — wrapped so a KV read failure doesn't crash with a bare 500
+      let stored;
       try {
-        const r = await fetch(
-          `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=${ds}`,
-          { signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined }
-        );
-        if (!r.ok) continue;
-        const data  = await r.json();
-        const { found, unmatched: um } = parseDay(data, schedule);
-        matches = mergeResults(matches, found);
-        synced.push(...found.map(m => m.matchId));
-        unmatched.push(...um);
-      } catch(e) { /* skip date */ }
+        stored = await kv.get('wc2026:results') || { matches: [] };
+      } catch (e) {
+        return res.status(502).json({ error: 'KV read failed', detail: e.message });
+      }
+      let matches = stored.matches || [];
+      const schedule = SCHEDULE;
+
+      // Fetch all requested dates IN PARALLEL instead of sequentially — 15 dates
+      // run one-after-another (each up to 8s) can comfortably exceed Vercel's
+      // default serverless function timeout. Running them concurrently keeps
+      // total time close to the slowest single request instead of the sum of all.
+      const results = await Promise.allSettled(
+        dates.slice(0, 15).map(async (ds) => {
+          const r = await fetch(
+            `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=${ds}`,
+            { signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined }
+          );
+          if (!r.ok) return { found: [], unmatched: [] };
+          const data = await r.json();
+          return parseDay(data, schedule);
+        })
+      );
+
+      const synced = [], unmatched = [];
+      for (const r of results) {
+        if (r.status !== 'fulfilled') continue; // a single date failing shouldn't fail the whole sync
+        matches = mergeResults(matches, r.value.found);
+        synced.push(...r.value.found.map(m => m.matchId));
+        unmatched.push(...r.value.unmatched);
+      }
+
+      try {
+        await kv.set('wc2026:results', {
+          matches,
+          asOf:  new Date().toISOString(),
+          count: matches.length,
+        });
+      } catch (e) {
+        // Surface the real reason (e.g. payload too large for the KV plan's limit)
+        // instead of letting it bubble up as an opaque 500.
+        return res.status(502).json({
+          error: 'KV write failed', detail: e.message,
+          synced: synced.length, total: matches.length, unmatched,
+        });
+      }
+
+      return res.json({ synced: synced.length, total: matches.length, unmatched });
+    } catch (e) {
+      return res.status(500).json({ error: 'sync failed', detail: e.message });
     }
-
-    await kv.set('wc2026:results', {
-      matches,
-      asOf:  new Date().toISOString(),
-      count: matches.length,
-    });
-
-    return res.json({ synced: synced.length, total: matches.length, unmatched });
   }
 
   res.status(405).end();

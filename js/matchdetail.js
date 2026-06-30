@@ -295,22 +295,53 @@ function _tabFacts(result, summary) {
     var t1Kicks = psoKicks.filter(function(k){ return k.tid === result.tid1; });
     var t2Kicks = psoKicks.filter(function(k){ return k.tid === result.tid2; });
     var maxKicks = Math.max(t1Kicks.length, t2Kicks.length);
+    var t1Score  = t1Kicks.filter(function(k){ return k.scored; }).length;
+    var t2Score  = t2Kicks.filter(function(k){ return k.scored; }).length;
+
+    function kickDot(scored) {
+      return scored
+        ? '<span class="pso-dot pso-dot-scored">&#10003;</span>'
+        : '<span class="pso-dot pso-dot-missed">&#10005;</span>';
+    }
+
     var kickRows = '';
-    for (var i=0; i<maxKicks; i++) {
+    for (var i = 0; i < maxKicks; i++) {
       var k1 = t1Kicks[i], k2 = t2Kicks[i];
       kickRows += '<div class="pso-kick-row">'
-        + '<span class="pso-kick pso-left">'  + (k1 ? (k1.scored?'&#9917;':'&#10005;') + ' ' + k1.name : '') + '</span>'
-        + '<span class="pso-kick-num">' + (i+1) + '</span>'
-        + '<span class="pso-kick pso-right">' + (k2 ? (k2.scored?'&#9917;':'&#10005;') + ' ' + k2.name : '') + '</span>'
+        + '<span class="pso-kick pso-left">'
+        + (k1 ? kickDot(k1.scored) + '<span class="pso-name">' + k1.name + '</span>' : '')
+        + '</span>'
+        + '<span class="pso-kick-num">' + (i + 1) + '</span>'
+        + '<span class="pso-kick pso-right">'
+        + (k2 ? '<span class="pso-name">' + k2.name + '</span>' + kickDot(k2.scored) : '')
+        + '</span>'
         + '</div>';
     }
+
+    // Dot summary strip for each team
+    function dotStrip(kicks) {
+      return kicks.map(function(k) { return kickDot(k.scored); }).join('');
+    }
+
     psoHtml = '<div class="pso-section">'
-      + '<div class="pso-header">'
-      + '<span class="pso-team">' + getFlag(result.team1) + ' ' + displayName(result.team1) + ' <b>' + t1Kicks.filter(function(k){return k.scored;}).length + '</b></span>'
-      + '<span class="pso-label">Penalty Shootout</span>'
-      + '<span class="pso-team pso-team-r"><b>' + t2Kicks.filter(function(k){return k.scored;}).length + '</b> ' + displayName(result.team2) + ' ' + getFlag(result.team2) + '</span>'
+      + '<div class="pso-banner">'
+      + '<div class="pso-banner-team">'
+      + '<span class="pso-banner-flag">' + getFlag(result.team1) + '</span>'
+      + '<span class="pso-banner-name">' + displayName(result.team1) + '</span>'
+      + '<span class="pso-banner-score' + (t1Score > t2Score ? ' pso-winner' : '') + '">' + t1Score + '</span>'
       + '</div>'
-      + kickRows
+      + '<span class="pso-banner-label">Penalties</span>'
+      + '<div class="pso-banner-team pso-banner-team-r">'
+      + '<span class="pso-banner-score' + (t2Score > t1Score ? ' pso-winner' : '') + '">' + t2Score + '</span>'
+      + '<span class="pso-banner-name">' + displayName(result.team2) + '</span>'
+      + '<span class="pso-banner-flag">' + getFlag(result.team2) + '</span>'
+      + '</div>'
+      + '</div>'
+      + '<div class="pso-dot-strips">'
+      + '<div class="pso-dot-strip">' + dotStrip(t1Kicks) + '</div>'
+      + '<div class="pso-dot-strip pso-dot-strip-r">' + dotStrip(t2Kicks) + '</div>'
+      + '</div>'
+      + (kickRows ? '<div class="pso-kicks">' + kickRows + '</div>' : '')
       + '</div>';
   }
 

@@ -6,7 +6,8 @@ function buildPreviewSection(matchId) {
   if (!p.open) return '';
   if (p.data) {
     const m = SCHEDULE.find(x => x.id === matchId)
-           || (typeof R32_MATCHES !== 'undefined' && R32_MATCHES.find(x => x.id === matchId));
+           || (typeof R32_MATCHES !== 'undefined' && R32_MATCHES.find(x => x.id === matchId))
+           || (typeof KO_ROUNDS   !== 'undefined' && KO_ROUNDS.find(x => x.id === matchId));
     return buildDetailedPreview(p.data, m);
   }
   if (p.text) return '<div class="preview-panel"><div class="pv-hed"><span class="pv-hed-lbl">AI Preview</span></div><div class="pv-body"><p class="pv-txt">' + p.text + '</p></div></div>';
@@ -35,8 +36,14 @@ function buildPreviewToggle(matchId) {
 
 function buildDetailedPreview(d, match) {
   const h2h = d.h2h || {};
-  const t1  = match ? displayName(match.t1) : (d.team1 && d.team1.name ? d.team1.name : '');
-  const t2  = match ? displayName(match.t2) : (d.team2 && d.team2.name ? d.team2.name : '');
+  // For KO matches, match.t1/t2 are undefined — resolve from standings
+  let t1 = match ? displayName(match.t1) : (d.team1 && d.team1.name ? d.team1.name : '');
+  let t2 = match ? displayName(match.t2) : (d.team2 && d.team2.name ? d.team2.name : '');
+  if ((!t1 || !t2) && match && match.id && typeof getKOMatchTeams === 'function') {
+    const koTeams = getKOMatchTeams(match.id);
+    if (koTeams[0]) t1 = displayName(koTeams[0]);
+    if (koTeams[1]) t2 = displayName(koTeams[1]);
+  }
 
   // Wrap a labelled section block; skip entirely when inner is empty
   function blk(label, inner) {

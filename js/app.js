@@ -1138,7 +1138,8 @@ function clearCache()    { localStorage.removeItem('wc2026_results'); STATE.resu
 function isMatchDay() {
   const today = getTodayCT();
   return SCHEDULE.some(m => m.date === today) ||
-         R32_MATCHES.some(m => m.date === today);
+         R32_MATCHES.some(m => m.date === today) ||
+         (typeof KO_ROUNDS !== 'undefined' && KO_ROUNDS.some(m => m.date === today));
 }
 
 // ── Bracket resolution helpers (used by bracket.js + analyzer.js) ─────────

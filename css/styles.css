@@ -2525,21 +2525,35 @@ td.ps-name { color: var(--white); font-weight: 600; }
                    border-radius: 3px; padding: 0 4px; margin-left: 3px; }
 
 /* ── Penalty shootout section ── */
-.pso-section  { margin: 12px 0 4px; border-top: 1px solid var(--border); padding-top: 12px; }
-.pso-header   { display: flex; align-items: center; justify-content: space-between;
-                font-size: 11px; font-weight: 700; color: var(--muted);
-                margin-bottom: 10px; }
-.pso-team     { display: flex; align-items: center; gap: 5px; }
-.pso-team-r   { flex-direction: row-reverse; }
-.pso-team b   { color: var(--white); font-size: 15px; }
-.pso-label    { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
-.pso-kick-row { display: grid; grid-template-columns: 1fr 28px 1fr;
-                gap: 4px; margin-bottom: 6px; align-items: center; }
-.pso-kick     { font-size: 11px; color: var(--white); }
-.pso-left     { text-align: left; }
-.pso-right    { text-align: right; }
-.pso-kick-num { text-align: center; font-size: 10px; color: var(--dim);
-                font-weight: 700; }
+.pso-section {
+  margin: 16px 0 4px; background: #0f1217;
+  border: 1px solid rgba(255,255,255,.07); border-radius: 14px; overflow: hidden;
+}
+.pso-banner {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 14px 10px; gap: 8px;
+  border-bottom: 1px solid rgba(255,255,255,.05);
+}
+.pso-banner-team { display: flex; align-items: center; gap: 7px; flex: 1; }
+.pso-banner-team-r { flex-direction: row-reverse; }
+.pso-banner-name { font-size: 12px; font-weight: 700; color: #b0b8c4; }
+.pso-banner-score { font-size: 22px; font-weight: 900; color: var(--dim); font-variant-numeric: tabular-nums; }
+.pso-banner-score.pso-winner { color: var(--green); }
+.pso-banner-label { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); flex-shrink: 0; }
+.pso-dot-strips { display: flex; justify-content: space-between; padding: 8px 14px; gap: 8px; border-bottom: 1px solid rgba(255,255,255,.04); }
+.pso-dot-strip   { display: flex; gap: 5px; flex: 1; }
+.pso-dot-strip-r { justify-content: flex-end; }
+.pso-dot { width: 20px; height: 20px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; flex-shrink: 0; }
+.pso-dot-scored { background: rgba(32,189,118,.18); color: var(--green); border: 1.5px solid var(--green); }
+.pso-dot-missed { background: rgba(240,84,75,.12); color: var(--crimson); border: 1.5px solid rgba(240,84,75,.4); }
+.pso-kicks { padding: 4px 0 8px; }
+.pso-kick-row { display: grid; grid-template-columns: 1fr 28px 1fr; align-items: center; padding: 5px 14px; }
+.pso-kick  { display: flex; align-items: center; gap: 6px; }
+.pso-left  { text-align: left; }
+.pso-right { text-align: right; flex-direction: row-reverse; }
+.pso-name  { font-size: 11px; color: #b0b8c4; }
+.pso-kick-num { text-align: center; font-size: 10px; color: var(--dim); font-weight: 700; }
+
 
 /* ════════════════════════════════════════════════════════
    FotMob-style match card (Today tab) — vertical layout

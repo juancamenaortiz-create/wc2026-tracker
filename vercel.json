@@ -1,43 +1,34 @@
 {
   "functions": {
-    "api/preview.js": {
-      "maxDuration": 45
-    },
-    "api/team.js": {
-      "maxDuration": 25
-    },
-    "api/subscribe.js": {
-      "maxDuration": 10
-    },
-    "api/cron.js": {
-      "maxDuration": 30
-    },
-    "api/sync.js": {
-      "maxDuration": 30
-    },
-    "api/cron-sync.js": {
-      "maxDuration": 30
+    "api/scores.js": {
+      "runtime": "nodejs20.x"
     }
   },
   "headers": [
     {
       "source": "/api/(.*)",
       "headers": [
-        {
-          "key": "Access-Control-Allow-Origin",
-          "value": "*"
-        },
-        {
-          "key": "Cache-Control",
-          "value": "no-store"
-        }
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Cache-Control", "value": "no-store" }
       ]
-    }
-  ],
-  "crons": [
+    },
     {
-      "path": "/api/cron-sync",
-      "schedule": "10 0 * * *"
+      "source": "/(.*)\\.(js|css)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/index.html",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, must-revalidate" }
+      ]
     }
   ]
 }

@@ -2565,6 +2565,15 @@ td.ps-name { color: var(--white); font-weight: 600; }
 .pso-icon-cell .pso-dot { width: 11px; height: 11px; }
 .pso-kick-num { text-align: center; font-size: 10px; color: var(--dim); font-weight: 700; }
 
+/* Temporary on-screen diagnostic panel for PSO data gaps — remove once confirmed fixed */
+.pso-debug {
+  margin: 10px 14px 14px; padding: 10px;
+  background: rgba(245,158,11,.06); border: 1px dashed rgba(245,158,11,.35);
+  border-radius: 8px;
+}
+.pso-debug-title { font-size: 10px; font-weight: 800; color: var(--amber); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .03em; }
+.pso-debug-row { font-family: monospace; font-size: 10px; color: #d7dbe2; line-height: 1.6; word-break: break-word; }
+
 
 
 /* ════════════════════════════════════════════════════════

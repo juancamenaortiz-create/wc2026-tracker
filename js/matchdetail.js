@@ -350,7 +350,9 @@ function _tabFacts(result, summary) {
       + '</div>';
   }
 
-  return info + '<div class="facts-timeline">' + html + '</div>' + psoHtml
+  var psoDebugHtml = _psoDebugPanel(summary, result, psoKicks);
+
+  return info + '<div class="facts-timeline">' + html + '</div>' + psoHtml + psoDebugHtml
        + '<button class="md-fullstats-btn" onclick="setMDTab(\'stats\')">View full match stats</button>';
 }
 
@@ -416,6 +418,32 @@ function _subsFromRosters(summary, result) {
     });
   });
   return subs;
+}
+
+// On-screen diagnostic for PSO kicks that look incomplete — easier to screenshot
+// on mobile than digging through browser devtools. Shows the raw play data from
+// the summary endpoint so we can see ESPN's exact field shape and fix the matcher.
+function _psoDebugPanel(summary, result, psoKicks) {
+  var minExpected = (result.penScore1 || 0) + (result.penScore2 || 0);
+  if (psoKicks.length >= minExpected) return ''; // looks complete, no need to show this
+
+  var plays = summary && (summary.plays || (summary.boxscore && summary.boxscore.plays)) || [];
+  if (!plays.length) {
+    return '<div class="pso-debug"><div class="pso-debug-title">PSO Debug</div>'
+      + '<div class="pso-debug-row">No summary.plays data available yet (still loading or endpoint returned none).</div></div>';
+  }
+  var rows = plays.map(function(p, i) {
+    var typeText = (p.type && (p.type.text || p.type.name)) || p.text || '(no type)';
+    var period = p.period && p.period.number;
+    var athlete = (p.participants && p.participants[0] && p.participants[0].athlete &&
+                  (p.participants[0].athlete.shortName || p.participants[0].athlete.displayName)) || '';
+    return '<div class="pso-debug-row">' + i + ': "' + typeText + '" | period=' + period
+      + ' | scoringPlay=' + (!!p.scoringPlay) + ' | team=' + ((p.team && p.team.id) || '?')
+      + (athlete ? ' | ' + athlete : '') + '</div>';
+  }).join('');
+  return '<div class="pso-debug">'
+    + '<div class="pso-debug-title">PSO Debug — found ' + psoKicks.length + ', expected &ge; ' + minExpected + '. Raw plays below:</div>'
+    + rows + '</div>';
 }
 
 // Extract penalty shootout kicks from the summary endpoint

@@ -2573,6 +2573,10 @@ td.ps-name { color: var(--white); font-weight: 600; }
 }
 .pso-debug-title { font-size: 10px; font-weight: 800; color: var(--amber); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .03em; }
 .pso-debug-row { font-family: monospace; font-size: 10px; color: #d7dbe2; line-height: 1.6; word-break: break-word; }
+.pso-debug-pre {
+  font-family: monospace; font-size: 9.5px; color: #d7dbe2; line-height: 1.5;
+  white-space: pre-wrap; word-break: break-word; margin: 0; max-height: 400px; overflow-y: auto;
+}
 
 
 

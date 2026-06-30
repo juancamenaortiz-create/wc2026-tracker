@@ -210,7 +210,9 @@ function _tabFacts(result, summary) {
   }
 
   // Enrich scoreboard events (goals + cards) with substitutions, VAR decisions
-  // and shootout kicks from the summary plays array. The scoreboard API only
+  // and shootout kicks from summary.shootout (a dedicated field, separate from
+  // plays — confirmed via diagnostic that this endpoint has no top-level plays
+  // array at all for this league).
   // returns goals and cards; everything else lives in the summary endpoint.
   var events = _enrichEvents(result.events || [], summary, result);
   // PSO kicks: the lightweight scoreboard endpoint (result.pso) typically only
@@ -424,79 +426,57 @@ function _subsFromRosters(summary, result) {
 // on mobile than digging through browser devtools. Shows the raw play data from
 // the summary endpoint so we can see ESPN's exact field shape and fix the matcher.
 function _psoDebugPanel(summary, result, psoKicks) {
-  // Previously gated on "kicks.length >= penScore1+penScore2", but that's a broken
-  // heuristic: a makes-only list (no misses) will always trivially equal that sum,
-  // since penScore1+penScore2 IS the makes count. Always show this for any PSO
-  // match instead, so we get real ground truth regardless of count.
-  var plays = summary && (summary.plays || (summary.boxscore && summary.boxscore.plays)) || [];
-  if (!plays.length) {
+  // Confirmed via prior diagnostic: this endpoint has NO top-level `plays` array.
+  // The real shootout data lives under summary.shootout. Dump it raw so we get
+  // its exact inner shape regardless of whether our parse attempt got it right.
+  if (!summary || !summary.shootout) {
     var topKeys = summary ? Object.keys(summary).join(', ') : '(summary is null/undefined)';
-    var boxKeys = (summary && summary.boxscore) ? Object.keys(summary.boxscore).join(', ') : '(no boxscore key)';
-    return '<div class="pso-debug"><div class="pso-debug-title">PSO Debug — no plays found</div>'
-      + '<div class="pso-debug-row">summary.plays is empty/missing. Top-level summary keys: ' + topKeys + '</div>'
-      + '<div class="pso-debug-row">summary.boxscore keys: ' + boxKeys + '</div>'
-      + '<div class="pso-debug-row">result.pso (scoreboard fallback) has ' + ((result.pso || []).length) + ' entries (makes only).</div>'
+    return '<div class="pso-debug"><div class="pso-debug-title">PSO Debug — no summary.shootout found</div>'
+      + '<div class="pso-debug-row">Top-level summary keys: ' + topKeys + '</div>'
+      + '<div class="pso-debug-row">Matched ' + psoKicks.length + ' kicks via fallback (result.pso, makes only).</div>'
       + '</div>';
   }
-  var rows = plays.map(function(p, i) {
-    var typeText = (p.type && (p.type.text || p.type.name)) || p.text || '(no type)';
-    var period = p.period && p.period.number;
-    var athlete = (p.participants && p.participants[0] && p.participants[0].athlete &&
-                  (p.participants[0].athlete.shortName || p.participants[0].athlete.displayName)) || '';
-    return '<div class="pso-debug-row">' + i + ': "' + typeText + '" | period=' + period
-      + ' | scoringPlay=' + (!!p.scoringPlay) + ' | team=' + ((p.team && p.team.id) || '?')
-      + (athlete ? ' | ' + athlete : '') + '</div>';
-  }).join('');
+  var raw = '';
+  try { raw = JSON.stringify(summary.shootout, null, 1); } catch (e) { raw = '(could not stringify: ' + e.message + ')'; }
+  if (raw.length > 3000) raw = raw.slice(0, 3000) + '\n... (truncated, ' + raw.length + ' chars total)';
   return '<div class="pso-debug">'
-    + '<div class="pso-debug-title">PSO Debug — matched ' + psoKicks.length + ' kicks. All ' + plays.length + ' raw plays below:</div>'
-    + rows + '</div>';
+    + '<div class="pso-debug-title">PSO Debug — matched ' + psoKicks.length + ' kicks. Raw summary.shootout:</div>'
+    + '<pre class="pso-debug-pre">' + raw.replace(/</g,'&lt;') + '</pre>'
+    + '</div>';
 }
 
-// Extract penalty shootout kicks from the summary endpoint
+// Extract penalty shootout kicks from the summary endpoint's dedicated `shootout`
+// field — confirmed via diagnostic that this endpoint has no top-level `plays`
+// array at all; the real PSO data lives under summary.shootout instead.
 function _extractPSOKicks(summary, result) {
   if (!result || result.substatus !== 'PSO') return [];
-  var plays = summary && (summary.plays || (summary.boxscore && summary.boxscore.plays) || []);
-  if (!plays.length) return [];
+  if (!summary || !summary.shootout) return [];
+
+  var so = summary.shootout;
+  // Try the most likely shapes defensively: a flat array of kick objects,
+  // or an object grouping kicks by team (home/away or similar keys).
+  var list = Array.isArray(so) ? so
+           : Array.isArray(so.kicks) ? so.kicks
+           : Array.isArray(so.shots) ? so.shots
+           : [].concat(so.home || [], so.away || []);
+
+  if (!Array.isArray(list) || !list.length) return [];
+
   var kicks = [];
-  plays.forEach(function(p) {
-    var typeText = ((p.type && (p.type.text || p.type.name)) || p.text || '').toLowerCase();
-    var period = p.period && p.period.number;
-    var inShootout = typeof period === 'number' && period >= 5;
-    // ESPN's confirmed real phrasing for shootout kicks is "Penalty - Scored",
-    // "Penalty - Saved", or "Penalty - Missed" (hyphenated triplet, distinct from
-    // a regular in-play "Penalty Kick" goal). Match these directly — far more
-    // reliable than period numbers, which aren't consistently present.
-    var isPSOkick = typeText.includes('penalty - scored') || typeText.includes('penalty - saved')
-                 || typeText.includes('penalty - missed') || typeText.includes('shootout')
-                 || (inShootout && typeText.includes('penalty'));
-    if (isPSOkick) {
-      var ath = p.participants || p.athletes || [];
-      var name = (ath[0] && (ath[0].athlete && (ath[0].athlete.shortName || ath[0].athlete.displayName) || ath[0].shortName || ath[0].displayName)) || '';
-      var tid  = (p.team && p.team.id) || '';
-      // "Saved" (keeper stopped it) and "Missed" (off target) both count as a miss.
-      var scored = typeText.includes('scored') || (!typeText.includes('saved') && !typeText.includes('missed') && !!p.scoringPlay);
-      if (name || tid) kicks.push({ name:name, tid:tid, scored:scored });
-    }
+  list.forEach(function(k) {
+    var name = (k.athlete && (k.athlete.shortName || k.athlete.displayName))
+             || k.shortName || k.displayName || k.name
+             || (k.participants && k.participants[0] && k.participants[0].athlete &&
+                (k.participants[0].athlete.shortName || k.participants[0].athlete.displayName))
+             || '';
+    var tid = (k.team && k.team.id) || k.teamId || (k.team && k.team) || '';
+    var scored = (typeof k.scored === 'boolean')     ? k.scored
+               : (typeof k.made === 'boolean')        ? k.made
+               : (typeof k.successful === 'boolean')  ? k.successful
+               : (typeof k.result === 'string')       ? /score|goal|made/i.test(k.result)
+               : !!k.goal || !!k.scoringPlay;
+    if (name || tid) kicks.push({ name: String(name), tid: String(tid), scored: !!scored });
   });
-  // DIAGNOSTIC: if the kicks list looks incomplete (fewer entries than the known
-  // minimum of made penalties), dump the raw play data so we can see ESPN's exact
-  // field shape and fix the matcher precisely instead of guessing again.
-  var minExpected = (result.penScore1 || 0) + (result.penScore2 || 0);
-  if (kicks.length < minExpected) {
-    try {
-      console.warn('[PSO DEBUG] kicks found=' + kicks.length + ' but expected >= ' + minExpected +
-        ' makes. Copy this array and send it back:', plays.map(function(p) {
-          return {
-            typeText: (p.type && (p.type.text || p.type.name)) || p.text || '',
-            period: p.period && p.period.number,
-            scoringPlay: p.scoringPlay,
-            teamId: p.team && p.team.id,
-            athlete: (p.participants && p.participants[0] && p.participants[0].athlete &&
-                     (p.participants[0].athlete.shortName || p.participants[0].athlete.displayName)) || '',
-          };
-        }));
-    } catch (e) {}
-  }
   return kicks;
 }
 

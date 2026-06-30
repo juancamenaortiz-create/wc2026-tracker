@@ -352,9 +352,7 @@ function _tabFacts(result, summary) {
       + '</div>';
   }
 
-  var psoDebugHtml = _psoDebugPanel(summary, result, psoKicks);
-
-  return info + '<div class="facts-timeline">' + html + '</div>' + psoHtml + psoDebugHtml
+  return info + '<div class="facts-timeline">' + html + '</div>' + psoHtml
        + '<button class="md-fullstats-btn" onclick="setMDTab(\'stats\')">View full match stats</button>';
 }
 
@@ -422,62 +420,39 @@ function _subsFromRosters(summary, result) {
   return subs;
 }
 
-// On-screen diagnostic for PSO kicks that look incomplete — easier to screenshot
-// on mobile than digging through browser devtools. Shows the raw play data from
-// the summary endpoint so we can see ESPN's exact field shape and fix the matcher.
-function _psoDebugPanel(summary, result, psoKicks) {
-  // Confirmed via prior diagnostic: this endpoint has NO top-level `plays` array.
-  // The real shootout data lives under summary.shootout. Dump it raw so we get
-  // its exact inner shape regardless of whether our parse attempt got it right.
-  if (!summary || !summary.shootout) {
-    var topKeys = summary ? Object.keys(summary).join(', ') : '(summary is null/undefined)';
-    return '<div class="pso-debug"><div class="pso-debug-title">PSO Debug — no summary.shootout found</div>'
-      + '<div class="pso-debug-row">Top-level summary keys: ' + topKeys + '</div>'
-      + '<div class="pso-debug-row">Matched ' + psoKicks.length + ' kicks via fallback (result.pso, makes only).</div>'
-      + '</div>';
-  }
-  var raw = '';
-  try { raw = JSON.stringify(summary.shootout, null, 1); } catch (e) { raw = '(could not stringify: ' + e.message + ')'; }
-  if (raw.length > 3000) raw = raw.slice(0, 3000) + '\n... (truncated, ' + raw.length + ' chars total)';
-  return '<div class="pso-debug">'
-    + '<div class="pso-debug-title">PSO Debug — matched ' + psoKicks.length + ' kicks. Raw summary.shootout:</div>'
-    + '<pre class="pso-debug-pre">' + raw.replace(/</g,'&lt;') + '</pre>'
-    + '</div>';
-}
-
 // Extract penalty shootout kicks from the summary endpoint's dedicated `shootout`
-// field — confirmed via diagnostic that this endpoint has no top-level `plays`
-// array at all; the real PSO data lives under summary.shootout instead.
+// field. Confirmed exact shape via diagnostic: an array of two team objects,
+// each with { id, team, shots: [{ playerId, player, shotNumber, didScore }] }.
 function _extractPSOKicks(summary, result) {
   if (!result || result.substatus !== 'PSO') return [];
-  if (!summary || !summary.shootout) return [];
-
-  var so = summary.shootout;
-  // Try the most likely shapes defensively: a flat array of kick objects,
-  // or an object grouping kicks by team (home/away or similar keys).
-  var list = Array.isArray(so) ? so
-           : Array.isArray(so.kicks) ? so.kicks
-           : Array.isArray(so.shots) ? so.shots
-           : [].concat(so.home || [], so.away || []);
-
-  if (!Array.isArray(list) || !list.length) return [];
+  var so = summary && summary.shootout;
+  if (!Array.isArray(so) || !so.length) return [];
 
   var kicks = [];
-  list.forEach(function(k) {
-    var name = (k.athlete && (k.athlete.shortName || k.athlete.displayName))
-             || k.shortName || k.displayName || k.name
-             || (k.participants && k.participants[0] && k.participants[0].athlete &&
-                (k.participants[0].athlete.shortName || k.participants[0].athlete.displayName))
-             || '';
-    var tid = (k.team && k.team.id) || k.teamId || (k.team && k.team) || '';
-    var scored = (typeof k.scored === 'boolean')     ? k.scored
-               : (typeof k.made === 'boolean')        ? k.made
-               : (typeof k.successful === 'boolean')  ? k.successful
-               : (typeof k.result === 'string')       ? /score|goal|made/i.test(k.result)
-               : !!k.goal || !!k.scoringPlay;
-    if (name || tid) kicks.push({ name: String(name), tid: String(tid), scored: !!scored });
+  so.forEach(function(teamEntry) {
+    var tid = String(teamEntry.id || '');
+    var shots = teamEntry.shots || [];
+    shots.forEach(function(s) {
+      kicks.push({
+        name: _shortKickerName(s.player || ''),
+        tid: tid,
+        scored: !!s.didScore,
+        order: s.shotNumber || 0,
+      });
+    });
   });
+  // Interleave by shot order (1st kick each side, 2nd kick each side, ...) so the
+  // kicker rows display in the actual sequence the shootout was taken in.
+  kicks.sort(function(a, b) { return a.order - b.order; });
   return kicks;
+}
+
+// "Joshua Kimmich" → "J. Kimmich" — matches the abbreviated style used
+// everywhere else in the timeline (which gets shortName directly from ESPN).
+function _shortKickerName(full) {
+  var parts = (full || '').trim().split(/\s+/);
+  if (parts.length < 2) return full;
+  return parts[0].charAt(0) + '. ' + parts.slice(1).join(' ');
 }
 
 // ── LINEUP TAB ────────────────────────────────────────────────────────────────

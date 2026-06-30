@@ -424,13 +424,19 @@ function _subsFromRosters(summary, result) {
 // on mobile than digging through browser devtools. Shows the raw play data from
 // the summary endpoint so we can see ESPN's exact field shape and fix the matcher.
 function _psoDebugPanel(summary, result, psoKicks) {
-  var minExpected = (result.penScore1 || 0) + (result.penScore2 || 0);
-  if (psoKicks.length >= minExpected) return ''; // looks complete, no need to show this
-
+  // Previously gated on "kicks.length >= penScore1+penScore2", but that's a broken
+  // heuristic: a makes-only list (no misses) will always trivially equal that sum,
+  // since penScore1+penScore2 IS the makes count. Always show this for any PSO
+  // match instead, so we get real ground truth regardless of count.
   var plays = summary && (summary.plays || (summary.boxscore && summary.boxscore.plays)) || [];
   if (!plays.length) {
-    return '<div class="pso-debug"><div class="pso-debug-title">PSO Debug</div>'
-      + '<div class="pso-debug-row">No summary.plays data available yet (still loading or endpoint returned none).</div></div>';
+    var topKeys = summary ? Object.keys(summary).join(', ') : '(summary is null/undefined)';
+    var boxKeys = (summary && summary.boxscore) ? Object.keys(summary.boxscore).join(', ') : '(no boxscore key)';
+    return '<div class="pso-debug"><div class="pso-debug-title">PSO Debug — no plays found</div>'
+      + '<div class="pso-debug-row">summary.plays is empty/missing. Top-level summary keys: ' + topKeys + '</div>'
+      + '<div class="pso-debug-row">summary.boxscore keys: ' + boxKeys + '</div>'
+      + '<div class="pso-debug-row">result.pso (scoreboard fallback) has ' + ((result.pso || []).length) + ' entries (makes only).</div>'
+      + '</div>';
   }
   var rows = plays.map(function(p, i) {
     var typeText = (p.type && (p.type.text || p.type.name)) || p.text || '(no type)';
@@ -442,7 +448,7 @@ function _psoDebugPanel(summary, result, psoKicks) {
       + (athlete ? ' | ' + athlete : '') + '</div>';
   }).join('');
   return '<div class="pso-debug">'
-    + '<div class="pso-debug-title">PSO Debug — found ' + psoKicks.length + ', expected &ge; ' + minExpected + '. Raw plays below:</div>'
+    + '<div class="pso-debug-title">PSO Debug — matched ' + psoKicks.length + ' kicks. All ' + plays.length + ' raw plays below:</div>'
     + rows + '</div>';
 }
 

@@ -308,9 +308,7 @@ function _tabFacts(result, summary) {
     var t2Score  = t2Kicks.filter(function(k){ return k.scored; }).length;
 
     function kickDot(scored) {
-      return scored
-        ? '<span class="pso-dot pso-dot-scored">&#10003;</span>'
-        : '<span class="pso-dot pso-dot-missed">&#10005;</span>';
+      return '<span class="pso-dot ' + (scored ? 'pso-dot-scored' : 'pso-dot-missed') + '"></span>';
     }
 
     var kickRows = '';
@@ -446,6 +444,25 @@ function _extractPSOKicks(summary, result) {
       if (name || tid) kicks.push({ name:name, tid:tid, scored:scored });
     }
   });
+  // DIAGNOSTIC: if the kicks list looks incomplete (fewer entries than the known
+  // minimum of made penalties), dump the raw play data so we can see ESPN's exact
+  // field shape and fix the matcher precisely instead of guessing again.
+  var minExpected = (result.penScore1 || 0) + (result.penScore2 || 0);
+  if (kicks.length < minExpected) {
+    try {
+      console.warn('[PSO DEBUG] kicks found=' + kicks.length + ' but expected >= ' + minExpected +
+        ' makes. Copy this array and send it back:', plays.map(function(p) {
+          return {
+            typeText: (p.type && (p.type.text || p.type.name)) || p.text || '',
+            period: p.period && p.period.number,
+            scoringPlay: p.scoringPlay,
+            teamId: p.team && p.team.id,
+            athlete: (p.participants && p.participants[0] && p.participants[0].athlete &&
+                     (p.participants[0].athlete.shortName || p.participants[0].athlete.displayName)) || '',
+          };
+        }));
+    } catch (e) {}
+  }
   return kicks;
 }
 

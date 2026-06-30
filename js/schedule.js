@@ -122,12 +122,20 @@ function buildScheduleRow(match) {
     else                                            { w1 = 'draw';   w2 = 'draw'; }
   }
 
-  // For KO matches, resolve slot labels ("2nd-A") to actual team names via standings
+  // For KO matches, resolve slot labels ("2nd-A") to actual team names.
+  // Prefer the CONFIRMED result team names (ground truth from ESPN) whenever
+  // the match has already been played/is live — only fall back to the
+  // standings-based slot projection for matches that haven't happened yet.
   let t1Name, t2Name;
   if (match.isKnockout) {
-    const resolved = getKOMatchTeams(match.id);
-    t1Name = resolved[0] || _koSlotLabel(match.slot1) || 'TBD';
-    t2Name = resolved[1] || _koSlotLabel(match.slot2) || 'TBD';
+    if (result && result.team1 && result.team2) {
+      t1Name = result.team1;
+      t2Name = result.team2;
+    } else {
+      const resolved = getKOMatchTeams(match.id);
+      t1Name = resolved[0] || _koSlotLabel(match.slot1) || 'TBD';
+      t2Name = resolved[1] || _koSlotLabel(match.slot2) || 'TBD';
+    }
   } else {
     t1Name = match.t1 || 'TBD';
     t2Name = match.t2 || 'TBD';
@@ -167,9 +175,10 @@ function buildScheduleRow(match) {
   // ── Score cell (right column) ──
   let scoreCell;
   if ((isLive || isFT) && score1 !== null) {
-    const pen = (isFT && isPSO && result?.penScore1 != null)
-      ? `<span class="srow-pen">${result.penScore1}–${result.penScore2}p</span>` : '';
-    scoreCell = `<div class="srow-scores"><span class="${w1}">${score1}</span><span class="${w2}">${score2}</span>${pen}</div>`;
+    const hasPen = isFT && isPSO && result?.penScore1 != null && result?.penScore2 != null;
+    const pen1 = hasPen ? `<span class="srow-pen-paren">(${result.penScore1})</span>` : '';
+    const pen2 = hasPen ? `<span class="srow-pen-paren">(${result.penScore2})</span>` : '';
+    scoreCell = `<div class="srow-scores"><span class="${w1}">${score1}${pen1}</span><span class="${w2}">${score2}${pen2}</span></div>`;
   } else {
     scoreCell = '<div class="srow-dash">–</div>';
   }
@@ -179,8 +188,8 @@ function buildScheduleRow(match) {
   return `<div class="srow${isMy1 || isMy2 ? ' my-t' : ''}${clickable ? ' srow-click' : ''}"${clickable ? ` onclick="openMatchDetail(${match.id})"` : ''}>
     <div class="srow-status">${statusCell}</div>
     <div class="srow-teams">
-      <div class="srow-team ${w1}">${badge(match.t1)}<span class="srow-name">${displayName(t1Name)}</span>${isMy1 ? '<span class="srow-star">★</span>' : '<span data-star-team="' + (match.t1 || '') + '"></span>'}</div>
-      <div class="srow-team ${w2}">${badge(match.t2)}<span class="srow-name">${displayName(t2Name)}</span>${isMy2 ? '<span class="srow-star">★</span>' : '<span data-star-team="' + (match.t2 || '') + '"></span>'}</div>
+      <div class="srow-team ${w1}">${badge(t1Name)}<span class="srow-name">${displayName(t1Name)}</span>${isMy1 ? '<span class="srow-star">★</span>' : '<span data-star-team="' + t1Name + '"></span>'}</div>
+      <div class="srow-team ${w2}">${badge(t2Name)}<span class="srow-name">${displayName(t2Name)}</span>${isMy2 ? '<span class="srow-star">★</span>' : '<span data-star-team="' + t2Name + '"></span>'}</div>
     </div>
     ${scoreCell}
     ${delayBar}

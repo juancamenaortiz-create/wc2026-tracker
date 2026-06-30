@@ -599,13 +599,13 @@ img.emoji {
 .srow-team.winner .srow-name { font-weight: 700; color: var(--white); }
 .srow-team.loser  .srow-name { color: #aeb6c2; }
 
-.srow-scores { display: flex; flex-direction: column; gap: 7px; align-items: center; min-width: 22px; }
-.srow-scores > span:not(.srow-pen) {
-  height: 21px; display: flex; align-items: center; justify-content: center;
+.srow-scores { display: flex; flex-direction: column; gap: 7px; align-items: center; min-width: 46px; }
+.srow-scores > span {
+  height: 21px; display: flex; align-items: center; justify-content: center; gap: 3px;
   font-size: 14px; font-weight: 800; color: #e7eaf0; font-variant-numeric: tabular-nums;
 }
 .srow-scores .loser { color: #aeb6c2; }
-.srow-scores .srow-pen { font-size: 9px; font-weight: 700; color: var(--amber); margin-top: -2px; }
+.srow-pen-paren { font-size: 11px; font-weight: 700; color: var(--gold); }
 .srow-dash { text-align: center; color: #3a414c; font-size: 14px; font-weight: 700; min-width: 22px; }
 
 /* Group-view schedule: stacked date + time/status in left cell */
@@ -2547,11 +2547,11 @@ td.ps-name { color: var(--white); font-weight: 600; }
 .pso-dot-strips { display: flex; justify-content: space-between; padding: 8px 14px; gap: 8px; border-bottom: 1px solid rgba(255,255,255,.04); }
 .pso-dot-strip   { display: flex; gap: 7px; flex: 1; }
 .pso-dot-strip-r { justify-content: flex-end; }
-/* Plain colored glyphs — no circle background or border */
-.pso-dot { display: inline-flex; align-items: center; justify-content: center; font-weight: 800; line-height: 1; flex-shrink: 0; }
-.pso-dot-strip .pso-dot { font-size: 16px; }
-.pso-dot-scored { color: var(--green); }
-.pso-dot-missed { color: var(--crimson); }
+/* Solid colored circles — green = scored, gray = missed. No glyph inside. */
+.pso-dot { display: inline-block; border-radius: 50%; flex-shrink: 0; }
+.pso-dot-strip .pso-dot { width: 13px; height: 13px; }
+.pso-dot-scored { background: var(--green); }
+.pso-dot-missed { background: #4a505c; }
 .pso-kicks { padding: 4px 0 8px; }
 /* name(left) — icon — number — icon — name(right): icons cluster at center, names sit at the outer edges */
 .pso-kick-row {
@@ -2562,7 +2562,7 @@ td.ps-name { color: var(--white); font-weight: 600; }
 .pso-kname-left  { text-align: left; }
 .pso-kname-right { text-align: right; }
 .pso-icon-cell { display: flex; align-items: center; justify-content: center; }
-.pso-icon-cell .pso-dot { font-size: 14px; }
+.pso-icon-cell .pso-dot { width: 11px; height: 11px; }
 .pso-kick-num { text-align: center; font-size: 10px; color: var(--dim); font-weight: 700; }
 
 

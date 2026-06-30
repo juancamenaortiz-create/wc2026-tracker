@@ -141,9 +141,17 @@ function matchesForDate(date) {
     ...(typeof R32_MATCHES !== 'undefined' ? R32_MATCHES : []),
     ...(typeof KO_ROUNDS   !== 'undefined' ? KO_ROUNDS   : []),
   ].filter(m => m.date === date).map(m => {
-    const teams = getKOMatchTeams(m.id);
-    const t1 = teams[0] || _koSlotLabel(m.slot1);
-    const t2 = teams[1] || _koSlotLabel(m.slot2);
+    // Prefer the CONFIRMED result team names (ground truth from ESPN) once the
+    // match has been played/is live — only use the standings projection before that.
+    const res = getKnockoutResult(m.id);
+    let t1, t2;
+    if (res && res.team1 && res.team2) {
+      t1 = res.team1; t2 = res.team2;
+    } else {
+      const teams = getKOMatchTeams(m.id);
+      t1 = teams[0] || _koSlotLabel(m.slot1);
+      t2 = teams[1] || _koSlotLabel(m.slot2);
+    }
     return Object.assign({}, m, { t1: t1, t2: t2 });
   });
   // Sort by actual kickoff time so noon games don't appear after evening games

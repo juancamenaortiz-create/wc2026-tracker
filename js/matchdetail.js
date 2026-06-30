@@ -213,10 +213,13 @@ function _tabFacts(result, summary) {
   // and shootout kicks from the summary plays array. The scoreboard API only
   // returns goals and cards; everything else lives in the summary endpoint.
   var events = _enrichEvents(result.events || [], summary, result);
-  // PSO kicks: prefer result.pso (captured directly from the scoreboard refresh,
-  // always available even before the slower summary endpoint loads). Fall back
-  // to extracting from the summary endpoint's play-by-play if result.pso is empty.
-  var psoKicks = (result.pso && result.pso.length) ? result.pso : _extractPSOKicks(summary, result);
+  // PSO kicks: the lightweight scoreboard endpoint (result.pso) typically only
+  // records SUCCESSFUL shootout kicks — ESPN's "scoring plays" list omits misses.
+  // The summary endpoint's full play-by-play has the complete sequence including
+  // misses, so prefer it whenever it returns anything; fall back to result.pso
+  // (available immediately on every refresh) only if the summary hasn't loaded yet.
+  var summaryPsoKicks = _extractPSOKicks(summary, result);
+  var psoKicks = summaryPsoKicks.length ? summaryPsoKicks : (result.pso || []);
 
   if (!events.length && !psoKicks.length)
     return info + '<div class="md-empty">No events yet.</div>';
@@ -426,10 +429,14 @@ function _extractPSOKicks(summary, result) {
   if (!plays.length) return [];
   var kicks = [];
   plays.forEach(function(p) {
-    var typeText = ((p.type && (p.type.text || p.type.name)) || '').toLowerCase();
-    var isPSOkick = typeText.includes('shootout') || typeText.includes('penalty kick');
-    // PSO kicks usually happen in period 5 (after 90+30 AET)
-    var inShootout = p.period && p.period.number >= 5;
+    var typeText = ((p.type && (p.type.text || p.type.name)) || p.text || '').toLowerCase();
+    var period = p.period && p.period.number;
+    var inShootout = typeof period === 'number' && period >= 5;
+    // "shootout" / "penalty kick" wording is unambiguous on its own. A bare
+    // "penalty" + miss/score/save wording is only trusted when we can confirm
+    // it's period 5+ — otherwise it could be a regular-time penalty, not a shootout kick.
+    var isPSOkick = typeText.includes('shootout') || typeText.includes('penalty kick')
+                 || (inShootout && typeText.includes('penalty'));
     if (isPSOkick || inShootout) {
       var ath = p.participants || p.athletes || [];
       var name = (ath[0] && (ath[0].athlete && (ath[0].athlete.shortName || ath[0].athlete.displayName) || ath[0].shortName || ath[0].displayName)) || '';

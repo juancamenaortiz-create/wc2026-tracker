@@ -484,6 +484,10 @@ async function fetchFromESPN(overrideDates) {
           const ks2 = Math.max(parseInt(away.score)||0, dAway);
           const homePenKO = parseInt(home.shootoutScore ?? home.penaltyAggregateScore ?? null);
           const awayPenKO = parseInt(away.shootoutScore ?? away.penaltyAggregateScore ?? null);
+          // ESPN often drops the "Penalties" wording from the status text once a match
+          // is fully complete (just reports "Full Time"). If shootout scores exist,
+          // the match was decided on penalties regardless of what the status text says.
+          if (!substatus && !isNaN(homePenKO) && !isNaN(awayPenKO)) substatus = 'PSO';
           koFound.push({
             matchId: koMatch.id, team1: kt1, team2: kt2, espnId: ev.id,
             score1: flipKO ? ks2 : ks1, score2: flipKO ? ks1 : ks2,
@@ -545,6 +549,8 @@ async function fetchFromESPN(overrideDates) {
         // Penalty shootout scores (ESPN uses shootoutScore on the competitor)
         const homePen = parseInt(home.shootoutScore ?? home.penaltyAggregateScore ?? null);
         const awayPen = parseInt(away.shootoutScore ?? away.penaltyAggregateScore ?? null);
+        // Same fallback as the KO branch — ESPN drops "Penalties" wording once final.
+        if (!substatus && !isNaN(homePen) && !isNaN(awayPen)) substatus = 'PSO';
         // Score lag fix: derive score from events in case ESPN's counter lags behind.
         // NOTE: ESPN's event "team" field is already the BENEFITING team for own goals
         // (i.e. tid already points to whoever's score the OG counts toward) — no extra flip needed.

@@ -1,7 +1,1951 @@
 {
-  "asOf": "2026-06-23",
+  "asOf": "2026-06-30",
   "_note": "Static cache of completed WC2026 group-stage matches. Commit to /data/results.json.",
   "matches": [
+    {
+      "matchId": 61,
+      "team1": "Norway",
+      "team2": "France",
+      "espnId": "760475",
+      "score1": 1,
+      "score2": 4,
+      "status": "FT",
+      "substatus": "",
+      "group": "I",
+      "date": "2026-06-26",
+      "clock": "90'+5'",
+      "events": [
+        {
+          "min": "7'",
+          "tid": "478",
+          "p": "O. Dembélé",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "10'",
+          "tid": "464",
+          "p": "P. Berg",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "20'",
+          "tid": "478",
+          "p": "O. Dembélé",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "21'",
+          "tid": "464",
+          "p": "T. Aasgaard",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "32'",
+          "tid": "478",
+          "p": "O. Dembélé",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "74'",
+          "tid": "478",
+          "p": "A. Tchouaméni",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "90'+4'",
+          "tid": "478",
+          "p": "D. Doué",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        }
+      ],
+      "pso": [],
+      "tid1": "464",
+      "tid2": "478",
+      "penScore1": null,
+      "penScore2": null,
+      "stats": {
+        "t1": {
+          "appearances": 0,
+          "foulsCommitted": 9,
+          "wonCorners": 4,
+          "goalAssists": 1,
+          "possessionPct": 43.3,
+          "shotAssists": 7,
+          "shotsOnTarget": 4,
+          "totalGoals": 1,
+          "totalShots": 10
+        },
+        "t2": {
+          "appearances": 0,
+          "foulsCommitted": 11,
+          "wonCorners": 5,
+          "goalAssists": 4,
+          "possessionPct": 56.7,
+          "shotAssists": 16,
+          "shotsOnTarget": 9,
+          "totalGoals": 4,
+          "totalShots": 18
+        }
+      }
+    },
+    {
+      "matchId": 62,
+      "team1": "Senegal",
+      "team2": "Iraq",
+      "espnId": "760474",
+      "score1": 5,
+      "score2": 0,
+      "status": "FT",
+      "substatus": "",
+      "group": "I",
+      "date": "2026-06-26",
+      "clock": "90'+6'",
+      "events": [
+        {
+          "min": "4'",
+          "tid": "654",
+          "p": "H. Diarra",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "13'",
+          "tid": "4375",
+          "p": "R. Sulaka",
+          "pIn": "",
+          "g": false,
+          "y": false,
+          "r": true,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "18'",
+          "tid": "654",
+          "p": "A. Seck",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "56'",
+          "tid": "654",
+          "p": "I. Sarr",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "59'",
+          "tid": "654",
+          "p": "P. Gueye",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "71'",
+          "tid": "654",
+          "p": "P. Gueye",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "75'",
+          "tid": "4375",
+          "p": "A. Al-Ammari",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "81'",
+          "tid": "654",
+          "p": "P. Gueye",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "82'",
+          "tid": "654",
+          "p": "I. Ndiaye",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "90'",
+          "tid": "4375",
+          "p": "M. Doski",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        }
+      ],
+      "pso": [],
+      "tid1": "654",
+      "tid2": "4375",
+      "penScore1": null,
+      "penScore2": null,
+      "stats": {
+        "t1": {
+          "appearances": 0,
+          "foulsCommitted": 10,
+          "wonCorners": 12,
+          "goalAssists": 5,
+          "possessionPct": 69.2,
+          "shotAssists": 24,
+          "shotsOnTarget": 12,
+          "totalGoals": 5,
+          "totalShots": 28
+        },
+        "t2": {
+          "appearances": 0,
+          "foulsCommitted": 11,
+          "wonCorners": 3,
+          "goalAssists": 0,
+          "possessionPct": 30.8,
+          "shotAssists": 3,
+          "shotsOnTarget": 1,
+          "totalGoals": 0,
+          "totalShots": 6
+        }
+      }
+    },
+    {
+      "matchId": 56,
+      "team1": "Curaçao",
+      "team2": "Ivory Coast",
+      "espnId": "760473",
+      "score1": 0,
+      "score2": 2,
+      "status": "FT",
+      "substatus": "",
+      "group": "E",
+      "date": "2026-06-25",
+      "clock": "90'+6'",
+      "events": [
+        {
+          "min": "7'",
+          "tid": "4789",
+          "p": "N. Pépé",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "35'",
+          "tid": "4789",
+          "p": "N. Pépé",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "64'",
+          "tid": "4789",
+          "p": "N. Pépé",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "75'",
+          "tid": "11678",
+          "p": "J. Bacuna",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "83'",
+          "tid": "11678",
+          "p": "G. Kastaneer",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        }
+      ],
+      "pso": [],
+      "tid1": "11678",
+      "tid2": "4789",
+      "penScore1": null,
+      "penScore2": null,
+      "stats": {
+        "t1": {
+          "appearances": 0,
+          "foulsCommitted": 11,
+          "wonCorners": 4,
+          "goalAssists": 0,
+          "possessionPct": 36.7,
+          "shotAssists": 9,
+          "shotsOnTarget": 2,
+          "totalGoals": 0,
+          "totalShots": 11
+        },
+        "t2": {
+          "appearances": 0,
+          "foulsCommitted": 6,
+          "wonCorners": 6,
+          "goalAssists": 2,
+          "possessionPct": 63.3,
+          "shotAssists": 6,
+          "shotsOnTarget": 3,
+          "totalGoals": 2,
+          "totalShots": 7
+        }
+      }
+    },
+    {
+      "matchId": 55,
+      "team1": "Ecuador",
+      "team2": "Germany",
+      "espnId": "760468",
+      "score1": 2,
+      "score2": 1,
+      "status": "FT",
+      "substatus": "",
+      "group": "E",
+      "date": "2026-06-25",
+      "clock": "90'+7'",
+      "events": [
+        {
+          "min": "2'",
+          "tid": "481",
+          "p": "L. Sané",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "9'",
+          "tid": "209",
+          "p": "N. Angulo",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "43'",
+          "tid": "209",
+          "p": "P. Hincapié",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "44'",
+          "tid": "481",
+          "p": "A. Pavlovic",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "50'",
+          "tid": "209",
+          "p": "A. Franco",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "77'",
+          "tid": "209",
+          "p": "G. Plata",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "89'",
+          "tid": "209",
+          "p": "G. Plata",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        }
+      ],
+      "pso": [],
+      "tid1": "209",
+      "tid2": "481",
+      "penScore1": null,
+      "penScore2": null,
+      "stats": {
+        "t1": {
+          "appearances": 0,
+          "foulsCommitted": 15,
+          "wonCorners": 3,
+          "goalAssists": 2,
+          "possessionPct": 38.9,
+          "shotAssists": 7,
+          "shotsOnTarget": 3,
+          "totalGoals": 2,
+          "totalShots": 7
+        },
+        "t2": {
+          "appearances": 0,
+          "foulsCommitted": 10,
+          "wonCorners": 2,
+          "goalAssists": 1,
+          "possessionPct": 61.1,
+          "shotAssists": 9,
+          "shotsOnTarget": 3,
+          "totalGoals": 1,
+          "totalShots": 11
+        }
+      }
+    },
+    {
+      "matchId": 58,
+      "team1": "Japan",
+      "team2": "Sweden",
+      "espnId": "760471",
+      "score1": 1,
+      "score2": 1,
+      "status": "FT",
+      "substatus": "",
+      "group": "F",
+      "date": "2026-06-25",
+      "clock": "90'+7'",
+      "events": [
+        {
+          "min": "32'",
+          "tid": "466",
+          "p": "I. Hien",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "56'",
+          "tid": "627",
+          "p": "D. Maeda",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "62'",
+          "tid": "466",
+          "p": "A. Elanga",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "77'",
+          "tid": "627",
+          "p": "S. Taniguchi",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "85'",
+          "tid": "466",
+          "p": "V. Gyökeres",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        }
+      ],
+      "pso": [],
+      "tid1": "627",
+      "tid2": "466",
+      "penScore1": null,
+      "penScore2": null,
+      "stats": {
+        "t1": {
+          "appearances": 0,
+          "foulsCommitted": 20,
+          "wonCorners": 2,
+          "goalAssists": 1,
+          "possessionPct": 52.3,
+          "shotAssists": 8,
+          "shotsOnTarget": 3,
+          "totalGoals": 1,
+          "totalShots": 8
+        },
+        "t2": {
+          "appearances": 0,
+          "foulsCommitted": 11,
+          "wonCorners": 8,
+          "goalAssists": 1,
+          "possessionPct": 47.7,
+          "shotAssists": 8,
+          "shotsOnTarget": 5,
+          "totalGoals": 1,
+          "totalShots": 11
+        }
+      }
+    },
+    {
+      "matchId": 57,
+      "team1": "Tunisia",
+      "team2": "Netherlands",
+      "espnId": "760472",
+      "score1": 1,
+      "score2": 3,
+      "status": "FT",
+      "substatus": "",
+      "group": "F",
+      "date": "2026-06-25",
+      "clock": "90'+5'",
+      "events": [
+        {
+          "min": "3'",
+          "tid": "449",
+          "p": "E. Skhiri",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": true,
+          "pk": false
+        },
+        {
+          "min": "7'",
+          "tid": "449",
+          "p": "B. Brobbey",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "54'",
+          "tid": "659",
+          "p": "H. Mastouri",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "62'",
+          "tid": "449",
+          "p": "J. van Hecke",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        }
+      ],
+      "pso": [],
+      "tid1": "659",
+      "tid2": "449",
+      "penScore1": null,
+      "penScore2": null,
+      "stats": {
+        "t1": {
+          "appearances": 0,
+          "foulsCommitted": 11,
+          "wonCorners": 4,
+          "goalAssists": 1,
+          "possessionPct": 28.6,
+          "shotAssists": 7,
+          "shotsOnTarget": 4,
+          "totalGoals": 1,
+          "totalShots": 10
+        },
+        "t2": {
+          "appearances": 0,
+          "foulsCommitted": 10,
+          "wonCorners": 6,
+          "goalAssists": 2,
+          "possessionPct": 71.4,
+          "shotAssists": 15,
+          "shotsOnTarget": 7,
+          "totalGoals": 3,
+          "totalShots": 20
+        }
+      }
+    },
+    {
+      "matchId": 60,
+      "team1": "Paraguay",
+      "team2": "Australia",
+      "espnId": "760469",
+      "score1": 0,
+      "score2": 0,
+      "status": "FT",
+      "substatus": "",
+      "group": "D",
+      "date": "2026-06-25",
+      "clock": "90'+5'",
+      "events": [
+        {
+          "min": "46'",
+          "tid": "628",
+          "p": "J. Irvine",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "77'",
+          "tid": "210",
+          "p": "D. Gómez",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        }
+      ],
+      "pso": [],
+      "tid1": "210",
+      "tid2": "628",
+      "penScore1": null,
+      "penScore2": null,
+      "stats": {
+        "t1": {
+          "appearances": 0,
+          "foulsCommitted": 9,
+          "wonCorners": 1,
+          "goalAssists": 0,
+          "possessionPct": 44,
+          "shotAssists": 5,
+          "shotsOnTarget": 2,
+          "totalGoals": 0,
+          "totalShots": 7
+        },
+        "t2": {
+          "appearances": 0,
+          "foulsCommitted": 6,
+          "wonCorners": 3,
+          "goalAssists": 0,
+          "possessionPct": 56,
+          "shotAssists": 11,
+          "shotsOnTarget": 5,
+          "totalGoals": 0,
+          "totalShots": 12
+        }
+      }
+    },
+    {
+      "matchId": 59,
+      "team1": "USA",
+      "team2": "Türkiye",
+      "espnId": "760470",
+      "score1": 2,
+      "score2": 3,
+      "status": "FT",
+      "substatus": "",
+      "group": "D",
+      "date": "2026-06-25",
+      "clock": "90'+9'",
+      "events": [
+        {
+          "min": "3'",
+          "tid": "660",
+          "p": "A. Trusty",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "10'",
+          "tid": "465",
+          "p": "A. Güler",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "19'",
+          "tid": "660",
+          "p": "S. Berhalter",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "31'",
+          "tid": "465",
+          "p": "B. Yilmaz",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "49'",
+          "tid": "660",
+          "p": "S. Berhalter",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "90'+8'",
+          "tid": "465",
+          "p": "K. Ayhan",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        }
+      ],
+      "pso": [],
+      "tid1": "660",
+      "tid2": "465",
+      "penScore1": null,
+      "penScore2": null,
+      "stats": {
+        "t1": {
+          "appearances": 0,
+          "foulsCommitted": 13,
+          "wonCorners": 9,
+          "goalAssists": 1,
+          "possessionPct": 52.6,
+          "shotAssists": 14,
+          "shotsOnTarget": 7,
+          "totalGoals": 2,
+          "totalShots": 18
+        },
+        "t2": {
+          "appearances": 0,
+          "foulsCommitted": 13,
+          "wonCorners": 2,
+          "goalAssists": 2,
+          "possessionPct": 47.4,
+          "shotAssists": 7,
+          "shotsOnTarget": 3,
+          "totalGoals": 3,
+          "totalShots": 9
+        }
+      }
+    },
+    {
+      "matchId": 50,
+      "team1": "Bosnia & Herzegovina",
+      "team2": "Qatar",
+      "espnId": "760462",
+      "score1": 3,
+      "score2": 1,
+      "status": "FT",
+      "substatus": "",
+      "group": "B",
+      "date": "2026-06-24",
+      "clock": "90'+6'",
+      "events": [
+        {
+          "min": "29'",
+          "tid": "452",
+          "p": "K. Alajbegovic",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "34'",
+          "tid": "452",
+          "p": "M. Abunada",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": true,
+          "pk": false
+        },
+        {
+          "min": "42'",
+          "tid": "4398",
+          "p": "H. Al-Haydos",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "78'",
+          "tid": "4398",
+          "p": "A. Fathy",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "80'",
+          "tid": "452",
+          "p": "E. Mahmic",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "82'",
+          "tid": "452",
+          "p": "E. Mahmic",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        }
+      ],
+      "pso": [],
+      "tid1": "452",
+      "tid2": "4398",
+      "penScore1": null,
+      "penScore2": null,
+      "stats": {
+        "t1": {
+          "appearances": 0,
+          "foulsCommitted": 9,
+          "wonCorners": 5,
+          "goalAssists": 2,
+          "possessionPct": 54.4,
+          "shotAssists": 11,
+          "shotsOnTarget": 5,
+          "totalGoals": 3,
+          "totalShots": 14
+        },
+        "t2": {
+          "appearances": 0,
+          "foulsCommitted": 14,
+          "wonCorners": 5,
+          "goalAssists": 1,
+          "possessionPct": 45.6,
+          "shotAssists": 10,
+          "shotsOnTarget": 3,
+          "totalGoals": 1,
+          "totalShots": 9
+        }
+      }
+    },
+    {
+      "matchId": 49,
+      "team1": "Switzerland",
+      "team2": "Canada",
+      "espnId": "760463",
+      "score1": 2,
+      "score2": 1,
+      "status": "FT",
+      "substatus": "",
+      "group": "B",
+      "date": "2026-06-24",
+      "clock": "90'+7'",
+      "events": [
+        {
+          "min": "32'",
+          "tid": "206",
+          "p": "C. Larin",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "32'",
+          "tid": "475",
+          "p": "G. Xhaka",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "46'",
+          "tid": "475",
+          "p": "R. Vargas",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "57'",
+          "tid": "475",
+          "p": "J. Manzambi",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "76'",
+          "tid": "206",
+          "p": "P. David",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "87'",
+          "tid": "206",
+          "p": "L. Millar",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        }
+      ],
+      "pso": [],
+      "tid1": "475",
+      "tid2": "206",
+      "penScore1": null,
+      "penScore2": null,
+      "stats": {
+        "t1": {
+          "appearances": 0,
+          "foulsCommitted": 19,
+          "wonCorners": 2,
+          "goalAssists": 2,
+          "possessionPct": 55.3,
+          "shotAssists": 4,
+          "shotsOnTarget": 4,
+          "totalGoals": 2,
+          "totalShots": 6
+        },
+        "t2": {
+          "appearances": 0,
+          "foulsCommitted": 13,
+          "wonCorners": 7,
+          "goalAssists": 1,
+          "possessionPct": 44.7,
+          "shotAssists": 12,
+          "shotsOnTarget": 7,
+          "totalGoals": 1,
+          "totalShots": 13
+        }
+      }
+    },
+    {
+      "matchId": 52,
+      "team1": "Morocco",
+      "team2": "Haiti",
+      "espnId": "760464",
+      "score1": 4,
+      "score2": 2,
+      "status": "FT",
+      "substatus": "",
+      "group": "C",
+      "date": "2026-06-24",
+      "clock": "90'+9'",
+      "events": [
+        {
+          "min": "10'",
+          "tid": "2654",
+          "p": "Y. Bounou",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": true,
+          "pk": false
+        },
+        {
+          "min": "39'",
+          "tid": "2869",
+          "p": "A. Hakimi",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "43'",
+          "tid": "2654",
+          "p": "W. Isidor",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "45'+1'",
+          "tid": "2869",
+          "p": "I. Saibari",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "78'",
+          "tid": "2869",
+          "p": "S. Rahimi",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "79'",
+          "tid": "2654",
+          "p": "J. Placide",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "80'",
+          "tid": "2654",
+          "p": "D. Nazon",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "89'",
+          "tid": "2869",
+          "p": "G. Yassine",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "90'+3'",
+          "tid": "2654",
+          "p": "J. Casimir",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        }
+      ],
+      "pso": [],
+      "tid1": "2869",
+      "tid2": "2654",
+      "penScore1": null,
+      "penScore2": null,
+      "stats": {
+        "t1": {
+          "appearances": 0,
+          "foulsCommitted": 10,
+          "wonCorners": 9,
+          "goalAssists": 3,
+          "possessionPct": 69.1,
+          "shotAssists": 15,
+          "shotsOnTarget": 11,
+          "totalGoals": 4,
+          "totalShots": 22
+        },
+        "t2": {
+          "appearances": 0,
+          "foulsCommitted": 18,
+          "wonCorners": 1,
+          "goalAssists": 1,
+          "possessionPct": 30.9,
+          "shotAssists": 5,
+          "shotsOnTarget": 2,
+          "totalGoals": 2,
+          "totalShots": 9
+        }
+      }
+    },
+    {
+      "matchId": 51,
+      "team1": "Brazil",
+      "team2": "Scotland",
+      "espnId": "760465",
+      "score1": 3,
+      "score2": 0,
+      "status": "FT",
+      "substatus": "",
+      "group": "C",
+      "date": "2026-06-24",
+      "clock": "90'+6'",
+      "events": [
+        {
+          "min": "7'",
+          "tid": "205",
+          "p": "Vinícius Júnior",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "45'+3'",
+          "tid": "205",
+          "p": "Vinícius Júnior",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "60'",
+          "tid": "205",
+          "p": "M. Cunha",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "62'",
+          "tid": "205",
+          "p": "Danilo",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "82'",
+          "tid": "205",
+          "p": "Fabinho",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "89'",
+          "tid": "580",
+          "p": "R. Christie",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        }
+      ],
+      "pso": [],
+      "tid1": "205",
+      "tid2": "580",
+      "penScore1": null,
+      "penScore2": null,
+      "stats": {
+        "t1": {
+          "appearances": 0,
+          "foulsCommitted": 11,
+          "wonCorners": 7,
+          "goalAssists": 3,
+          "possessionPct": 54,
+          "shotAssists": 18,
+          "shotsOnTarget": 9,
+          "totalGoals": 3,
+          "totalShots": 21
+        },
+        "t2": {
+          "appearances": 0,
+          "foulsCommitted": 10,
+          "wonCorners": 7,
+          "goalAssists": 0,
+          "possessionPct": 46,
+          "shotAssists": 10,
+          "shotsOnTarget": 5,
+          "totalGoals": 0,
+          "totalShots": 14
+        }
+      }
+    },
+    {
+      "matchId": 53,
+      "team1": "Mexico",
+      "team2": "Czechia",
+      "espnId": "760467",
+      "score1": 3,
+      "score2": 0,
+      "status": "FT",
+      "substatus": "",
+      "group": "A",
+      "date": "2026-06-24",
+      "clock": "90'+6'",
+      "events": [
+        {
+          "min": "55'",
+          "tid": "203",
+          "p": "M. Chávez",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "61'",
+          "tid": "203",
+          "p": "J. Quiñones",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "64'",
+          "tid": "203",
+          "p": "E. Álvarez",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "90'+4'",
+          "tid": "203",
+          "p": "Á. Fidalgo",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        }
+      ],
+      "pso": [],
+      "tid1": "203",
+      "tid2": "450",
+      "penScore1": null,
+      "penScore2": null,
+      "stats": {
+        "t1": {
+          "appearances": 0,
+          "foulsCommitted": 13,
+          "wonCorners": 1,
+          "goalAssists": 3,
+          "possessionPct": 48.1,
+          "shotAssists": 10,
+          "shotsOnTarget": 5,
+          "totalGoals": 3,
+          "totalShots": 11
+        },
+        "t2": {
+          "appearances": 0,
+          "foulsCommitted": 9,
+          "wonCorners": 5,
+          "goalAssists": 0,
+          "possessionPct": 51.9,
+          "shotAssists": 5,
+          "shotsOnTarget": 1,
+          "totalGoals": 0,
+          "totalShots": 13
+        }
+      }
+    },
+    {
+      "matchId": 54,
+      "team1": "South Korea",
+      "team2": "South Africa",
+      "espnId": "760466",
+      "score1": 0,
+      "score2": 1,
+      "status": "FT",
+      "substatus": "",
+      "group": "A",
+      "date": "2026-06-24",
+      "clock": "90'+6'",
+      "events": [
+        {
+          "min": "63'",
+          "tid": "467",
+          "p": "T. Maseko",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "73'",
+          "tid": "467",
+          "p": "A. Modiba",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "79'",
+          "tid": "451",
+          "p": "C. Gue-Sung",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        }
+      ],
+      "pso": [],
+      "tid1": "451",
+      "tid2": "467",
+      "penScore1": null,
+      "penScore2": null,
+      "stats": {
+        "t1": {
+          "appearances": 0,
+          "foulsCommitted": 9,
+          "wonCorners": 6,
+          "goalAssists": 0,
+          "possessionPct": 68.4,
+          "shotAssists": 7,
+          "shotsOnTarget": 3,
+          "totalGoals": 0,
+          "totalShots": 8
+        },
+        "t2": {
+          "appearances": 0,
+          "foulsCommitted": 7,
+          "wonCorners": 4,
+          "goalAssists": 1,
+          "possessionPct": 31.6,
+          "shotAssists": 10,
+          "shotsOnTarget": 4,
+          "totalGoals": 1,
+          "totalShots": 13
+        }
+      }
+    },
+    {
+      "matchId": 45,
+      "team1": "Portugal",
+      "team2": "Uzbekistan",
+      "espnId": "760461",
+      "score1": 5,
+      "score2": 0,
+      "status": "FT",
+      "substatus": "",
+      "group": "K",
+      "date": "2026-06-23",
+      "clock": "90'+6'",
+      "events": [
+        {
+          "min": "6'",
+          "tid": "482",
+          "p": "C. Ronaldo",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "14'",
+          "tid": "2570",
+          "p": "O. Xamrobekov",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "17'",
+          "tid": "482",
+          "p": "N. Mendes",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "39'",
+          "tid": "482",
+          "p": "C. Ronaldo",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "60'",
+          "tid": "482",
+          "p": "A. Nematov",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": true,
+          "pk": false
+        },
+        {
+          "min": "68'",
+          "tid": "482",
+          "p": "R. Veiga",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "87'",
+          "tid": "482",
+          "p": "R. Leão",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        }
+      ],
+      "pso": [],
+      "tid1": "482",
+      "tid2": "2570",
+      "penScore1": null,
+      "penScore2": null,
+      "stats": {
+        "t1": {
+          "appearances": 0,
+          "foulsCommitted": 14,
+          "wonCorners": 3,
+          "goalAssists": 2,
+          "possessionPct": 65.9,
+          "shotAssists": 9,
+          "shotsOnTarget": 9,
+          "totalGoals": 5,
+          "totalShots": 17
+        },
+        "t2": {
+          "appearances": 0,
+          "foulsCommitted": 15,
+          "wonCorners": 2,
+          "goalAssists": 0,
+          "possessionPct": 34.1,
+          "shotAssists": 7,
+          "shotsOnTarget": 2,
+          "totalGoals": 1,
+          "totalShots": 7
+        }
+      }
+    },
+    {
+      "matchId": 46,
+      "team1": "England",
+      "team2": "Ghana",
+      "espnId": "760458",
+      "score1": 0,
+      "score2": 0,
+      "status": "FT",
+      "substatus": "",
+      "group": "L",
+      "date": "2026-06-23",
+      "clock": "90'+6'",
+      "events": [
+        {
+          "min": "41'",
+          "tid": "448",
+          "p": "D. Rice",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "60'",
+          "tid": "4469",
+          "p": "I. Williams",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        }
+      ],
+      "pso": [],
+      "tid1": "448",
+      "tid2": "4469",
+      "penScore1": null,
+      "penScore2": null,
+      "stats": {
+        "t1": {
+          "appearances": 0,
+          "foulsCommitted": 14,
+          "wonCorners": 9,
+          "goalAssists": 0,
+          "possessionPct": 78.9,
+          "shotAssists": 14,
+          "shotsOnTarget": 3,
+          "totalGoals": 0,
+          "totalShots": 19
+        },
+        "t2": {
+          "appearances": 0,
+          "foulsCommitted": 24,
+          "wonCorners": 2,
+          "goalAssists": 0,
+          "possessionPct": 21.1,
+          "shotAssists": 1,
+          "shotsOnTarget": 1,
+          "totalGoals": 0,
+          "totalShots": 2
+        }
+      }
+    },
+    {
+      "matchId": 47,
+      "team1": "Panama",
+      "team2": "Croatia",
+      "espnId": "760460",
+      "score1": 0,
+      "score2": 1,
+      "status": "FT",
+      "substatus": "",
+      "group": "L",
+      "date": "2026-06-23",
+      "clock": "90'+5'",
+      "events": [
+        {
+          "min": "54'",
+          "tid": "477",
+          "p": "A. Budimir",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "61'",
+          "tid": "2659",
+          "p": "É. Bárcenas",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "90'+2'",
+          "tid": "477",
+          "p": "P. Sucic",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        }
+      ],
+      "pso": [],
+      "tid1": "2659",
+      "tid2": "477",
+      "penScore1": null,
+      "penScore2": null,
+      "stats": {
+        "t1": {
+          "appearances": 0,
+          "foulsCommitted": 19,
+          "wonCorners": 7,
+          "goalAssists": 0,
+          "possessionPct": 42,
+          "shotAssists": 5,
+          "shotsOnTarget": 1,
+          "totalGoals": 0,
+          "totalShots": 8
+        },
+        "t2": {
+          "appearances": 0,
+          "foulsCommitted": 12,
+          "wonCorners": 2,
+          "goalAssists": 1,
+          "possessionPct": 58,
+          "shotAssists": 4,
+          "shotsOnTarget": 2,
+          "totalGoals": 1,
+          "totalShots": 6
+        }
+      }
+    },
+    {
+      "matchId": 48,
+      "team1": "Colombia",
+      "team2": "Congo DR",
+      "espnId": "760459",
+      "score1": 1,
+      "score2": 0,
+      "status": "FT",
+      "substatus": "",
+      "group": "K",
+      "date": "2026-06-23",
+      "clock": "90'+7'",
+      "events": [
+        {
+          "min": "56'",
+          "tid": "208",
+          "p": "J. Lucumí",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "76'",
+          "tid": "208",
+          "p": "D. Muñoz",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "90'+3'",
+          "tid": "2850",
+          "p": "C. Pickel",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "90'+4'",
+          "tid": "208",
+          "p": "J. Lerma",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        }
+      ],
+      "pso": [],
+      "tid1": "208",
+      "tid2": "2850",
+      "penScore1": null,
+      "penScore2": null,
+      "stats": {
+        "t1": {
+          "appearances": 0,
+          "foulsCommitted": 12,
+          "wonCorners": 5,
+          "goalAssists": 1,
+          "possessionPct": 63.5,
+          "shotAssists": 14,
+          "shotsOnTarget": 9,
+          "totalGoals": 1,
+          "totalShots": 20
+        },
+        "t2": {
+          "appearances": 0,
+          "foulsCommitted": 16,
+          "wonCorners": 4,
+          "goalAssists": 0,
+          "possessionPct": 36.5,
+          "shotAssists": 7,
+          "shotsOnTarget": 1,
+          "totalGoals": 0,
+          "totalShots": 7
+        }
+      }
+    },
     {
       "matchId": 41,
       "team1": "Argentina",
@@ -88,6 +2032,7 @@
           "pk": false
         }
       ],
+      "pso": [],
       "tid1": "202",
       "tid2": "474",
       "penScore1": null,
@@ -179,6 +2124,7 @@
           "pk": false
         }
       ],
+      "pso": [],
       "tid1": "478",
       "tid2": "4375",
       "penScore1": null,
@@ -282,6 +2228,7 @@
           "pk": false
         }
       ],
+      "pso": [],
       "tid1": "464",
       "tid2": "654",
       "penScore1": null,
@@ -385,6 +2332,7 @@
           "pk": false
         }
       ],
+      "pso": [],
       "tid1": "2917",
       "tid2": "624",
       "penScore1": null,
@@ -476,6 +2424,7 @@
           "pk": false
         }
       ],
+      "pso": [],
       "tid1": "659",
       "tid2": "627",
       "penScore1": null,
@@ -591,6 +2540,7 @@
           "pk": false
         }
       ],
+      "pso": [],
       "tid1": "164",
       "tid2": "655",
       "penScore1": null,
@@ -670,6 +2620,7 @@
           "pk": false
         }
       ],
+      "pso": [],
       "tid1": "459",
       "tid2": "469",
       "penScore1": null,
@@ -809,6 +2760,7 @@
           "pk": false
         }
       ],
+      "pso": [],
       "tid1": "212",
       "tid2": "2597",
       "penScore1": null,
@@ -936,6 +2888,7 @@
           "pk": false
         }
       ],
+      "pso": [],
       "tid1": "2666",
       "tid2": "2620",
       "penScore1": null,
@@ -1087,6 +3040,7 @@
           "pk": false
         }
       ],
+      "pso": [],
       "tid1": "449",
       "tid2": "466",
       "penScore1": null,
@@ -1166,6 +3120,7 @@
           "pk": false
         }
       ],
+      "pso": [],
       "tid1": "481",
       "tid2": "4789",
       "penScore1": null,
@@ -1281,6 +3236,7 @@
           "pk": false
         }
       ],
+      "pso": [],
       "tid1": "209",
       "tid2": "11678",
       "penScore1": null,
@@ -1408,6 +3364,7 @@
           "pk": false
         }
       ],
+      "pso": [],
       "tid1": "206",
       "tid2": "452",
       "penScore1": null,
@@ -1583,6 +3540,7 @@
           "pk": false
         }
       ],
+      "pso": [],
       "tid1": "660",
       "tid2": "210",
       "penScore1": null,
@@ -1722,6 +3680,7 @@
           "pk": false
         }
       ],
+      "pso": [],
       "tid1": "203",
       "tid2": "467",
       "penScore1": null,
@@ -1813,6 +3772,7 @@
           "pk": false
         }
       ],
+      "pso": [],
       "tid1": "451",
       "tid2": "450",
       "penScore1": null,
@@ -1892,6 +3852,7 @@
           "pk": false
         }
       ],
+      "pso": [],
       "tid1": "628",
       "tid2": "465",
       "penScore1": null,
@@ -1947,18 +3908,6 @@
           "pk": false
         },
         {
-          "min": "17'",
-          "tid": "475",
-          "p": "B. Embolo",
-          "pIn": "",
-          "g": true,
-          "y": false,
-          "r": false,
-          "sub": false,
-          "og": false,
-          "pk": true
-        },
-        {
           "min": "23'",
           "tid": "4398",
           "p": "J. Gaber",
@@ -1993,6 +3942,13 @@
           "sub": false,
           "og": true,
           "pk": false
+        }
+      ],
+      "pso": [
+        {
+          "name": "B. Embolo",
+          "tid": "475",
+          "scored": true
         }
       ],
       "tid1": "4398",
@@ -2086,6 +4042,7 @@
           "pk": false
         }
       ],
+      "pso": [],
       "tid1": "205",
       "tid2": "2869",
       "penScore1": null,
@@ -2189,6 +4146,7 @@
           "pk": false
         }
       ],
+      "pso": [],
       "tid1": "2654",
       "tid2": "580",
       "penScore1": null,
@@ -2268,18 +4226,6 @@
           "pk": false
         },
         {
-          "min": "45'+5'",
-          "tid": "481",
-          "p": "K. Havertz",
-          "pIn": "",
-          "g": true,
-          "y": false,
-          "r": false,
-          "sub": false,
-          "og": false,
-          "pk": true
-        },
-        {
           "min": "47'",
           "tid": "481",
           "p": "J. Musiala",
@@ -2326,6 +4272,13 @@
           "sub": false,
           "og": false,
           "pk": false
+        }
+      ],
+      "pso": [
+        {
+          "name": "K. Havertz",
+          "tid": "481",
+          "scored": true
         }
       ],
       "tid1": "481",
@@ -2455,6 +4408,7 @@
           "pk": false
         }
       ],
+      "pso": [],
       "tid1": "449",
       "tid2": "627",
       "penScore1": null,
@@ -2558,6 +4512,7 @@
           "pk": false
         }
       ],
+      "pso": [],
       "tid1": "4789",
       "tid2": "209",
       "penScore1": null,
@@ -2685,6 +4640,7 @@
           "pk": false
         }
       ],
+      "pso": [],
       "tid1": "659",
       "tid2": "466",
       "penScore1": null,
@@ -2774,18 +4730,13 @@
           "sub": false,
           "og": false,
           "pk": false
-        },
+        }
+      ],
+      "pso": [
         {
-          "min": "83'",
+          "name": "T. Mokoena",
           "tid": "467",
-          "p": "T. Mokoena",
-          "pIn": "",
-          "g": true,
-          "y": false,
-          "r": false,
-          "sub": false,
-          "og": false,
-          "pk": true
+          "scored": true
         }
       ],
       "tid1": "450",
@@ -2877,18 +4828,13 @@
           "sub": false,
           "og": false,
           "pk": false
-        },
+        }
+      ],
+      "pso": [
         {
-          "min": "90'+12'",
+          "name": "M. Arnautovic",
           "tid": "474",
-          "p": "M. Arnautovic",
-          "pIn": "",
-          "g": true,
-          "y": false,
-          "r": false,
-          "sub": false,
-          "og": false,
-          "pk": true
+          "scored": true
         }
       ],
       "tid1": "474",
@@ -3006,6 +4952,7 @@
           "pk": false
         }
       ],
+      "pso": [],
       "tid1": "482",
       "tid2": "2850",
       "penScore1": null,
@@ -3048,18 +4995,6 @@
       "date": "2026-06-17",
       "clock": "90'+7'",
       "events": [
-        {
-          "min": "12'",
-          "tid": "448",
-          "p": "H. Kane",
-          "pIn": "",
-          "g": true,
-          "y": false,
-          "r": false,
-          "sub": false,
-          "og": false,
-          "pk": true
-        },
         {
           "min": "36'",
           "tid": "477",
@@ -3119,6 +5054,13 @@
           "sub": false,
           "og": false,
           "pk": false
+        }
+      ],
+      "pso": [
+        {
+          "name": "H. Kane",
+          "tid": "448",
+          "scored": true
         }
       ],
       "tid1": "448",
@@ -3212,6 +5154,7 @@
           "pk": false
         }
       ],
+      "pso": [],
       "tid1": "4469",
       "tid2": "2659",
       "penScore1": null,
@@ -3327,6 +5270,7 @@
           "pk": false
         }
       ],
+      "pso": [],
       "tid1": "2570",
       "tid2": "208",
       "penScore1": null,
@@ -3418,6 +5362,7 @@
           "pk": false
         }
       ],
+      "pso": [],
       "tid1": "478",
       "tid2": "654",
       "penScore1": null,
@@ -3533,6 +5478,7 @@
           "pk": false
         }
       ],
+      "pso": [],
       "tid1": "4375",
       "tid2": "464",
       "penScore1": null,
@@ -3612,6 +5558,7 @@
           "pk": false
         }
       ],
+      "pso": [],
       "tid1": "202",
       "tid2": "624",
       "penScore1": null,
@@ -3669,7 +5616,7 @@
         {
           "min": "90'+3'",
           "tid": "164",
-          "p": "Pedri ",
+          "p": "Pedri",
           "pIn": "",
           "g": false,
           "y": true,
@@ -3679,6 +5626,7 @@
           "pk": false
         }
       ],
+      "pso": [],
       "tid1": "164",
       "tid2": "2597",
       "penScore1": null,
@@ -3794,6 +5742,7 @@
           "pk": false
         }
       ],
+      "pso": [],
       "tid1": "459",
       "tid2": "2620",
       "penScore1": null,
@@ -3873,6 +5822,7 @@
           "pk": false
         }
       ],
+      "pso": [],
       "tid1": "655",
       "tid2": "212",
       "penScore1": null,
@@ -3976,6 +5926,7 @@
           "pk": false
         }
       ],
+      "pso": [],
       "tid1": "469",
       "tid2": "2666",
       "penScore1": null,
@@ -4113,18 +6064,13 @@
           "sub": false,
           "og": false,
           "pk": false
-        },
+        }
+      ],
+      "pso": [
         {
-          "min": "90'+7'",
+          "name": "G. Xhaka",
           "tid": "475",
-          "p": "G. Xhaka",
-          "pIn": "",
-          "g": true,
-          "y": false,
-          "r": false,
-          "sub": false,
-          "og": false,
-          "pk": true
+          "scored": true
         }
       ],
       "tid1": "475",
@@ -4290,6 +6236,7 @@
           "pk": false
         }
       ],
+      "pso": [],
       "tid1": "206",
       "tid2": "4398",
       "penScore1": null,
@@ -4369,6 +6316,7 @@
           "pk": false
         }
       ],
+      "pso": [],
       "tid1": "203",
       "tid2": "451",
       "penScore1": null,
@@ -4520,6 +6468,7 @@
           "pk": false
         }
       ],
+      "pso": [],
       "tid1": "660",
       "tid2": "628",
       "penScore1": null,
@@ -4599,6 +6548,7 @@
           "pk": false
         }
       ],
+      "pso": [],
       "tid1": "580",
       "tid2": "2869",
       "penScore1": null,
@@ -4726,6 +6676,7 @@
           "pk": false
         }
       ],
+      "pso": [],
       "tid1": "205",
       "tid2": "2654",
       "penScore1": null,
@@ -4829,6 +6780,7 @@
           "pk": false
         }
       ],
+      "pso": [],
       "tid1": "465",
       "tid2": "210",
       "penScore1": null,
@@ -4855,6 +6807,1166 @@
           "shotsOnTarget": 2,
           "totalGoals": 1,
           "totalShots": 7
+        }
+      }
+    },
+    {
+      "matchId": 64,
+      "team1": "Cape Verde",
+      "team2": "Saudi Arabia",
+      "espnId": "760478",
+      "score1": 0,
+      "score2": 0,
+      "status": "FT",
+      "substatus": "",
+      "group": "H",
+      "date": "2026-06-26",
+      "clock": "90'+5'",
+      "events": [
+        {
+          "min": "4'",
+          "tid": "655",
+          "p": "S. Abdulhamid",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "8'",
+          "tid": "2597",
+          "p": "W. Pina",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "67'",
+          "tid": "655",
+          "p": "N. Al-Dawsari",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "90'+3'",
+          "tid": "655",
+          "p": "F. Al-Brikan",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        }
+      ],
+      "pso": [],
+      "tid1": "2597",
+      "tid2": "655",
+      "penScore1": null,
+      "penScore2": null,
+      "stats": {
+        "t1": {
+          "appearances": 0,
+          "foulsCommitted": 10,
+          "wonCorners": 4,
+          "goalAssists": 0,
+          "possessionPct": 51,
+          "shotAssists": 12,
+          "shotsOnTarget": 2,
+          "totalGoals": 0,
+          "totalShots": 15
+        },
+        "t2": {
+          "appearances": 0,
+          "foulsCommitted": 16,
+          "wonCorners": 2,
+          "goalAssists": 0,
+          "possessionPct": 49,
+          "shotAssists": 5,
+          "shotsOnTarget": 3,
+          "totalGoals": 0,
+          "totalShots": 7
+        }
+      }
+    },
+    {
+      "matchId": 63,
+      "team1": "Uruguay",
+      "team2": "Spain",
+      "espnId": "760479",
+      "score1": 0,
+      "score2": 1,
+      "status": "FT",
+      "substatus": "",
+      "group": "H",
+      "date": "2026-06-26",
+      "clock": "90'+6'",
+      "events": [
+        {
+          "min": "42'",
+          "tid": "164",
+          "p": "Á. Baena",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "46'",
+          "tid": "164",
+          "p": "Á. Baena",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "54'",
+          "tid": "212",
+          "p": "J. Sanabria",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "58'",
+          "tid": "212",
+          "p": "G. Varela",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "90'+3'",
+          "tid": "212",
+          "p": "N. de la Cruz",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "90'+5'",
+          "tid": "212",
+          "p": "A. Canobbio",
+          "pIn": "",
+          "g": false,
+          "y": false,
+          "r": true,
+          "sub": false,
+          "og": false,
+          "pk": false
+        }
+      ],
+      "pso": [],
+      "tid1": "212",
+      "tid2": "164",
+      "penScore1": null,
+      "penScore2": null,
+      "stats": {
+        "t1": {
+          "appearances": 0,
+          "foulsCommitted": 14,
+          "wonCorners": 1,
+          "goalAssists": 0,
+          "possessionPct": 33.1,
+          "shotAssists": 5,
+          "shotsOnTarget": 1,
+          "totalGoals": 0,
+          "totalShots": 5
+        },
+        "t2": {
+          "appearances": 0,
+          "foulsCommitted": 14,
+          "wonCorners": 6,
+          "goalAssists": 1,
+          "possessionPct": 66.9,
+          "shotAssists": 6,
+          "shotsOnTarget": 1,
+          "totalGoals": 1,
+          "totalShots": 6
+        }
+      }
+    },
+    {
+      "matchId": 66,
+      "team1": "Egypt",
+      "team2": "Iran",
+      "espnId": "760476",
+      "score1": 1,
+      "score2": 1,
+      "status": "FT",
+      "substatus": "",
+      "group": "G",
+      "date": "2026-06-26",
+      "clock": "90'+9'",
+      "events": [
+        {
+          "min": "5'",
+          "tid": "2620",
+          "p": "M. Saber",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "14'",
+          "tid": "469",
+          "p": "R. Rezaeian",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "19'",
+          "tid": "469",
+          "p": "H. Kanani",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "20'",
+          "tid": "2620",
+          "p": "M. Saber",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "42'",
+          "tid": "2620",
+          "p": "Y. Ibrahim",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "43'",
+          "tid": "469",
+          "p": "A. Nemati",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "79'",
+          "tid": "469",
+          "p": "S. Ezatolahi",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "90'+2'",
+          "tid": "2620",
+          "p": "M. Lashin",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "90'+4'",
+          "tid": "469",
+          "p": "S. Khalilzadeh",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        }
+      ],
+      "pso": [],
+      "tid1": "2620",
+      "tid2": "469",
+      "penScore1": null,
+      "penScore2": null,
+      "stats": {
+        "t1": {
+          "appearances": 0,
+          "foulsCommitted": 11,
+          "wonCorners": 8,
+          "goalAssists": 1,
+          "possessionPct": 61.4,
+          "shotAssists": 10,
+          "shotsOnTarget": 3,
+          "totalGoals": 1,
+          "totalShots": 15
+        },
+        "t2": {
+          "appearances": 0,
+          "foulsCommitted": 16,
+          "wonCorners": 2,
+          "goalAssists": 0,
+          "possessionPct": 38.6,
+          "shotAssists": 7,
+          "shotsOnTarget": 4,
+          "totalGoals": 1,
+          "totalShots": 13
+        }
+      }
+    },
+    {
+      "matchId": 65,
+      "team1": "New Zealand",
+      "team2": "Belgium",
+      "espnId": "760477",
+      "score1": 1,
+      "score2": 5,
+      "status": "FT",
+      "substatus": "",
+      "group": "G",
+      "date": "2026-06-26",
+      "clock": "90'+6'",
+      "events": [
+        {
+          "min": "28'",
+          "tid": "459",
+          "p": "L. Trossard",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "46'",
+          "tid": "2666",
+          "p": "M. Stamenic",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "50'",
+          "tid": "459",
+          "p": "L. Trossard",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "56'",
+          "tid": "2666",
+          "p": "E. Just",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "66'",
+          "tid": "459",
+          "p": "K. De Bruyne",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "84'",
+          "tid": "2666",
+          "p": "E. Just",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "86'",
+          "tid": "459",
+          "p": "R. Lukaku",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "90'+4'",
+          "tid": "459",
+          "p": "A. Saelemaekers",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        }
+      ],
+      "pso": [],
+      "tid1": "2666",
+      "tid2": "459",
+      "penScore1": null,
+      "penScore2": null,
+      "stats": {
+        "t1": {
+          "appearances": 0,
+          "foulsCommitted": 10,
+          "wonCorners": 5,
+          "goalAssists": 0,
+          "possessionPct": 45.5,
+          "shotAssists": 3,
+          "shotsOnTarget": 2,
+          "totalGoals": 1,
+          "totalShots": 6
+        },
+        "t2": {
+          "appearances": 0,
+          "foulsCommitted": 7,
+          "wonCorners": 8,
+          "goalAssists": 3,
+          "possessionPct": 54.5,
+          "shotAssists": 28,
+          "shotsOnTarget": 10,
+          "totalGoals": 5,
+          "totalShots": 35
+        }
+      }
+    },
+    {
+      "matchId": 68,
+      "team1": "Croatia",
+      "team2": "Ghana",
+      "espnId": "760480",
+      "score1": 2,
+      "score2": 1,
+      "status": "FT",
+      "substatus": "",
+      "group": "L",
+      "date": "2026-06-27",
+      "clock": "90'+8'",
+      "events": [
+        {
+          "min": "31'",
+          "tid": "477",
+          "p": "P. Sucic",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "68'",
+          "tid": "477",
+          "p": "I. Perisic",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "73'",
+          "tid": "4469",
+          "p": "D. Luckassen",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "83'",
+          "tid": "477",
+          "p": "N. Vlasic",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "90'+4'",
+          "tid": "4469",
+          "p": "K. Oppong",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        }
+      ],
+      "pso": [],
+      "tid1": "477",
+      "tid2": "4469",
+      "penScore1": null,
+      "penScore2": null,
+      "stats": {
+        "t1": {
+          "appearances": 0,
+          "foulsCommitted": 9,
+          "wonCorners": 3,
+          "goalAssists": 2,
+          "possessionPct": 53.3,
+          "shotAssists": 8,
+          "shotsOnTarget": 4,
+          "totalGoals": 2,
+          "totalShots": 8
+        },
+        "t2": {
+          "appearances": 0,
+          "foulsCommitted": 13,
+          "wonCorners": 2,
+          "goalAssists": 1,
+          "possessionPct": 46.7,
+          "shotAssists": 6,
+          "shotsOnTarget": 1,
+          "totalGoals": 1,
+          "totalShots": 6
+        }
+      }
+    },
+    {
+      "matchId": 67,
+      "team1": "Panama",
+      "team2": "England",
+      "espnId": "760485",
+      "score1": 0,
+      "score2": 2,
+      "status": "FT",
+      "substatus": "",
+      "group": "L",
+      "date": "2026-06-27",
+      "clock": "90'+6'",
+      "events": [
+        {
+          "min": "53'",
+          "tid": "2659",
+          "p": "J. Fajardo",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "60'",
+          "tid": "448",
+          "p": "J. Quansah",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "62'",
+          "tid": "448",
+          "p": "J. Bellingham",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "67'",
+          "tid": "448",
+          "p": "H. Kane",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "84'",
+          "tid": "2659",
+          "p": "A. Andrade",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        }
+      ],
+      "pso": [],
+      "tid1": "2659",
+      "tid2": "448",
+      "penScore1": null,
+      "penScore2": null,
+      "stats": {
+        "t1": {
+          "appearances": 0,
+          "foulsCommitted": 16,
+          "wonCorners": 3,
+          "goalAssists": 0,
+          "possessionPct": 32.9,
+          "shotAssists": 9,
+          "shotsOnTarget": 2,
+          "totalGoals": 0,
+          "totalShots": 13
+        },
+        "t2": {
+          "appearances": 0,
+          "foulsCommitted": 13,
+          "wonCorners": 7,
+          "goalAssists": 2,
+          "possessionPct": 67.1,
+          "shotAssists": 12,
+          "shotsOnTarget": 6,
+          "totalGoals": 2,
+          "totalShots": 17
+        }
+      }
+    },
+    {
+      "matchId": 69,
+      "team1": "Colombia",
+      "team2": "Portugal",
+      "espnId": "760481",
+      "score1": 0,
+      "score2": 0,
+      "status": "FT",
+      "substatus": "",
+      "group": "K",
+      "date": "2026-06-27",
+      "clock": "90'+6'",
+      "events": [
+        {
+          "min": "86'",
+          "tid": "208",
+          "p": "G. Puerta",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        }
+      ],
+      "pso": [],
+      "tid1": "208",
+      "tid2": "482",
+      "penScore1": null,
+      "penScore2": null,
+      "stats": {
+        "t1": {
+          "appearances": 0,
+          "foulsCommitted": 12,
+          "wonCorners": 5,
+          "goalAssists": 0,
+          "possessionPct": 54.6,
+          "shotAssists": 20,
+          "shotsOnTarget": 6,
+          "totalGoals": 0,
+          "totalShots": 24
+        },
+        "t2": {
+          "appearances": 0,
+          "foulsCommitted": 6,
+          "wonCorners": 2,
+          "goalAssists": 0,
+          "possessionPct": 45.4,
+          "shotAssists": 8,
+          "shotsOnTarget": 2,
+          "totalGoals": 0,
+          "totalShots": 13
+        }
+      }
+    },
+    {
+      "matchId": 70,
+      "team1": "Congo DR",
+      "team2": "Uzbekistan",
+      "espnId": "760482",
+      "score1": 3,
+      "score2": 1,
+      "status": "FT",
+      "substatus": "",
+      "group": "K",
+      "date": "2026-06-27",
+      "clock": "90'+8'",
+      "events": [
+        {
+          "min": "10'",
+          "tid": "2570",
+          "p": "E. Shomurodov",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "21'",
+          "tid": "2850",
+          "p": "N. Sadiki",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "43'",
+          "tid": "2570",
+          "p": "A. Khusanov",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "45'+5'",
+          "tid": "2850",
+          "p": "N. Mbuku",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "48'",
+          "tid": "2570",
+          "p": "S. Nasrullaev",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "62'",
+          "tid": "2850",
+          "p": "S. Moutoussamy",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "78'",
+          "tid": "2850",
+          "p": "F. Mayele",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "90'+1'",
+          "tid": "2850",
+          "p": "Y. Wissa",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        }
+      ],
+      "pso": [
+        {
+          "name": "Y. Wissa",
+          "tid": "2850",
+          "scored": true
+        }
+      ],
+      "tid1": "2850",
+      "tid2": "2570",
+      "penScore1": null,
+      "penScore2": null,
+      "stats": {
+        "t1": {
+          "appearances": 0,
+          "foulsCommitted": 6,
+          "wonCorners": 2,
+          "goalAssists": 1,
+          "possessionPct": 57.6,
+          "shotAssists": 14,
+          "shotsOnTarget": 4,
+          "totalGoals": 3,
+          "totalShots": 19
+        },
+        "t2": {
+          "appearances": 0,
+          "foulsCommitted": 16,
+          "wonCorners": 4,
+          "goalAssists": 1,
+          "possessionPct": 42.4,
+          "shotAssists": 2,
+          "shotsOnTarget": 1,
+          "totalGoals": 1,
+          "totalShots": 3
+        }
+      }
+    },
+    {
+      "matchId": 72,
+      "team1": "Algeria",
+      "team2": "Austria",
+      "espnId": "760484",
+      "score1": 3,
+      "score2": 3,
+      "status": "FT",
+      "substatus": "",
+      "group": "J",
+      "date": "2026-06-27",
+      "clock": "90'+7'",
+      "events": [
+        {
+          "min": "11'",
+          "tid": "474",
+          "p": "M. Arnautovic",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "28'",
+          "tid": "474",
+          "p": "M. Arnautovic",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "45'",
+          "tid": "624",
+          "p": "R. Belghali",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "55'",
+          "tid": "474",
+          "p": "M. Sabitzer",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "60'",
+          "tid": "624",
+          "p": "R. Mahrez",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "90'+3'",
+          "tid": "624",
+          "p": "R. Mahrez",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "90'+6'",
+          "tid": "474",
+          "p": "S. Kalajdzic",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        }
+      ],
+      "pso": [],
+      "tid1": "624",
+      "tid2": "474",
+      "penScore1": null,
+      "penScore2": null,
+      "stats": {
+        "t1": {
+          "appearances": 0,
+          "foulsCommitted": 3,
+          "wonCorners": 0,
+          "goalAssists": 2,
+          "possessionPct": 65,
+          "shotAssists": 10,
+          "shotsOnTarget": 5,
+          "totalGoals": 3,
+          "totalShots": 12
+        },
+        "t2": {
+          "appearances": 0,
+          "foulsCommitted": 7,
+          "wonCorners": 3,
+          "goalAssists": 3,
+          "possessionPct": 35,
+          "shotAssists": 6,
+          "shotsOnTarget": 3,
+          "totalGoals": 3,
+          "totalShots": 10
+        }
+      }
+    },
+    {
+      "matchId": 71,
+      "team1": "Argentina",
+      "team2": "Jordan",
+      "espnId": "760483",
+      "score1": 3,
+      "score2": 1,
+      "status": "FT",
+      "substatus": "",
+      "group": "J",
+      "date": "2026-06-27",
+      "clock": "90'+6'",
+      "events": [
+        {
+          "min": "17'",
+          "tid": "2917",
+          "p": "M. Abu Taha",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "19'",
+          "tid": "202",
+          "p": "G. Lo Celso",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "55'",
+          "tid": "2917",
+          "p": "M. Al-Tamari",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "64'",
+          "tid": "2917",
+          "p": "Y. Al-Arab",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "80'",
+          "tid": "202",
+          "p": "L. Messi",
+          "pIn": "",
+          "g": true,
+          "y": false,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        },
+        {
+          "min": "90'+4'",
+          "tid": "2917",
+          "p": "M. Abu Zraiq",
+          "pIn": "",
+          "g": false,
+          "y": true,
+          "r": false,
+          "sub": false,
+          "og": false,
+          "pk": false
+        }
+      ],
+      "pso": [
+        {
+          "name": "L. Martínez",
+          "tid": "202",
+          "scored": true
+        }
+      ],
+      "tid1": "202",
+      "tid2": "2917",
+      "penScore1": null,
+      "penScore2": null,
+      "stats": {
+        "t1": {
+          "appearances": 0,
+          "foulsCommitted": 7,
+          "wonCorners": 6,
+          "goalAssists": 0,
+          "possessionPct": 73.3,
+          "shotAssists": 6,
+          "shotsOnTarget": 4,
+          "totalGoals": 3,
+          "totalShots": 12
+        },
+        "t2": {
+          "appearances": 0,
+          "foulsCommitted": 13,
+          "wonCorners": 2,
+          "goalAssists": 1,
+          "possessionPct": 26.7,
+          "shotAssists": 3,
+          "shotsOnTarget": 1,
+          "totalGoals": 1,
+          "totalShots": 5
         }
       }
     }

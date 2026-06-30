@@ -283,6 +283,7 @@ function buildMatchCard(match, now) {
   const isLive    = status === 'LIVE';
   const isFT      = status === 'FT';
   const isDelayed = status === 'DELAYED';
+  const delayReason = result?.substatus || 'Match delayed';
   const hasResult = isLive || isFT;
 
   const isPSO   = !!(result?.substatus === 'PSO');
@@ -299,7 +300,8 @@ function buildMatchCard(match, now) {
   let statusHtml = '';
   if (isFT) {
     const sub = result?.substatus;
-    statusHtml = `<span class="mc-status-ft">FT${sub ? ' ' + sub : ''}</span>`;
+    const subLabel = sub === 'PSO' ? 'P' : sub === 'AET' ? 'AET' : '';
+    statusHtml = `<span class="mc-status-ft">FT${subLabel ? ` (${subLabel})` : ''}</span>`;
   } else if (isLive) {
     if (result?.substatus === 'HT') {
       statusHtml = '<span class="mc-status-ht">HT</span>';
@@ -325,8 +327,9 @@ function buildMatchCard(match, now) {
   // Team rows — winner gold + bold, loser 45% opacity
   const cls1 = !isDraw && t1Wins ? 'winner' : (!isDraw && t2Wins ? 'loser' : '');
   const cls2 = !isDraw && t2Wins ? 'winner' : (!isDraw && t1Wins ? 'loser' : '');
-  const s1html = hasResult ? `<span class="mc-score">${score1}</span>` : '';
-  const s2html = hasResult ? `<span class="mc-score">${score2}</span>` : '';
+  const hasPenDisplay = isPSO && result.penScore1 != null && result.penScore2 != null;
+  const s1html = hasResult ? `<span class="mc-score">${score1}</span>${hasPenDisplay ? `<span class="mc-pen-paren">(${result.penScore1})</span>` : ''}` : '';
+  const s2html = hasResult ? `<span class="mc-score">${score2}</span>${hasPenDisplay ? `<span class="mc-pen-paren">(${result.penScore2})</span>` : ''}` : '';
 
   // Preview panel (shown for all matches when data is available + open)
   const pvPanel  = !isDelayed ? buildPreviewSection(match.id) : '';
@@ -350,7 +353,6 @@ function buildMatchCard(match, now) {
     <span data-star-team="${match.t2}"></span>
     ${s2html}
   </div>
-  ${isFT && isPSO && result.penScore1 !== null ? `<div class="mc-pso-score">Pens · ${result.penScore1}–${result.penScore2}</div>` : ''}
   ${isDelayed ? `<div class="mc-delay-note">${delayReason}</div>` : ''}
   ${pvPanel}
   <div class="mc-foot">

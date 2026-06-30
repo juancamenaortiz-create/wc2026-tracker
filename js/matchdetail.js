@@ -119,8 +119,11 @@ function _mdShell(result, sched) {
   var t1  = (result && result.team1) || sched.t1;
   var t2  = (result && result.team2) || sched.t2;
   var has = result && result.status !== 'NS';
+  var hasPSO = result && result.substatus === 'PSO' && result.penScore1 != null && result.penScore2 != null;
   var score = has
-    ? result.score1 + '<span class="md-score-sep">&ndash;</span>' + result.score2
+    ? result.score1 + (hasPSO ? '<span class="md-pen-paren">(' + result.penScore1 + ')</span>' : '')
+      + '<span class="md-score-sep">&ndash;</span>'
+      + result.score2 + (hasPSO ? '<span class="md-pen-paren">(' + result.penScore2 + ')</span>' : '')
     : '<span class="md-score-sep">vs</span>';
 
   // Goal lists for header (only shown for played/live matches)
@@ -132,7 +135,7 @@ function _mdShell(result, sched) {
   if (result && result.status === 'FT') {
     var s = result.substatus;
     statusTxt = s === 'AET' ? 'Full Time (AET)'
-              : s === 'PSO' ? 'Pens ' + result.penScore1 + '&ndash;' + result.penScore2
+              : s === 'PSO' ? 'Full Time (Pens)'
               : 'Full Time';
     statusCls = 'md-pill-ft';
   } else if (result && result.status === 'LIVE') {
@@ -210,7 +213,10 @@ function _tabFacts(result, summary) {
   // and shootout kicks from the summary plays array. The scoreboard API only
   // returns goals and cards; everything else lives in the summary endpoint.
   var events = _enrichEvents(result.events || [], summary, result);
-  var psoKicks = _extractPSOKicks(summary, result);
+  // PSO kicks: prefer result.pso (captured directly from the scoreboard refresh,
+  // always available even before the slower summary endpoint loads). Fall back
+  // to extracting from the summary endpoint's play-by-play if result.pso is empty.
+  var psoKicks = (result.pso && result.pso.length) ? result.pso : _extractPSOKicks(summary, result);
 
   if (!events.length && !psoKicks.length)
     return info + '<div class="md-empty">No events yet.</div>';

@@ -2259,6 +2259,10 @@ img.emoji {
   font-variant-numeric: tabular-nums; letter-spacing: .02em;
 }
 .md-score-sep { color: #3a414c; font-weight: 400; padding: 0 8px; }
+.md-pen-paren {
+  font-size: 18px; font-weight: 700; color: var(--gold);
+  margin: 0 2px; font-variant-numeric: tabular-nums;
+}
 .md-status-wrap { margin-top: 14px; }
 .md-status-pill {
   display: inline-flex; align-items: center; gap: 6px;
@@ -2635,6 +2639,10 @@ td.ps-name { color: var(--white); font-weight: 600; }
 }
 .mc-card .mc-team.winner .mc-score { color: var(--white); }
 .mc-card .mc-team.loser .mc-score { color: #aeb6c2; }
+.mc-pen-paren {
+  font-size: 13px; font-weight: 700; color: var(--gold);
+  margin-left: 3px; font-variant-numeric: tabular-nums;
+}
 
 .mc-foot {
   /* layout moved to animation section — flex-column with mc-foot-row inside */

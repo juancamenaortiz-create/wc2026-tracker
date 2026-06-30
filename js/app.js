@@ -330,6 +330,31 @@ const ESPN_NAMES = {
 };
 function espnToApp(n) { return ESPN_NAMES[n] || n || ''; }
 
+// Detect whether an ESPN comp.details[] entry is a penalty SHOOTOUT kick
+// (as opposed to a regular in-play penalty goal, or a normal-time/extra-time goal).
+// Multiple signals are checked since ESPN's exact field shape can vary by endpoint version.
+function _isShootoutDetail(d) {
+  if (d.shootout === true) return true;
+  const t = ((d.type && (d.type.text || d.type.name)) || '').toLowerCase();
+  if (t.includes('shootout')) return true;
+  if (d.period && typeof d.period.number === 'number' && d.period.number >= 5) return true;
+  return false;
+}
+
+// Build an ordered penalty-shootout kicks list straight from the lightweight
+// scoreboard comp.details array, so the PSO graphic doesn't depend on the
+// (separately-fetched, slower) summary endpoint being loaded first.
+function _buildPSOFromDetails(details) {
+  return (details || [])
+    .filter(_isShootoutDetail)
+    .map(d => ({
+      name:   d.athletesInvolved?.[0]?.shortName || '',
+      tid:    d.team?.id || '',
+      scored: !!d.scoringPlay,
+    }))
+    .filter(k => k.name || k.tid);
+}
+
 async function fetchFromESPN(overrideDates) {
   const found = [];
   const koFound = []; // KO match results (R32, R16, QF, SF, Final)
@@ -439,8 +464,11 @@ async function fetchFromESPN(overrideDates) {
           const flipKO = normName(kt1) === normName(n2);
           const homeId = home.team?.id || '';
           const awayId = away.team?.id || '';
+          // Penalty shootout kicks must be excluded from the regular-time score/timeline
+          // (see _isShootoutDetail) — captured separately as pso instead.
+          const psoFromScoreboardKO = _buildPSOFromDetails(comp.details);
           const eventsKO = (comp.details || [])
-            .filter(d => d.scoringPlay || d.yellowCard || d.redCard)
+            .filter(d => !_isShootoutDetail(d) && (d.scoringPlay || d.yellowCard || d.redCard))
             .map(d => ({
               min: d.clock?.displayValue || '',
               tid: d.team?.id || '',
@@ -462,6 +490,7 @@ async function fetchFromESPN(overrideDates) {
             status, substatus, round: koMatch.round || 'R32', date: koMatch.date,
             clock:  comp.status?.displayClock || '',
             events: eventsKO,
+            pso: psoFromScoreboardKO, // raw ESPN team ids, matches tid1/tid2 directly
             tid1: flipKO ? awayId : homeId,
             tid2: flipKO ? homeId : awayId,
             penScore1: isNaN(homePenKO) ? null : (flipKO ? awayPenKO : homePenKO),
@@ -473,8 +502,14 @@ async function fetchFromESPN(overrideDates) {
         // Extract events (goals + cards) and live clock from ESPN
         const homeId = home.team?.id || '';
         const awayId = away.team?.id || '';
+        // Penalty shootout kicks are reported as additional "scoringPlay" details
+        // in comp.details — they must be excluded from the regular-time event
+        // timeline and score derivation, or they inflate the final score and
+        // pollute the Summary tab timeline (e.g. showing "4–5" instead of "1–1, Pens 3–4").
+        const psoFromScoreboard = _buildPSOFromDetails(comp.details);
         const events = (comp.details || [])
           .filter(d => {
+            if (_isShootoutDetail(d)) return false; // handled separately as PSO kicks
             if (d.scoringPlay || d.yellowCard || d.redCard) return true;
             // Capture substitution events (type text = "Substitution")
             const t = (d.type?.text || d.type?.abbreviation || '').toLowerCase();
@@ -522,6 +557,7 @@ async function fetchFromESPN(overrideDates) {
           status, substatus, group:m.g, date:m.date,
           clock:  comp.status?.displayClock || '',
           events,
+          pso: psoFromScoreboard, // kick.tid is raw ESPN team id, matches tid1/tid2 below directly
           tid1: flip ? awayId : homeId,
           tid2: flip ? homeId : awayId,
           penScore1: isNaN(homePen) ? null : (flip ? awayPen : homePen),

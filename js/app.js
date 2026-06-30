@@ -336,6 +336,8 @@ function espnToApp(n) { return ESPN_NAMES[n] || n || ''; }
 function _isShootoutDetail(d) {
   if (d.shootout === true) return true;
   const t = ((d.type && (d.type.text || d.type.name)) || '').toLowerCase();
+  // Confirmed real ESPN phrasing for shootout kicks: "Penalty - Scored/Saved/Missed"
+  if (t.includes('penalty - scored') || t.includes('penalty - saved') || t.includes('penalty - missed')) return true;
   if (t.includes('shootout')) return true;
   if (d.period && typeof d.period.number === 'number' && d.period.number >= 5) return true;
   return false;

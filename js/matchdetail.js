@@ -432,16 +432,19 @@ function _extractPSOKicks(summary, result) {
     var typeText = ((p.type && (p.type.text || p.type.name)) || p.text || '').toLowerCase();
     var period = p.period && p.period.number;
     var inShootout = typeof period === 'number' && period >= 5;
-    // "shootout" / "penalty kick" wording is unambiguous on its own. A bare
-    // "penalty" + miss/score/save wording is only trusted when we can confirm
-    // it's period 5+ — otherwise it could be a regular-time penalty, not a shootout kick.
-    var isPSOkick = typeText.includes('shootout') || typeText.includes('penalty kick')
+    // ESPN's confirmed real phrasing for shootout kicks is "Penalty - Scored",
+    // "Penalty - Saved", or "Penalty - Missed" (hyphenated triplet, distinct from
+    // a regular in-play "Penalty Kick" goal). Match these directly — far more
+    // reliable than period numbers, which aren't consistently present.
+    var isPSOkick = typeText.includes('penalty - scored') || typeText.includes('penalty - saved')
+                 || typeText.includes('penalty - missed') || typeText.includes('shootout')
                  || (inShootout && typeText.includes('penalty'));
-    if (isPSOkick || inShootout) {
+    if (isPSOkick) {
       var ath = p.participants || p.athletes || [];
       var name = (ath[0] && (ath[0].athlete && (ath[0].athlete.shortName || ath[0].athlete.displayName) || ath[0].shortName || ath[0].displayName)) || '';
       var tid  = (p.team && p.team.id) || '';
-      var scored = !!(p.scoringPlay || typeText.includes('goal'));
+      // "Saved" (keeper stopped it) and "Missed" (off target) both count as a miss.
+      var scored = typeText.includes('scored') || (!typeText.includes('saved') && !typeText.includes('missed') && !!p.scoringPlay);
       if (name || tid) kicks.push({ name:name, tid:tid, scored:scored });
     }
   });

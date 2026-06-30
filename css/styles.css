@@ -2545,18 +2545,26 @@ td.ps-name { color: var(--white); font-weight: 600; }
 .pso-banner-score.pso-winner { color: var(--green); }
 .pso-banner-label { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); flex-shrink: 0; }
 .pso-dot-strips { display: flex; justify-content: space-between; padding: 8px 14px; gap: 8px; border-bottom: 1px solid rgba(255,255,255,.04); }
-.pso-dot-strip   { display: flex; gap: 5px; flex: 1; }
+.pso-dot-strip   { display: flex; gap: 7px; flex: 1; }
 .pso-dot-strip-r { justify-content: flex-end; }
-.pso-dot { width: 20px; height: 20px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; flex-shrink: 0; }
-.pso-dot-scored { background: rgba(32,189,118,.18); color: var(--green); border: 1.5px solid var(--green); }
-.pso-dot-missed { background: rgba(240,84,75,.12); color: var(--crimson); border: 1.5px solid rgba(240,84,75,.4); }
+/* Plain colored glyphs — no circle background or border */
+.pso-dot { display: inline-flex; align-items: center; justify-content: center; font-weight: 800; line-height: 1; flex-shrink: 0; }
+.pso-dot-strip .pso-dot { font-size: 16px; }
+.pso-dot-scored { color: var(--green); }
+.pso-dot-missed { color: var(--crimson); }
 .pso-kicks { padding: 4px 0 8px; }
-.pso-kick-row { display: grid; grid-template-columns: 1fr 28px 1fr; align-items: center; padding: 5px 14px; }
-.pso-kick  { display: flex; align-items: center; gap: 6px; }
-.pso-left  { text-align: left; }
-.pso-right { text-align: right; flex-direction: row-reverse; }
-.pso-name  { font-size: 11px; color: #b0b8c4; }
+/* name(left) — icon — number — icon — name(right): icons cluster at center, names sit at the outer edges */
+.pso-kick-row {
+  display: grid; grid-template-columns: 1fr 20px 26px 20px 1fr;
+  align-items: center; padding: 6px 14px; gap: 2px;
+}
+.pso-kname { font-size: 11px; color: #b0b8c4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pso-kname-left  { text-align: left; }
+.pso-kname-right { text-align: right; }
+.pso-icon-cell { display: flex; align-items: center; justify-content: center; }
+.pso-icon-cell .pso-dot { font-size: 14px; }
 .pso-kick-num { text-align: center; font-size: 10px; color: var(--dim); font-weight: 700; }
+
 
 
 /* ════════════════════════════════════════════════════════

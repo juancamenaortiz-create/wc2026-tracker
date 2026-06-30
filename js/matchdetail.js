@@ -317,13 +317,11 @@ function _tabFacts(result, summary) {
     for (var i = 0; i < maxKicks; i++) {
       var k1 = t1Kicks[i], k2 = t2Kicks[i];
       kickRows += '<div class="pso-kick-row">'
-        + '<span class="pso-kick pso-left">'
-        + (k1 ? kickDot(k1.scored) + '<span class="pso-name">' + k1.name + '</span>' : '')
-        + '</span>'
+        + '<span class="pso-kname pso-kname-left">' + (k1 ? k1.name : '') + '</span>'
+        + '<span class="pso-icon-cell">' + (k1 ? kickDot(k1.scored) : '') + '</span>'
         + '<span class="pso-kick-num">' + (i + 1) + '</span>'
-        + '<span class="pso-kick pso-right">'
-        + (k2 ? '<span class="pso-name">' + k2.name + '</span>' + kickDot(k2.scored) : '')
-        + '</span>'
+        + '<span class="pso-icon-cell">' + (k2 ? kickDot(k2.scored) : '') + '</span>'
+        + '<span class="pso-kname pso-kname-right">' + (k2 ? k2.name : '') + '</span>'
         + '</div>';
     }
 

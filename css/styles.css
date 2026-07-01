@@ -929,10 +929,25 @@ img.emoji {
 .bc-corner .pulse-dot { width: 5px; height: 5px; background: #fff; }
 
 .bc-team { display: flex; align-items: center; gap: 7px; padding: 6px 9px; height: 28px; }
-.bc-team.loser { opacity: .5; }
+.bc-team.loser { opacity: .38; }
+.bc-team.loser .bc-score { color: var(--muted); }
 .bc-team.winner .bc-name { color: var(--gold); font-weight: 700; }
-.bc-team.winner .bc-score { color: var(--gold); }
+.bc-team.winner .bc-score { color: var(--gold); font-weight: 800; }
 .bc-team.my-t   .bc-name { color: var(--gold); }
+
+/* Inline penalty parens on winner's score */
+.bc-pen { font-size: 9px; font-weight: 700; color: var(--gold); margin-left: 2px; }
+
+/* Result context strip at the bottom of each card */
+.bc-meta {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 3px 9px 5px; margin-top: 1px;
+  border-top: 1px solid rgba(255,255,255,.05);
+}
+.bc-meta-date { font-size: 9px; color: #5a6270; font-weight: 600; }
+.bc-meta-time { font-size: 9px; color: #5a6270; }
+.bc-meta-result { font-size: 9px; font-weight: 700; color: #6a727e; }
+.bc-meta-result.bc-meta-pso { color: var(--gold); }
 
 /* Analyzer bracket predictor — pick interaction */
 .az-pick-row { transition: background .12s; }

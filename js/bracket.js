@@ -170,6 +170,7 @@ function buildBracketCard(card, round) {
   let score1 = result ? result.score1 : '';
   let score2 = result ? result.score2 : '';
   const isPSO = !!(result?.substatus === 'PSO');
+  const isAET = !!(result?.substatus === 'AET');
 
   // winner / loser state per row
   let s1 = '', s2 = '';
@@ -183,27 +184,59 @@ function buildBracketCard(card, round) {
   const isMy2 = t2 ? isMyTeam(t2) : false;
   const showScore = isFT || isLive;
 
+  // Inline penalty parens on the winner's score for PSO matches
+  const pen1Html = (isPSO && isFT && result?.penScore1 != null && s1 === 'winner')
+    ? `<span class="bc-pen">(${result.penScore1})</span>` : '';
+  const pen2Html = (isPSO && isFT && result?.penScore2 != null && s2 === 'winner')
+    ? `<span class="bc-pen">(${result.penScore2})</span>` : '';
+
   // Card-level classes
   const liveClass = isLive ? ' bc-live' : '';
   const tbdClass  = (!t1 && !t2) ? ' bc-tbd' : '';
 
-  // Optional small corner flag for live / penalties
+  // Live corner badge
   let corner = '';
   if (isLive) {
     const clk = result?.clock ? ` ${result.clock}` : '';
     const lbl = result?.substatus === 'ET' ? 'ET' : result?.substatus === 'PSO' ? 'PSO' : 'LIVE';
     corner = `<span class="bc-corner live"><span class="pulse-dot"></span>${lbl}${clk}</span>`;
-  } else if (isFT && isPSO && result?.penScore1 != null) {
-    corner = `<span class="bc-corner pso">${result.penScore1}–${result.penScore2}p</span>`;
-  } else if (isFT && result?.substatus) {
-    corner = `<span class="bc-corner ft">${result.substatus}</span>`;
+  }
+
+  // Result context strip at the bottom of the card
+  let metaHtml = '';
+  if (isFT && card.date) {
+    const d = new Date(card.date + 'T12:00:00');
+    const dateLabel = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    let resultLabel = 'FT';
+    if (isPSO) resultLabel = `Pens ${result.penScore1}–${result.penScore2}`;
+    else if (isAET) resultLabel = 'AET';
+    metaHtml = `<div class="bc-meta">
+      <span class="bc-meta-date">${dateLabel}</span>
+      <span class="bc-meta-result${isPSO ? ' bc-meta-pso' : ''}">${resultLabel}</span>
+    </div>`;
+  } else if (!isFT && !isLive && card.date && card.time) {
+    const d = new Date(card.date + 'T12:00:00');
+    const dateLabel = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    metaHtml = `<div class="bc-meta">
+      <span class="bc-meta-date">${dateLabel}</span>
+      <span class="bc-meta-time">${card.time}</span>
+    </div>`;
   }
 
   return `<div class="bracket-card${liveClass}${tbdClass}" style="top:${card.y}px;width:${CARD_W}px">
     ${corner}
-    ${bcTeamRow(t1, card.slot1, { state: s1, isMy: isMy1, score: score1, showScore })}
+    <div class="bc-team ${s1} ${isMy1 ? 'my-t' : ''}">
+      ${t1 ? `<span class="bc-badge">${getFlag(t1)}</span>` : '<span class="bc-badge empty"></span>'}
+      <span class="bc-name${t1 ? ' team-link' : ' tbd'}"${t1 ? ` onclick="openTeamProfile('${t1}')"` : ''}>${t1 ? displayName(t1) : (card.slot1 || 'TBD')}</span>
+      ${showScore ? `<span class="bc-score">${score1}</span>${pen1Html}` : ''}
+    </div>
     <div class="bc-divider"></div>
-    ${bcTeamRow(t2, card.slot2, { state: s2, isMy: isMy2, score: score2, showScore })}
+    <div class="bc-team ${s2} ${isMy2 ? 'my-t' : ''}">
+      ${t2 ? `<span class="bc-badge">${getFlag(t2)}</span>` : '<span class="bc-badge empty"></span>'}
+      <span class="bc-name${t2 ? ' team-link' : ' tbd'}"${t2 ? ` onclick="openTeamProfile('${t2}')"` : ''}>${t2 ? displayName(t2) : (card.slot2 || 'TBD')}</span>
+      ${showScore ? `<span class="bc-score">${score2}</span>${pen2Html}` : ''}
+    </div>
+    ${metaHtml}
   </div>`;
 }
 

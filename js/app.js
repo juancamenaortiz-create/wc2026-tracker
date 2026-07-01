@@ -883,11 +883,13 @@ function getMatchResult(match) {
 function getKnockoutResult(matchId) {
   return STATE.results.knockoutMatches.find(m => m.matchId === matchId) || null;
 }
-// Unified lookup: R32 (73-88) live in groupMatches, R16+ in knockoutMatches
+// Unified lookup — searches both arrays since R32 results land in knockoutMatches
+// (fetched via the KO path) while group results land in groupMatches.
 function getAnyMatchResult(matchId) {
   if (!matchId) return null;
-  if (matchId <= 88) return STATE.results.groupMatches.find(m => m.matchId === matchId) || null;
-  return STATE.results.knockoutMatches.find(m => m.matchId === matchId) || null;
+  return STATE.results.groupMatches.find(m => m.matchId === matchId)
+      || STATE.results.knockoutMatches.find(m => m.matchId === matchId)
+      || null;
 }
 
 // ── Time Helpers ──────────────────────────────

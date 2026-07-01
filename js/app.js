@@ -248,25 +248,10 @@ function init() {
 // Non-match days: 30 min (no live games to track).
 let _refreshTimer = null;
 
-function hasActiveMatches() {
-  // Returns true when there's a LIVE match or an overdue match (kickoff passed, no score yet)
-  if ((STATE.results.groupMatches||[]).some(m => m.status === 'LIVE')) return true;
-  if ((STATE.results.knockoutMatches||[]).some(m => m.status === 'LIVE')) return true;
-  const now = Date.now(), today = getTodayCT();
-  return SCHEDULE.some(m => {
-    if (m.date !== today) return false;
-    const msOver = now - parseGameTimeCT(m.date, m.time).getTime();
-    if (msOver < 300000) return false; // less than 5 min past kickoff
-    return !(STATE.results.groupMatches||[]).some(r =>
-      normName(r.team1) === normName(m.t1) && normName(r.team2) === normName(m.t2)
-    );
-  });
-}
-
 function getRefreshInterval() {
-  if (!isMatchDay()) return 30 * 60 * 1000;
-  if (STATE.lastSource === 'Claude') return 60 * 60 * 1000;
-  return hasActiveMatches() ? 30 * 1000 : 60 * 1000; // 30s during live/overdue matches
+  if (!isMatchDay()) return 30 * 60 * 1000;            // no matches today — check every 30 min
+  if (STATE.lastSource === 'Claude') return 60 * 60 * 1000; // on Claude fallback — throttle to avoid burning AI credits
+  return 30 * 1000; // any match day — refresh every 30s for a snappier live experience
 }
 
 let _countdownTicker = null;
@@ -1027,7 +1012,7 @@ function loadPreviewCache() {
     Object.entries(cached).forEach(([id, entry]) => {
       // Only keep entries with parsed p.data — discard old p.text-only entries
       // open/loading are never saved to cache so they're always falsy on load
-      if (entry.matchDate >= today && entry.data) fresh[id] = entry;
+      if (entry.data) fresh[id] = entry; // keep all previews — past ones let you compare prediction vs result
     });
     STATE.aiPreviews = fresh;
     localStorage.setItem('wc2026_previews', JSON.stringify(fresh));

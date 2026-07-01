@@ -6,7 +6,7 @@
 // Layout constants
 const CARD_W     = 130;
 const CARD_H     = 58;
-const R32_SLOT   = 82;   // vertical slot height for R32 (16 slots)
+const R32_SLOT   = 100;  // vertical slot height for R32 — extra room for the meta strip
 const COL_GAP    = 26;
 const COL_STRIDE = CARD_W + COL_GAP;
 const ROUNDS     = ['R32','R16','QF','SF','Final'];
@@ -184,10 +184,11 @@ function buildBracketCard(card, round) {
   const isMy2 = t2 ? isMyTeam(t2) : false;
   const showScore = isFT || isLive;
 
-  // Inline penalty parens on the winner's score for PSO matches
-  const pen1Html = (isPSO && isFT && result?.penScore1 != null && s1 === 'winner')
+  // Inline penalty parens on BOTH teams for PSO matches so the shootout
+  // scores read naturally side-by-side (e.g. Germany 1(3) / Paraguay 1(4))
+  const pen1Html = (isPSO && isFT && result?.penScore1 != null)
     ? `<span class="bc-pen">(${result.penScore1})</span>` : '';
-  const pen2Html = (isPSO && isFT && result?.penScore2 != null && s2 === 'winner')
+  const pen2Html = (isPSO && isFT && result?.penScore2 != null)
     ? `<span class="bc-pen">(${result.penScore2})</span>` : '';
 
   // Card-level classes
@@ -207,12 +208,11 @@ function buildBracketCard(card, round) {
   if (isFT && card.date) {
     const d = new Date(card.date + 'T12:00:00');
     const dateLabel = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    let resultLabel = 'FT';
-    if (isPSO) resultLabel = `Pens ${result.penScore1}–${result.penScore2}`;
-    else if (isAET) resultLabel = 'AET';
+    const resultLabel = isPSO ? 'P' : isAET ? 'AET' : 'FT';
+    const resultCls = isPSO ? ' bc-meta-pso' : '';
     metaHtml = `<div class="bc-meta">
       <span class="bc-meta-date">${dateLabel}</span>
-      <span class="bc-meta-result${isPSO ? ' bc-meta-pso' : ''}">${resultLabel}</span>
+      <span class="bc-meta-result${resultCls}">${resultLabel}</span>
     </div>`;
   } else if (!isFT && !isLive && card.date && card.time) {
     const d = new Date(card.date + 'T12:00:00');

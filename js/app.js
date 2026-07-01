@@ -446,13 +446,46 @@ async function fetchFromESPN(overrideDates) {
             }
           }
           if (!koMatch) {
+            // Exact two-team match failed — try a looser one-team match for any KO
+            // match that has a 3rd-place slot. Our bracket projection algorithm can
+            // assign a different 3rd-place team than FIFA's official matrix, so
+            // "Belgium vs Algeria" in our projection vs "Belgium vs Senegal" from
+            // ESPN is a known class of mismatch. If the confirmed fixed-slot team
+            // (e.g. Belgium = 1st-G, which is unambiguous) matches one of ESPN's
+            // teams, we can confidently identify the match and trust ESPN for the
+            // actual opponent.
+            const koWithThird = allKO.filter(km =>
+              /^3rd-/.test(km.slot1 || '') || /^3rd-/.test(km.slot2 || '')
+            );
+            for (const km of koWithThird) {
+              const [kt1, kt2] = getKOMatchTeams(km.id);
+              const resolved = [kt1, kt2].filter(Boolean).map(normName);
+              const espnTeams = [normName(n1), normName(n2)];
+              if (resolved.some(t => espnTeams.includes(t))) {
+                koMatch = km;
+                break;
+              }
+            }
+          }
+          if (!koMatch) {
             const label = `${n1} vs ${n2}`;
             if (!unmatched.includes(label)) unmatched.push(label);
             continue;
           }
-          // Found a KO match — build result using same logic as group matches below
+          // Found a KO match — build result using same logic as group matches below.
+          // Use ESPN's actual team names as ground truth since our 3rd-place projection
+          // may differ from FIFA's official matrix (e.g. we project Algeria but ESPN
+          // returns Senegal for the same match slot — both are valid per the constraints
+          // but different from what FIFA officially assigned).
           const [kt1, kt2] = getKOMatchTeams(koMatch.id);
-          const flipKO = normName(kt1) === normName(n2);
+          // Determine flip: compare ESPN's home team against our resolved team1.
+          // If kt1 can't be matched (wrong 3rd projection), try n1/n2 against the
+          // fixed slot team directly to still get orientation right.
+          const flipKO = kt1 && normName(kt1) !== normName(n1) && normName(kt1) !== '';
+          // Actual team names: trust ESPN, falling back to our projection only if ESPN's
+          // names are somehow absent (shouldn't happen in practice).
+          const actualT1 = flipKO ? (n2 || kt2 || '') : (n1 || kt1 || '');
+          const actualT2 = flipKO ? (n1 || kt1 || '') : (n2 || kt2 || '');
           const homeId = home.team?.id || '';
           const awayId = away.team?.id || '';
           // Penalty shootout kicks must be excluded from the regular-time score/timeline
@@ -480,7 +513,7 @@ async function fetchFromESPN(overrideDates) {
           // the match was decided on penalties regardless of what the status text says.
           if (!substatus && !isNaN(homePenKO) && !isNaN(awayPenKO)) substatus = 'PSO';
           koFound.push({
-            matchId: koMatch.id, team1: kt1, team2: kt2, espnId: ev.id,
+            matchId: koMatch.id, team1: actualT1, team2: actualT2, espnId: ev.id,
             score1: flipKO ? ks2 : ks1, score2: flipKO ? ks1 : ks2,
             status, substatus, round: koMatch.round || 'R32', date: koMatch.date,
             clock:  comp.status?.displayClock || '',

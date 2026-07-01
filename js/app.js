@@ -1382,7 +1382,11 @@ function buildTimeline(result) {
 // Aggregates goals from all fetched match events into a ranked leaderboard.
 function buildTopScorers() {
   const map = {};
-  STATE.results.groupMatches.forEach(match => {
+  const allMatches = [
+    ...(STATE.results.groupMatches    || []),
+    ...(STATE.results.knockoutMatches || []),
+  ];
+  allMatches.forEach(match => {
     (match.events || []).forEach(ev => {
       if (!ev.g || ev.og) return;          // goals only, skip own goals
       const team = ev.tid === match.tid1 ? match.team1

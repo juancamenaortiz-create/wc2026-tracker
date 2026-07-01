@@ -110,7 +110,10 @@ function buildScorersHTML() {
   }
 
   const maxGoals    = scorers[0].goals;
-  const totalGames  = (STATE.results.groupMatches || []).filter(m => m.score1 != null).length;
+  const totalGames = [
+    ...(STATE.results.groupMatches    || []),
+    ...(STATE.results.knockoutMatches || []),
+  ].filter(m => m.score1 != null).length;
 
   // derive a short abbreviation from the team name
   const ABBR_MAP = {

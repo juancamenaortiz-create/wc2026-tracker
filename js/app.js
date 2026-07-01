@@ -387,7 +387,11 @@ async function fetchFromESPN(overrideDates) {
           if (sn === 'STATUS_HALFTIME') substatus = 'HT';
           status = 'LIVE';
         } else if (sn.includes('DELAY') || sn.includes('RAIN') ||
-                   sn.includes('POSTPONE') || sn.includes('SUSPEND') || sn.includes('CANCEL')) {
+                   sn.includes('POSTPONE') || sn.includes('SUSPEND') || sn.includes('CANCEL') ||
+                   // ESPN sometimes keeps type.name as STATUS_SCHEDULED for weather delays
+                   // and puts the delay reason in shortDetail/description instead.
+                   /delay|postpone|suspend|cancel/i.test(st.shortDetail || '') ||
+                   /delay|postpone|suspend|cancel/i.test(st.description  || '')) {
           // Delayed / postponed / suspended — surface in UI with ESPN's reason string
           status = 'DELAYED';
           substatus = st.shortDetail || st.description || 'Delayed';

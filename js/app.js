@@ -322,15 +322,11 @@ function _isShootoutDetail(d) {
   if (d.shootout === true) return true;
   const t = ((d.type && (d.type.text || d.type.name)) || '').toLowerCase();
   if (t.includes('shootout')) return true;
-  // "Penalty - Scored/Saved/Missed" is ESPN's confirmed phrasing for SHOOTOUT kicks.
-  // An in-play penalty goal (e.g. 120+5' AET) uses different type text ("Goal",
-  // "Penalty Kick Goal", etc.) — so this text match alone is reliable.
+  // ESPN's confirmed phrasing for SHOOTOUT kicks only. In-play penalties (including
+  // AET goals like 120+5') use "Penalty Kick Goal" or "Goal" — never "Penalty - Scored/
+  // Saved/Missed". Period-based detection removed: ESPN reuses period ≥ 5 for AET
+  // overflow minutes, causing false positives on legitimate in-play penalties.
   if (t.includes('penalty - scored') || t.includes('penalty - saved') || t.includes('penalty - missed')) return true;
-  // Period >= 5 can mean the actual shootout period BUT ESPN also uses it for
-  // added extra-time minutes (120+X'). Only trust it when combined with
-  // penalty/shootout-specific text to avoid false-positives on AET goals.
-  if (d.period && typeof d.period.number === 'number' && d.period.number >= 5
-      && (t.includes('penalty') || t.includes('shootout') || t.includes('kick'))) return true;
   return false;
 }
 
@@ -403,10 +399,8 @@ async function fetchFromESPN(overrideDates) {
           substatus = st.shortDetail || st.description || 'Delayed';
           // Fall through to team matching — don't skip, we want to render this match
         } else {
-          // Not started yet — still capture ESPN's authoritative kickoff time so we can
-          // correct any wrong/stale time in the hand-typed SCHEDULE data. ESPN's comp.date
-          // is the same field broadcasters and ticket vendors pull from, so it's far more
-          // reliable than a manually-typed schedule that can drift from late FIFA changes.
+          // Not started — capture ESPN's kickoff time to correct stale SCHEDULE data,
+          // then fall through so KO matches get their confirmed team names stored.
           const isoDate = comp.date || ev.date;
           if (isoDate) {
             const cs2 = comp.competitors || [];
@@ -422,7 +416,7 @@ async function fetchFromESPN(overrideDates) {
               if (sm) STATE.scheduleCorrections[sm.id] = isoDate;
             }
           }
-          continue; // no score/events to parse for a match that hasn't started
+          status = 'NS'; // fall through — group matches will skip below; KO matches capture team names
         }
         const cs = comp.competitors || [];
         const home = cs.find(c => c.homeAway === 'home') || cs[0];
@@ -492,6 +486,20 @@ async function fetchFromESPN(overrideDates) {
           // names are somehow absent (shouldn't happen in practice).
           const actualT1 = flipKO ? (n2 || kt2 || '') : (n1 || kt1 || '');
           const actualT2 = flipKO ? (n1 || kt1 || '') : (n2 || kt2 || '');
+          // For not-started matches just store the confirmed team names — no score
+          // or events yet. This ensures bracket/today always show the correct
+          // pairing (e.g. Switzerland vs Algeria) instead of our projection.
+          if (status === 'NS') {
+            koFound.push({
+              matchId: koMatch.id, team1: actualT1, team2: actualT2, espnId: ev.id,
+              score1: null, score2: null, status: 'NS', substatus: '',
+              round: koMatch.round || 'R32', date: koMatch.date,
+              clock: '', events: [], pso: [],
+              tid1: flipKO ? (home.team?.id||'') : (home.team?.id||''),
+              tid2: flipKO ? (home.team?.id||'') : (away.team?.id||''),
+            });
+            continue;
+          }
           const homeId = home.team?.id || '';
           const awayId = away.team?.id || '';
           // Penalty shootout kicks must be excluded from the regular-time score/timeline
@@ -532,6 +540,7 @@ async function fetchFromESPN(overrideDates) {
           });
           continue;
         }
+        if (status === 'NS') continue; // group matches: already known from SCHEDULE, skip NS entries
         const flip = normName(m.t1) === normName(n2);
         // Extract events (goals + cards) and live clock from ESPN
         const homeId = home.team?.id || '';

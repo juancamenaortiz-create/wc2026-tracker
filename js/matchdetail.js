@@ -215,13 +215,13 @@ function _tabFacts(result, summary) {
   // array at all for this league).
   // returns goals and cards; everything else lives in the summary endpoint.
   var events = _enrichEvents(result.events || [], summary, result);
-  // PSO kicks: the lightweight scoreboard endpoint (result.pso) typically only
-  // records SUCCESSFUL shootout kicks — ESPN's "scoring plays" list omits misses.
-  // The summary endpoint's full play-by-play has the complete sequence including
-  // misses, so prefer it whenever it returns anything; fall back to result.pso
-  // (available immediately on every refresh) only if the summary hasn't loaded yet.
   var summaryPsoKicks = _extractPSOKicks(summary, result);
-  var psoKicks = summaryPsoKicks.length ? summaryPsoKicks : (result.pso || []);
+  // Only fall back to the scoreboard-derived kicks (makes only, no misses) when
+  // the summary endpoint hasn't loaded yet AND the match actually went to penalties.
+  // An AET match must never show the PSO section — an in-play penalty in extra
+  // time (e.g. 120+5') is NOT a shootout kick.
+  var psoKicks = summaryPsoKicks.length ? summaryPsoKicks
+               : (result && result.substatus === 'PSO' ? (result.pso || []) : []);
 
   if (!events.length && !psoKicks.length)
     return info + '<div class="md-empty">No events yet.</div>';

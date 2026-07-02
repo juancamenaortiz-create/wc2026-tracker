@@ -321,10 +321,16 @@ function espnToApp(n) { return ESPN_NAMES[n] || n || ''; }
 function _isShootoutDetail(d) {
   if (d.shootout === true) return true;
   const t = ((d.type && (d.type.text || d.type.name)) || '').toLowerCase();
-  // Confirmed real ESPN phrasing for shootout kicks: "Penalty - Scored/Saved/Missed"
-  if (t.includes('penalty - scored') || t.includes('penalty - saved') || t.includes('penalty - missed')) return true;
   if (t.includes('shootout')) return true;
-  if (d.period && typeof d.period.number === 'number' && d.period.number >= 5) return true;
+  // "Penalty - Scored/Saved/Missed" is ESPN's confirmed phrasing for SHOOTOUT kicks.
+  // An in-play penalty goal (e.g. 120+5' AET) uses different type text ("Goal",
+  // "Penalty Kick Goal", etc.) — so this text match alone is reliable.
+  if (t.includes('penalty - scored') || t.includes('penalty - saved') || t.includes('penalty - missed')) return true;
+  // Period >= 5 can mean the actual shootout period BUT ESPN also uses it for
+  // added extra-time minutes (120+X'). Only trust it when combined with
+  // penalty/shootout-specific text to avoid false-positives on AET goals.
+  if (d.period && typeof d.period.number === 'number' && d.period.number >= 5
+      && (t.includes('penalty') || t.includes('shootout') || t.includes('kick'))) return true;
   return false;
 }
 
@@ -490,7 +496,7 @@ async function fetchFromESPN(overrideDates) {
           const awayId = away.team?.id || '';
           // Penalty shootout kicks must be excluded from the regular-time score/timeline
           // (see _isShootoutDetail) — captured separately as pso instead.
-          const psoFromScoreboardKO = _buildPSOFromDetails(comp.details);
+          const psoFromScoreboardKO = substatus === 'PSO' ? _buildPSOFromDetails(comp.details) : [];
           const eventsKO = (comp.details || [])
             .filter(d => !_isShootoutDetail(d) && (d.scoringPlay || d.yellowCard || d.redCard))
             .map(d => ({
@@ -534,7 +540,7 @@ async function fetchFromESPN(overrideDates) {
         // in comp.details — they must be excluded from the regular-time event
         // timeline and score derivation, or they inflate the final score and
         // pollute the Summary tab timeline (e.g. showing "4–5" instead of "1–1, Pens 3–4").
-        const psoFromScoreboard = _buildPSOFromDetails(comp.details);
+        const psoFromScoreboard = substatus === 'PSO' ? _buildPSOFromDetails(comp.details) : [];
         const events = (comp.details || [])
           .filter(d => {
             if (_isShootoutDetail(d)) return false; // handled separately as PSO kicks
@@ -1311,9 +1317,36 @@ function resolveKOSlot(slot) {
   // Best 3rd from pool: "3rd-ABCDF"
   const third = slot.match(/^3rd-([A-L]+)$/);
   if (third) {
-    // Use global bipartite assignment so no team appears in two slots
+    const groupStr = third[1];
+    // ── Real result takes priority over the algorithm ──────────────────────
+    // Our backtracking can assign a different 3rd-place team than FIFA's
+    // official matrix (e.g. "Algeria" when the real qualifier is "Senegal").
+    // THIRD_SLOT_MATCH tells us which R32 match ID this slot belongs to.
+    // If that match has a confirmed result, read the actual qualifier from it
+    // rather than trusting the projection.
+    const thirdMatchId = THIRD_SLOT_MATCH[groupStr];
+    if (thirdMatchId) {
+      const thirdResult = getAnyMatchResult(thirdMatchId);
+      if (thirdResult && thirdResult.status === 'FT'
+          && thirdResult.team1 && thirdResult.team2) {
+        // Determine which team filled the 3rd-place slot by comparing the
+        // OTHER slot (the fixed 1st/2nd-place team) against the result.
+        const r32m = R32_MATCHES.find(m => m.id === thirdMatchId);
+        if (r32m) {
+          const fixedSlotStr = /^3rd-/.test(r32m.slot1 || '') ? r32m.slot2 : r32m.slot1;
+          const fixedTeam = resolveKOSlot(fixedSlotStr);
+          if (fixedTeam) {
+            // Whichever result team is NOT the fixed-slot team is the real 3rd-place qualifier
+            return normName(thirdResult.team1) === normName(fixedTeam)
+              ? thirdResult.team2
+              : thirdResult.team1;
+          }
+        }
+      }
+    }
+    // ── Fall back to backtracking algorithm when no confirmed result yet ───
     const assignments = getThirdPlaceAssignments(ovr);
-    return assignments[third[1]] ?? null;
+    return assignments[groupStr] ?? null;
   }
   // Winner of previous match: "W-M89"
   const wm = slot.match(/^W-M(\d+)$/);
@@ -1331,19 +1364,22 @@ function resolveKOSlot(slot) {
 }
 
 function getKOMatchTeams(matchId) {
-  if (matchId <= 88) {
-    const m = R32_MATCHES.find(r => r.id === matchId);
-    return m ? [resolveKOSlot(m.slot1), resolveKOSlot(m.slot2)] : [null, null];
-  }
-  const m = KO_ROUNDS.find(r => r.id === matchId);
+  // Search both arrays — R32 (73-88) uses R32_MATCHES, R16+ uses KO_ROUNDS
+  const m = R32_MATCHES.find(r => r.id === matchId)
+         || (typeof KO_ROUNDS !== 'undefined' && KO_ROUNDS.find(r => r.id === matchId));
   return m ? [resolveKOSlot(m.slot1), resolveKOSlot(m.slot2)] : [null, null];
 }
 
 function getKOWinner(matchId) {
-  // Real result takes priority
-  const result = getKnockoutResult(matchId);
+  // Real result takes priority — search both result arrays
+  const result = getAnyMatchResult(matchId);
   if (result && result.status === 'FT') {
-    return parseInt(result.score1) > parseInt(result.score2) ? result.team1 : result.team2;
+    const isPSO = result.substatus === 'PSO';
+    const s1 = isPSO ? (result.penScore1 ?? result.score1) : result.score1;
+    const s2 = isPSO ? (result.penScore2 ?? result.score2) : result.score2;
+    if (parseInt(s1) > parseInt(s2)) return result.team1;
+    if (parseInt(s2) > parseInt(s1)) return result.team2;
+    // Scores still tied (shouldn't happen for a FT KO result) — fall through
   }
   // Fall back to user's bracket pick
   return STATE.bracketPicks[matchId] || null;

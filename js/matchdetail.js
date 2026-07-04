@@ -215,6 +215,41 @@ function _tabFacts(result, summary) {
   // array at all for this league).
   // returns goals and cards; everything else lives in the summary endpoint.
   var events = _enrichEvents(result.events || [], summary, result);
+
+  // summary.keyEvents is the confirmed field for full-match events including AET.
+  // comp.details from the scoreboard API only covers regulation time (0-90'),
+  // so AET goals and cards (e.g. Tielemans 120+5') are absent from result.events.
+  // Merge any keyEvents not already in the timeline.
+  if (summary && Array.isArray(summary.keyEvents) && summary.keyEvents.length) {
+    var existingKeys = {};
+    events.forEach(function(e) {
+      var key = (e.min || '') + '|' + (e.tid || '') + '|' + (e.g ? 'g' : e.y ? 'y' : e.r ? 'r' : '?');
+      existingKeys[key] = true;
+    });
+    summary.keyEvents.forEach(function(k) {
+      if (!k.scoringPlay && !k.yellowCard && !k.redCard) return;
+      if (_isShootoutDetail(k)) return;
+      var min = (k.clock && k.clock.displayValue) || '';
+      var tid = (k.team && k.team.id) || '';
+      var g = !!(k.scoringPlay), y = !!(k.yellowCard), r = !!(k.redCard);
+      var key = min + '|' + tid + '|' + (g ? 'g' : y ? 'y' : r ? 'r' : '?');
+      if (existingKeys[key]) return; // already have this one from comp.details
+      var ath = k.participants || k.athletes || [];
+      var p = (ath[0] && (ath[0].athlete && (ath[0].athlete.shortName || ath[0].athlete.displayName)) ||
+               (ath[0] && (ath[0].shortName || ath[0].displayName))) || '';
+      var pk = !!(k.penaltyKick || (k.scoringType && k.scoringType.abbreviation === 'PK') ||
+                  (k.type && k.type.text && k.type.text.toLowerCase().includes('penalty')));
+      events.push({ min: min, tid: tid, p: p, g: g, y: y, r: r, og: !!(k.ownGoal), pk: pk, pIn: '' });
+    });
+  }
+
+  // Drop card/event entries with no player name — ESPN sometimes logs cards in
+  // comp.details with empty athletesInvolved (data quality gap at the scoreboard level).
+  // Goals are always kept even if name is missing (own goal or data issue).
+  events = events.filter(function(e) {
+    if (e.g || e.sub) return true;
+    return !!e.p;
+  });
   var summaryPsoKicks = _extractPSOKicks(summary, result);
   // Only fall back to the scoreboard-derived kicks (makes only, no misses) when
   // the summary endpoint hasn't loaded yet AND the match actually went to penalties.
@@ -649,8 +684,8 @@ function _buildPitch(homeA, awayA, homeFm, awayFm) {
 
 var _STAT_DEFS = [
   { key:'possessionPct',   label:'Possession',    fmt:function(v){return v+'%';}, isPct:true },
-  { key:'totalShots',      label:'Shots' },
-  { key:'shotsOnTarget',   label:'On Target' },
+  { key:['totalShots','shots','shotAttempts'],              label:'Shots' },
+  { key:['shotsOnTarget','onTargetShotsTotal','shotsOnGoal'], label:'On Target' },
   { key:'saves',           label:'Saves' },
   { key:'passingAccuracy', label:'Pass Accuracy', fmt:function(v){return v+'%';}, isPct:true },
   { key:'totalTackles',    label:'Tackles' },
@@ -671,10 +706,13 @@ function _tabStats(result, summary, sched) {
       se2 = (result.stats && result.stats.t2) || {};
 
   function getSt(td, key) {
-    var found = (td.statistics||[]).filter(function(s){return s.name===key;})[0];
-    if (!found) return null;
-    var v = parseFloat(found.displayValue);
-    return isNaN(v) ? null : v;
+    // Try the exact key, then common ESPN aliases — key names vary between endpoints
+    var keys = Array.isArray(key) ? key : [key, key.replace(/([A-Z])/g, function(m) { return m.toLowerCase(); })];
+    for (var i = 0; i < keys.length; i++) {
+      var found = (td.statistics || []).find(function(s) { return s.name === keys[i]; });
+      if (found) { var v = parseFloat(found.displayValue); if (!isNaN(v)) return v; }
+    }
+    return null;
   }
 
   // Stats bars — green bar for home, dark for away

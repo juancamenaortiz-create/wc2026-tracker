@@ -56,7 +56,9 @@ async function _mdRender(scheduleMatchId) {
   var allMatches = (STATE.results.groupMatches || []).concat(STATE.results.knockoutMatches || []);
   var result = allMatches.find(function(r) { return r.matchId === scheduleMatchId; });
   var sched  = SCHEDULE.find(function(m) { return m.id === scheduleMatchId; })
-            || R32_MATCHES.find(function(m) { return m.id === scheduleMatchId; });
+            || R32_MATCHES.find(function(m) { return m.id === scheduleMatchId; })
+            || (typeof KO_ROUNDS !== 'undefined' && KO_ROUNDS.find(function(m) { return m.id === scheduleMatchId; }))
+            || null;
 
   if (!sched) { el.innerHTML = '<div class="md-empty">Match not found.</div>'; return; }
 
@@ -118,6 +120,12 @@ function _mdGoalList(events, tid) {
 function _mdShell(result, sched) {
   var t1  = (result && result.team1) || sched.t1;
   var t2  = (result && result.team2) || sched.t2;
+  // KO matches use slot1/slot2 instead of t1/t2 — resolve if needed
+  if (!t1 || !t2) {
+    var kt = (typeof getKOMatchTeams !== 'undefined') ? getKOMatchTeams(sched.id) : [null, null];
+    if (!t1) t1 = kt[0] || sched.slot1 || '';
+    if (!t2) t2 = kt[1] || sched.slot2 || '';
+  }
   var has = result && result.status !== 'NS';
   var hasPSO = result && result.substatus === 'PSO' && result.penScore1 != null && result.penScore2 != null;
   var score = has

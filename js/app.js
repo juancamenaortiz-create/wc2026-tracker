@@ -1085,7 +1085,9 @@ function savePreviewCache(matchId, entry, matchDate) {
 
 async function fetchMatchPreview(matchId) {
   const match = SCHEDULE.find(m => m.id === matchId)
-             || R32_MATCHES.find(m => m.id === matchId);
+             || R32_MATCHES.find(m => m.id === matchId)
+             || (typeof KO_ROUNDS !== 'undefined' && KO_ROUNDS.find(m => m.id === matchId))
+             || null;
   if (!match) return;
 
   // Already fetched or loading — skip
@@ -1096,25 +1098,40 @@ async function fetchMatchPreview(matchId) {
   renderActiveTab();
 
   try {
-    // Build a compact group standings snapshot to give the AI context it would
-    // otherwise need 2-3 web searches to find. This cuts ~15s off the preview time.
-    const groupStandings = (() => {
+    // Resolve team names — group matches have t1/t2 directly; KO matches
+    // need the confirmed result or the projection from getKOMatchTeams.
+    let t1 = match.t1 || '', t2 = match.t2 || '';
+    if (!t1 || !t2) {
+      const result = getAnyMatchResult(matchId);
+      if (result?.team1) t1 = result.team1;
+      if (result?.team2) t2 = result.team2;
+      if (!t1 || !t2) {
+        const [kt1, kt2] = getKOMatchTeams(matchId);
+        if (!t1) t1 = kt1 || match.slot1 || '';
+        if (!t2) t2 = kt2 || match.slot2 || '';
+      }
+    }
+
+    // Group standings only useful for group-stage matches
+    const isGroupStage = !!match.g;
+    const groupStandings = isGroupStage ? (() => {
       try {
         const rows = calculateStandings(match.g, STATE.results.groupMatches);
         return rows.map(r => `${r.rank}. ${r.team} — ${r.w}W ${r.d}D ${r.l}L ${r.gf}:${r.ga} (${r.pts} pts)`).join('\n');
       } catch(e) { return ''; }
-    })();
+    })() : '';
 
     const resp = await fetch('/api/preview', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        team1: match.t1 || match.slot1 || '',
-        team2: match.t2 || match.slot2 || '',
+        team1: t1,
+        team2: t2,
         group: match.g || '',
+        round: match.round || (isGroupStage ? 'Group Stage' : 'Knockout'),
         city:  match.city || '',
         date:  match.date || '',
-        groupStandings, // current table so AI doesn't need to search for it
+        groupStandings,
       }),
     });
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);

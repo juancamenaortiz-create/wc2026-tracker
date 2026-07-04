@@ -10,23 +10,29 @@ export default async function handler(req, res) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return res.status(200).json({ error: 'API key not configured', data: null });
 
-  const { team1, team2, group, city, date, groupStandings } = req.body || {};
+  const { team1, team2, group, round, city, date, groupStandings } = req.body || {};
   if (!team1 || !team2) return res.status(400).json({ error: 'Missing team names', data: null });
 
-  // Build the standings note as plain text so the prompt has no nested template literals
+  const roundLabel = group ? ('Group ' + group) : (round || 'Knockout Round');
+  const isKnockout = !group;
+
   const standingsNote = groupStandings
     ? 'Current Group ' + group + ' standings (already provided — do NOT search for this):\n' + groupStandings + '\n'
     : '';
 
+  const stakesFocus = isKnockout
+    ? '"stakes": "<2 sentences: what this knockout tie means — tournament trajectory, pressure on each team, who advances>",'
+    : '"stakes": "<2 sentences: group table situation — who is 1st/2nd/3rd, what each team needs from this result>",';
+
   const prompt = 'You are a FIFA World Cup 2026 tactical analyst. Search for CURRENT tournament information and return a focused pre-match preview as ONLY a raw JSON object — no markdown, no backticks, no explanation.\n\n'
     + 'Match: ' + team1 + ' vs ' + team2 + '\n'
-    + (group ? 'Group ' + group + ' · ' : '') + city + ' · ' + date + ' · 2026 FIFA World Cup\n\n'
+    + roundLabel + ' · ' + city + ' · ' + date + ' · 2026 FIFA World Cup\n\n'
     + 'IMPORTANT: Do NOT repeat basic team info (rankings, WC history, general style) — the user already has that in team profiles.\n'
     + standingsNote
-    + 'Focus your web searches ONLY on: each team\'s results and scorers so far in THIS tournament, and tactical/H2H research. Do NOT search for group standings.\n\n'
+    + 'Focus your web searches ONLY on: each team\'s results and scorers so far in THIS tournament, and tactical/H2H research.\n\n'
     + 'Return ONLY this JSON:\n'
     + '{\n'
-    + '  "stakes": "<2 sentences: group table situation — who is 1st/2nd/3rd, what each team needs from this result>",\n'
+    + '  ' + stakesFocus + '\n'
     + '  "form": {\n'
     + '    "team1": "<' + team1 + '\'s results in THIS tournament only, e.g. W 3-0 vs X, D 1-1 vs Y. Include top scorer>",\n'
     + '    "team2": "<same for ' + team2 + '>"\n'
@@ -67,15 +73,12 @@ export default async function handler(req, res) {
       .join('\n')
       .trim();
 
-    // Try to parse as JSON — model sometimes adds preamble before the JSON fence
     try {
-      // Strategy 1: extract content between ```json ... ``` fences
       let jsonStr = null;
       const fenceMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
       if (fenceMatch) {
         jsonStr = fenceMatch[1].trim();
       } else {
-        // Strategy 2: find the outermost { } JSON object in the text
         const start = text.indexOf('{');
         const end   = text.lastIndexOf('}');
         if (start !== -1 && end > start) jsonStr = text.slice(start, end + 1);
@@ -84,7 +87,6 @@ export default async function handler(req, res) {
       const parsed = JSON.parse(jsonStr);
       return res.status(200).json({ data: parsed });
     } catch(parseErr) {
-      // If JSON parse still fails, return as plain text fallback
       console.warn('preview.js: JSON parse failed:', parseErr.message);
       return res.status(200).json({ text: text || null });
     }

@@ -1,0 +1,130 @@
+[
+  {
+    "id": 73,
+    "date": "2026-06-28",
+    "time": "2:00 PM",
+    "city": "Los Angeles",
+    "slot1": "2nd-A",
+    "slot2": "2nd-B"
+  },
+  {
+    "id": 74,
+    "date": "2026-06-29",
+    "time": "3:30 PM",
+    "city": "Boston",
+    "slot1": "1st-E",
+    "slot2": "3rd-ABCDF"
+  },
+  {
+    "id": 75,
+    "date": "2026-06-29",
+    "time": "8:00 PM",
+    "city": "Monterrey",
+    "slot1": "1st-F",
+    "slot2": "2nd-C"
+  },
+  {
+    "id": 76,
+    "date": "2026-06-29",
+    "time": "12:00 PM",
+    "city": "Houston",
+    "slot1": "1st-C",
+    "slot2": "2nd-F"
+  },
+  {
+    "id": 77,
+    "date": "2026-06-30",
+    "time": "4:00 PM",
+    "city": "New York/NJ",
+    "slot1": "1st-I",
+    "slot2": "3rd-CDFGH"
+  },
+  {
+    "id": 78,
+    "date": "2026-06-30",
+    "time": "12:00 PM",
+    "city": "Dallas",
+    "slot1": "2nd-E",
+    "slot2": "2nd-I"
+  },
+  {
+    "id": 79,
+    "date": "2026-06-30",
+    "time": "8:00 PM",
+    "city": "Mexico City",
+    "slot1": "1st-A",
+    "slot2": "3rd-CEFHI"
+  },
+  {
+    "id": 80,
+    "date": "2026-07-01",
+    "time": "11:00 AM",
+    "city": "Atlanta",
+    "slot1": "1st-L",
+    "slot2": "3rd-EHIJK"
+  },
+  {
+    "id": 81,
+    "date": "2026-07-01",
+    "time": "7:00 PM",
+    "city": "San Francisco",
+    "slot1": "1st-D",
+    "slot2": "3rd-BEFIJ"
+  },
+  {
+    "id": 82,
+    "date": "2026-07-01",
+    "time": "3:00 PM",
+    "city": "Seattle",
+    "slot1": "1st-G",
+    "slot2": "3rd-AEHIJ"
+  },
+  {
+    "id": 83,
+    "date": "2026-07-02",
+    "time": "6:00 PM",
+    "city": "Toronto",
+    "slot1": "2nd-K",
+    "slot2": "2nd-L"
+  },
+  {
+    "id": 84,
+    "date": "2026-07-02",
+    "time": "2:00 PM",
+    "city": "Los Angeles",
+    "slot1": "1st-H",
+    "slot2": "2nd-J"
+  },
+  {
+    "id": 85,
+    "date": "2026-07-02",
+    "time": "10:00 PM",
+    "city": "Vancouver",
+    "slot1": "1st-B",
+    "slot2": "3rd-EFGIJ"
+  },
+  {
+    "id": 86,
+    "date": "2026-07-03",
+    "time": "5:00 PM",
+    "city": "Miami",
+    "slot1": "1st-J",
+    "slot2": "2nd-H"
+  },
+  {
+    "id": 87,
+    "date": "2026-07-03",
+    "time": "8:30 PM",
+    "city": "Kansas City",
+    "slot1": "1st-K",
+    "slot2": "3rd-DEIJL"
+  },
+  {
+    "id": 88,
+    "date": "2026-07-03",
+    "time": "1:00 PM",
+    "city": "Dallas",
+    "slot1": "2nd-D",
+    "slot2": "2nd-G"
+  }
+]

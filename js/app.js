@@ -2,6 +2,7 @@
 
 const STATE = {
   results:     { groupMatches: [], knockoutMatches: [] },
+  winProbs:    {},   // matchId → { home, away, draw } — win probabilities for upcoming matches
   myTeams:     [],
   lastUpdated: null,
   lastSource:  null,   // 'ESPN' | 'Claude' | null — visible in header
@@ -495,6 +496,15 @@ async function fetchFromESPN(overrideDates) {
           // or events yet. This ensures bracket/today always show the correct
           // pairing (e.g. Switzerland vs Algeria) instead of our projection.
           if (status === 'NS') {
+            const nsOdds = (comp.odds || [])[0] || {};
+            const nsPred = comp.predictor || {};
+            const nsH = parseFloat(nsOdds.homeTeamOdds?.winPercentage || nsPred.homeTeam?.gameProjection || 0) || null;
+            const nsA = parseFloat(nsOdds.awayTeamOdds?.winPercentage || nsPred.awayTeam?.gameProjection || 0) || null;
+            if (nsH || nsA) {
+              STATE.winProbs[koMatch.id] = {
+                home: flipKO ? nsA : nsH, away: flipKO ? nsH : nsA,
+                draw: Math.max(0, 100 - (nsH||0) - (nsA||0)) };
+            }
             koFound.push({
               matchId: koMatch.id, team1: actualT1, team2: actualT2, espnId: ev.id,
               score1: null, score2: null, status: 'NS', substatus: '',
@@ -546,6 +556,19 @@ async function fetchFromESPN(overrideDates) {
           continue;
         }
         if (status === 'NS') continue; // group matches: already known from SCHEDULE, skip NS entries
+        // Extract win probability while we have the event in scope (NS matches already continued above)
+        (() => {
+          const odds = (comp.odds || [])[0] || {};
+          const pred = comp.predictor || {};
+          const h  = parseFloat(odds.homeTeamOdds?.winPercentage || pred.homeTeam?.gameProjection || 0) || null;
+          const a  = parseFloat(odds.awayTeamOdds?.winPercentage || pred.awayTeam?.gameProjection || 0) || null;
+          const dr = parseFloat(odds.drawOdds?.drawPercentage || 0) || null;
+          if (h || a) {
+            const flip2 = normName(m.t1) === normName(n2);
+            STATE.winProbs[m.id] = { home: flip2 ? a : h, away: flip2 ? h : a,
+              draw: dr || Math.max(0, 100 - (h||0) - (a||0)) };
+          }
+        })();
         const flip = normName(m.t1) === normName(n2);
         // Extract events (goals + cards) and live clock from ESPN
         const homeId = home.team?.id || '';
@@ -902,6 +925,15 @@ function getMatchResult(match) {
 }
 function getKnockoutResult(matchId) {
   return STATE.results.knockoutMatches.find(m => m.matchId === matchId) || null;
+}
+// Get a team's ESPN team ID from stored match results (needed for roster fetch)
+function getEspnTeamId(team) {
+  const all = [...STATE.results.groupMatches, ...STATE.results.knockoutMatches];
+  for (const m of all) {
+    if (normName(m.team1) === normName(team) && m.tid1) return m.tid1;
+    if (normName(m.team2) === normName(team) && m.tid2) return m.tid2;
+  }
+  return null;
 }
 // Unified lookup — searches both arrays since R32 results land in knockoutMatches
 // (fetched via the KO path) while group results land in groupMatches.

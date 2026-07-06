@@ -1907,6 +1907,58 @@ img.emoji {
 }
 .overdue-secs { font-weight: 800; color: var(--amber); min-width: 20px; }
 
+/* ── Win Probability (Today + Schedule) ── */
+.mc-prob { padding: 8px 0 2px; }
+.mc-prob-bar {
+  display: flex; height: 4px; border-radius: 999px; overflow: hidden; gap: 1px;
+  margin-bottom: 5px; background: rgba(255,255,255,.06);
+}
+.mc-prob-seg { height: 100%; min-width: 4px; border-radius: 999px; }
+.mc-prob-home { background: var(--green); }
+.mc-prob-draw { background: #4a505c; }
+.mc-prob-away { background: #3a8be0; }
+.mc-prob-labels {
+  display: flex; justify-content: space-between;
+  font-size: 10px; font-weight: 700; color: #7a828e;
+}
+.mc-prob-lbl-c { color: #5a6270; }
+
+/* Schedule row win probability mini-bar */
+.srow-prob-wrap { margin: 3px 0 1px; }
+.srow-prob-bar {
+  display: flex; height: 3px; border-radius: 999px; overflow: hidden; gap: 1px;
+  background: rgba(255,255,255,.05); margin-bottom: 3px;
+}
+.srow-prob-h { background: var(--green); min-width: 3px; }
+.srow-prob-d { background: #4a505c; min-width: 3px; }
+.srow-prob-a { background: #3a8be0; min-width: 3px; }
+.srow-prob-nums {
+  display: flex; justify-content: space-between;
+  font-size: 9px; color: #606878;
+}
+.srow-prob-mid { color: #505560; }
+
+/* Schedule team filter search */
+.sched-filter-wrap { padding: 0 16px 12px; }
+.sched-search-box {
+  display: flex; align-items: center; gap: 8px;
+  background: #15181c; border: 1px solid rgba(255,255,255,.08);
+  border-radius: 10px; padding: 8px 12px;
+  transition: border-color .15s;
+}
+.sched-search-box:focus-within { border-color: rgba(32,189,118,.35); }
+.sched-search-ico { width: 14px; height: 14px; flex-shrink: 0; color: #6a727e; }
+.sched-search-inp {
+  flex: 1; background: none; border: none; outline: none;
+  font-size: 14px; color: var(--white); font-family: inherit;
+}
+.sched-search-inp::placeholder { color: #4a505c; }
+.sched-search-clear {
+  background: none; border: none; color: #6a727e; font-size: 14px;
+  cursor: pointer; padding: 0 2px; line-height: 1;
+}
+.sched-search-clear:hover { color: var(--white); }
+
 /* ── Team Profile Sheet ── */
 #team-profile-modal {
   backdrop-filter: blur(10px);
@@ -2042,6 +2094,77 @@ img.emoji {
 .tp-row:last-child { border-bottom: none; }
 .tp-row-lbl { color: var(--muted); flex-shrink: 0; }
 .tp-row span:last-child { text-align: right; color: var(--white); font-weight: 600; }
+
+/* New TP modal structure */
+.tp-modal-inner { display: flex; flex-direction: column; height: 100%; }
+.tp-modal-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.tp-modal-title { flex: 1; font-size: 16px; font-weight: 700; color: var(--white); }
+.tp-modal-body { flex: 1; overflow-y: auto; padding: 16px 16px 32px; }
+.tp-close { background: none; border: 1px solid var(--dim); color: var(--muted); font-size: 18px; font-weight: 300; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.tp-pin-btn { background: none; border: 1px solid var(--dim); color: var(--muted); font-size: 16px; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; }
+.tp-pin-btn.on { color: var(--gold); border-color: var(--gold); }
+
+.tp-hero { display: flex; align-items: center; gap: 13px; margin-bottom: 18px; }
+.tp-hero-info { min-width: 0; }
+.tp-badge-red { color: var(--crimson); background: rgba(240,84,75,.1); }
+.tp-section-lbl { font-size: 10px; font-weight: 700; color: #6a727e; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 7px; padding: 0 2px; margin-top: 16px; }
+.tp-section-lbl:first-child { margin-top: 0; }
+
+/* Extended stats grid */
+.tp-stats-wide { grid-template-columns: repeat(4, 1fr) !important; }
+.tp-stat-green { color: var(--green) !important; }
+.tp-stat-red { color: var(--crimson) !important; }
+
+/* Next match */
+.tp-elim-card { background: rgba(240,84,75,.06); border-color: rgba(240,84,75,.15); font-size: 13px; color: #aab2c0; display: flex; align-items: center; gap: 8px; padding: 12px; }
+.tp-elim-ico { color: var(--crimson); font-size: 14px; }
+.tp-next-card { display: flex; align-items: center; justify-content: space-between; padding: 12px; }
+.tp-next-opp { font-size: 14px; font-weight: 600; color: var(--white); display: flex; align-items: center; gap: 6px; }
+.tp-next-time { font-size: 11px; color: var(--muted); }
+.tp-next-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.04); font-size: 13px; color: #cdd3dc; }
+.tp-next-row:last-child { border-bottom: none; }
+
+/* Match log */
+.tp-match-log { padding: 0; overflow: hidden; }
+.tp-match-row {
+  display: grid; grid-template-columns: 1fr auto auto; align-items: start;
+  padding: 10px 12px; gap: 6px 10px;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+}
+.tp-match-row:last-child { border-bottom: none; }
+.tp-match-opp { font-size: 13px; font-weight: 600; color: var(--white); display: flex; align-items: center; gap: 6px; grid-column: 1; }
+.tp-match-score { font-size: 13px; font-weight: 700; color: #cdd3dc; grid-column: 2; text-align: right; white-space: nowrap; }
+.tp-res-badge { font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 5px; align-self: center; grid-column: 3; }
+.tp-res-w { background: rgba(32,189,118,.15); color: var(--green); }
+.tp-res-d { background: rgba(255,255,255,.08); color: #8a9ab0; }
+.tp-res-l { background: rgba(240,84,75,.12); color: var(--crimson); }
+.tp-match-meta { font-size: 10px; color: #6a727e; grid-column: 1 / -1; margin-top: -2px; }
+.tp-match-scorers { color: #aab2c0; margin-top: 2px; }
+
+/* Player stats */
+.tp-ps-header { display: grid; grid-template-columns: 1fr repeat(3, 32px); font-size: 10px; color: #5a6270; font-weight: 700; padding: 6px 12px; border-bottom: 1px solid rgba(255,255,255,.06); }
+.tp-ps-row { display: grid; grid-template-columns: 1fr repeat(3, 32px); align-items: center; padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,.04); }
+.tp-ps-row:last-child { border-bottom: none; }
+.tp-ps-name { font-size: 12px; color: #cdd3dc; }
+.tp-ps-pk { font-size: 10px; color: var(--muted); }
+.tp-ps-val { font-size: 12px; font-weight: 700; color: #5a6270; text-align: center; }
+.tp-ps-goals { color: var(--green); }
+.tp-ps-yc { color: var(--amber); }
+.tp-ps-rc { color: var(--crimson); }
+
+/* Squad roster */
+.tp-roster-group { margin-bottom: 12px; }
+.tp-roster-pos-lbl { font-size: 9px; font-weight: 800; color: #5a6270; text-transform: uppercase; letter-spacing: .07em; padding: 4px 0 6px; }
+.tp-roster-row { display: grid; grid-template-columns: 24px 1fr auto auto; align-items: center; gap: 6px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,.04); }
+.tp-roster-row:last-child { border-bottom: none; }
+.tp-roster-num { font-size: 11px; font-weight: 700; color: #5a6270; text-align: center; }
+.tp-roster-name { font-size: 12px; color: #cdd3dc; font-weight: 600; }
+.tp-roster-club { font-size: 10px; color: #6a727e; }
+.tp-roster-age { font-size: 10px; color: #4a505c; }
+.tp-loading-sm { font-size: 12px; color: #6a727e; padding: 8px 0; }
 
 .tp-stats-grid {
   display: grid; grid-template-columns: repeat(6, 1fr);

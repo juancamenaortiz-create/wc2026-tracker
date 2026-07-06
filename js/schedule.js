@@ -1,6 +1,17 @@
 // SCHEDULE.JS — Full schedule tab renderer (card-grouped, mockup layout)
 
-const SCHEDULE_STATE = { view: 'date', filter: 'all', scrollToToday: false };
+const SCHEDULE_STATE = { view: 'date', filter: 'all', teamFilter: '', scrollToToday: false };
+
+function setScheduleTeamFilter(val) {
+  SCHEDULE_STATE.teamFilter = (val || '').trim().toLowerCase();
+  renderSchedule(document.getElementById('schedule-panel'));
+}
+function clearScheduleTeamFilter() {
+  SCHEDULE_STATE.teamFilter = '';
+  const inp = document.getElementById('sched-team-filter');
+  if (inp) inp.value = '';
+  renderSchedule(document.getElementById('schedule-panel'));
+}
 
 function schedSortKey(m) {
   const t = getMatchTime(m);
@@ -10,12 +21,37 @@ function schedSortKey(m) {
 }
 
 function renderSchedule(container) {
-  const allMatches = [
+  const tf = SCHEDULE_STATE.teamFilter;
+  const allMatchesRaw = [
     ...SCHEDULE.map(m => ({ ...m, isKnockout: false })),
     ...R32_MATCHES.map(m => ({ ...m, round: 'R32', isKnockout: true })),
     ...KO_ROUNDS.map(m => ({ ...m, isKnockout: true })),
   ];
+  // Resolve KO team names from results so the filter works on actual team names
+  const allMatches = allMatchesRaw.map(m => {
+    if (!m.isKnockout) return m;
+    const result = getAnyMatchResult(m.id);
+    if (result && result.team1 && result.team2) return { ...m, t1: result.team1, t2: result.team2 };
+    const [rt1, rt2] = getKOMatchTeams(m.id);
+    return { ...m, t1: rt1 || m.slot1, t2: rt2 || m.slot2 };
+  }).filter(m => {
+    if (!tf) return true;
+    return (m.t1 || '').toLowerCase().includes(tf)
+        || (m.t2 || '').toLowerCase().includes(tf)
+        || (m.slot1 || '').toLowerCase().includes(tf)
+        || (m.slot2 || '').toLowerCase().includes(tf);
+  });
   const viewMode = SCHEDULE_STATE.view;
+
+  const filterBar = `<div class="sched-filter-wrap">
+    <div class="sched-search-box">
+      <svg class="sched-search-ico" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="9" r="5.5"/><path d="M14 14l3 3"/></svg>
+      <input id="sched-team-filter" class="sched-search-inp" type="text" placeholder="Filter by team…"
+        value="${tf ? tf : ''}"
+        oninput="setScheduleTeamFilter(this.value)" autocomplete="off" autocorrect="off" spellcheck="false">
+      ${tf ? `<button class="sched-search-clear" onclick="clearScheduleTeamFilter()">✕</button>` : ''}
+    </div>
+  </div>`;
 
   let html = `<div class="sched-top">
     <h2 class="sched-title">Schedule</h2>
@@ -24,6 +60,7 @@ function renderSchedule(container) {
       <button class="sched-seg-btn${viewMode === 'group' ? ' active' : ''}" onclick="setScheduleView('group')">By group</button>
     </div>
   </div>
+  ${filterBar}
   <div class="schedule-wrap">`;
 
   let sortedDates = [];
@@ -183,6 +220,23 @@ function buildScheduleRow(match) {
     scoreCell = '<div class="srow-dash">–</div>';
   }
 
+  // Win probability mini-bar for upcoming matches
+  let probBar = '';
+  if (!isLive && !isFT && !isDelayed) {
+    const wp = STATE.winProbs && STATE.winProbs[match.id];
+    if (wp && (wp.home || wp.away)) {
+      const h = Math.round(wp.home||0), dr = Math.round(wp.draw||0), a = Math.round(wp.away||0);
+      probBar = `<div class="srow-prob-wrap">
+        <div class="srow-prob-bar">
+          <div class="srow-prob-h" style="width:${h}%"></div>
+          <div class="srow-prob-d" style="width:${dr}%"></div>
+          <div class="srow-prob-a" style="width:${a}%"></div>
+        </div>
+        <div class="srow-prob-nums"><span>${h}%</span><span class="srow-prob-mid">D ${dr}%</span><span>${a}%</span></div>
+      </div>`;
+    }
+  }
+
   const clickable = isLive || isFT;
   const delayBar = isDelayed ? `<div class="srow-delay-bar">${result?.substatus || 'Match delayed'}</div>` : '';
   return `<div class="srow${isMy1 || isMy2 ? ' my-t' : ''}${clickable ? ' srow-click' : ''}"${clickable ? ` onclick="openMatchDetail(${match.id})"` : ''}>
@@ -192,6 +246,7 @@ function buildScheduleRow(match) {
       <div class="srow-team ${w2}">${badge(t2Name)}<span class="srow-name">${displayName(t2Name)}</span>${isMy2 ? '<span class="srow-star">★</span>' : '<span data-star-team="' + t2Name + '"></span>'}</div>
     </div>
     ${scoreCell}
+    ${probBar}
     ${delayBar}
   </div>`;
 }

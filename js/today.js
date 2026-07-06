@@ -339,6 +339,27 @@ function buildMatchCard(match, now) {
   const s1html = hasResult ? `<span class="mc-score">${score1}</span>${hasPenDisplay ? `<span class="mc-pen-paren">(${result.penScore1})</span>` : ''}` : '';
   const s2html = hasResult ? `<span class="mc-score">${score2}</span>${hasPenDisplay ? `<span class="mc-pen-paren">(${result.penScore2})</span>` : ''}` : '';
 
+  // Win probability bar — only for pre-kickoff matches when ESPN odds are available
+  let winProbHtml = '';
+  if (!hasResult && !isLive && !isDelayed && msUntil > 0) {
+    const wp = STATE.winProbs && STATE.winProbs[match.id];
+    if (wp && (wp.home || wp.away)) {
+      const h = Math.round(wp.home || 0), d = Math.round(wp.draw || 0), a = Math.round(wp.away || 0);
+      winProbHtml = `<div class="mc-prob">
+        <div class="mc-prob-bar">
+          <div class="mc-prob-seg mc-prob-home" style="width:${h}%"></div>
+          <div class="mc-prob-seg mc-prob-draw" style="width:${d}%"></div>
+          <div class="mc-prob-seg mc-prob-away" style="width:${a}%"></div>
+        </div>
+        <div class="mc-prob-labels">
+          <span class="mc-prob-lbl">${h}%</span>
+          <span class="mc-prob-lbl mc-prob-lbl-c">Draw ${d}%</span>
+          <span class="mc-prob-lbl">${a}%</span>
+        </div>
+      </div>`;
+    }
+  }
+
   // Preview panel (shown for all matches when data is available + open)
   const pvPanel  = !isDelayed ? buildPreviewSection(match.id) : '';
   // Toggle button shown in footer for all non-delayed matches
@@ -362,6 +383,7 @@ function buildMatchCard(match, now) {
     ${s2html}
   </div>
   ${isDelayed ? `<div class="mc-delay-note">${delayReason}</div>` : ''}
+  ${winProbHtml}
   ${pvPanel}
   <div class="mc-foot">
     <div class="mc-foot-row">

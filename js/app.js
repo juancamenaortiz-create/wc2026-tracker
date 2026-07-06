@@ -388,14 +388,16 @@ async function fetchFromESPN(overrideDates) {
         );
         clearTimeout(t);
         if (!r || !r.ok) return null;
-        return await r.json().catch(() => null);
+        const json = await r.json().catch(() => null);
+        return json ? { ds, json } : null; // carry the date string alongside the payload
       } catch(e) { clearTimeout(t); return null; }
     })
   );
 
   for (const dayResult of dayPayloads) {
     if (dayResult.status !== 'fulfilled' || !dayResult.value) continue;
-    const data = dayResult.value;
+    const ds = dayResult.value.ds;
+    const data = dayResult.value.json;
     for (const ev of (data.events || [])) {
       const comp = ev.competitions?.[0];
       if (!comp) continue;

@@ -4,13 +4,16 @@ const SCHEDULE_STATE = { view: 'date', filter: 'all', teamFilter: '', scrollToTo
 
 function setScheduleTeamFilter(val) {
   SCHEDULE_STATE.teamFilter = (val || '').trim().toLowerCase();
-  renderSchedule(document.getElementById('schedule-panel'));
+  renderActiveTab(); // renderSchedule uses tab-inner, not a separate 'schedule-panel' element
+  // Restore focus and cursor position in the recreated input after DOM rebuild
+  requestAnimationFrame(() => {
+    const inp = document.getElementById('sched-team-filter');
+    if (inp) { inp.focus(); const l = inp.value.length; inp.setSelectionRange(l, l); }
+  });
 }
 function clearScheduleTeamFilter() {
   SCHEDULE_STATE.teamFilter = '';
-  const inp = document.getElementById('sched-team-filter');
-  if (inp) inp.value = '';
-  renderSchedule(document.getElementById('schedule-panel'));
+  renderActiveTab();
 }
 
 function schedSortKey(m) {

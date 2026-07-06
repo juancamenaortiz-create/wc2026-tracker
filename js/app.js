@@ -359,74 +359,77 @@ async function fetchFromESPN(overrideDates) {
   const unmatched = []; // collect any ESPN teams we can't match
   const utcStr = d => `${d.getUTCFullYear()}${String(d.getUTCMonth()+1).padStart(2,'0')}${String(d.getUTCDate()).padStart(2,'0')}`;
 
-  // If called from syncHistory, use the provided date(s); otherwise build the recent window
+  // Build date window: 12 days back covers the full current + previous KO round.
+  // R32 spans Jun 28-Jul 3; on Jul 6 the old 3-day window missed all of it.
+  // Tomorrow is included to catch midnight-UTC kickoffs that land on the next calendar date.
   const datesToQuery = overrideDates || (() => {
     const s = new Set();
-    for (let back = 0; back <= 3; back++) s.add(utcStr(new Date(Date.now() - back * 86400000)));
-    s.add(utcStr(new Date(Date.now() + 86400000))); // tomorrow UTC
+    for (let back = 0; back <= 12; back++) s.add(utcStr(new Date(Date.now() - back * 86400000)));
+    s.add(utcStr(new Date(Date.now() + 86400000)));
     return s;
   })();
 
-  for (const ds of datesToQuery) {
-    try {
+  // Fetch all dates IN PARALLEL — 13 serial requests × ~1s each = 13s; parallel ≈ 1s
+  const dayPayloads = await Promise.allSettled(
+    [...datesToQuery].map(async ds => {
       const ac = new AbortController();
       const t  = setTimeout(() => ac.abort(), 6000);
-      const r  = await fetch(
-        `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=${ds}`,
-        { signal: ac.signal }
-      ).finally(() => clearTimeout(t));
-      if (!r || !r.ok) continue;
-      const data = await r.json().catch(() => null);
-      if (!data) continue;
-      for (const ev of (data.events || [])) {
-        const comp = ev.competitions?.[0];
-        if (!comp) continue;
-        const st = comp.status?.type || ev.status?.type || {};
-        const sn = (st.name || '').toUpperCase();
-        let status, substatus = '';
-        if (st.completed || sn.includes('FINAL')) {
-          status = 'FT';
-          if      (sn.includes('PENALT') || sn.includes('SHOOTOUT')) substatus = 'PSO';
-          else if (sn.includes('AET')    || sn.includes('EXTRA'))    substatus = 'AET';
-        } else if (sn.includes('SHOOTOUT') || (sn.includes('PENALT') && !sn.includes('KICK'))) {
-          status = 'LIVE'; substatus = 'PSO';
-        } else if (sn.includes('EXTRA') || sn.includes('OVERTIME')) {
-          status = 'LIVE'; substatus = 'ET';
-        } else if (sn.includes('HALF') || sn.includes('PROGRESS')) {
-          // STATUS_FIRST_HALF, STATUS_SECOND_HALF, STATUS_IN_PROGRESS → all LIVE
-          // Only STATUS_HALFTIME (exact break between halves) gets HT badge
-          if (sn === 'STATUS_HALFTIME') substatus = 'HT';
-          status = 'LIVE';
-        } else if (sn.includes('DELAY') || sn.includes('RAIN') ||
-                   sn.includes('POSTPONE') || sn.includes('SUSPEND') || sn.includes('CANCEL') ||
-                   // ESPN sometimes keeps type.name as STATUS_SCHEDULED for weather delays
-                   // and puts the delay reason in shortDetail/description instead.
-                   /delay|postpone|suspend|cancel/i.test(st.shortDetail || '') ||
-                   /delay|postpone|suspend|cancel/i.test(st.description  || '')) {
-          // Delayed / postponed / suspended — surface in UI with ESPN's reason string
-          status = 'DELAYED';
-          substatus = st.shortDetail || st.description || 'Delayed';
-          // Fall through to team matching — don't skip, we want to render this match
-        } else {
-          // Not started — capture ESPN's kickoff time to correct stale SCHEDULE data,
-          // then fall through so KO matches get their confirmed team names stored.
-          const isoDate = comp.date || ev.date;
-          if (isoDate) {
-            const cs2 = comp.competitors || [];
-            const h2 = cs2.find(c => c.homeAway === 'home') || cs2[0];
-            const a2 = cs2.find(c => c.homeAway === 'away') || cs2[1];
-            if (h2 && a2) {
-              const nn1 = espnToApp(h2.team?.displayName || '');
-              const nn2 = espnToApp(a2.team?.displayName || '');
-              const sm = SCHEDULE.find(sm =>
-                (normName(sm.t1)===normName(nn1) && normName(sm.t2)===normName(nn2)) ||
-                (normName(sm.t1)===normName(nn2) && normName(sm.t2)===normName(nn1))
-              );
-              if (sm) STATE.scheduleCorrections[sm.id] = isoDate;
-            }
+      try {
+        const r = await fetch(
+          `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=${ds}`,
+          { signal: ac.signal }
+        );
+        clearTimeout(t);
+        if (!r || !r.ok) return null;
+        return await r.json().catch(() => null);
+      } catch(e) { clearTimeout(t); return null; }
+    })
+  );
+
+  for (const dayResult of dayPayloads) {
+    if (dayResult.status !== 'fulfilled' || !dayResult.value) continue;
+    const data = dayResult.value;
+    for (const ev of (data.events || [])) {
+      const comp = ev.competitions?.[0];
+      if (!comp) continue;
+      const st = comp.status?.type || ev.status?.type || {};
+      const sn = (st.name || '').toUpperCase();
+      let status, substatus = '';
+      if (st.completed || sn.includes('FINAL')) {
+        status = 'FT';
+        if      (sn.includes('PENALT') || sn.includes('SHOOTOUT')) substatus = 'PSO';
+        else if (sn.includes('AET')    || sn.includes('EXTRA'))    substatus = 'AET';
+      } else if (sn.includes('SHOOTOUT') || (sn.includes('PENALT') && !sn.includes('KICK'))) {
+        status = 'LIVE'; substatus = 'PSO';
+      } else if (sn.includes('EXTRA') || sn.includes('OVERTIME')) {
+        status = 'LIVE'; substatus = 'ET';
+      } else if (sn.includes('HALF') || sn.includes('PROGRESS')) {
+        if (sn === 'STATUS_HALFTIME') substatus = 'HT';
+        status = 'LIVE';
+      } else if (sn.includes('DELAY') || sn.includes('RAIN') ||
+                 sn.includes('POSTPONE') || sn.includes('SUSPEND') || sn.includes('CANCEL') ||
+                 /delay|postpone|suspend|cancel/i.test(st.shortDetail || '') ||
+                 /delay|postpone|suspend|cancel/i.test(st.description  || '')) {
+        status = 'DELAYED';
+        substatus = st.shortDetail || st.description || 'Delayed';
+      } else {
+        const isoDate = comp.date || ev.date;
+        if (isoDate) {
+          const cs2 = comp.competitors || [];
+          const h2 = cs2.find(c => c.homeAway === 'home') || cs2[0];
+          const a2 = cs2.find(c => c.homeAway === 'away') || cs2[1];
+          if (h2 && a2) {
+            const nn1 = espnToApp(h2.team?.displayName || '');
+            const nn2 = espnToApp(a2.team?.displayName || '');
+            const sm = SCHEDULE.find(sm =>
+              (normName(sm.t1)===normName(nn1) && normName(sm.t2)===normName(nn2)) ||
+              (normName(sm.t1)===normName(nn2) && normName(sm.t2)===normName(nn1))
+            );
+            if (sm) STATE.scheduleCorrections[sm.id] = isoDate;
           }
-          status = 'NS'; // fall through — group matches will skip below; KO matches capture team names
         }
+        status = 'NS';
+      }
         const cs = comp.competitors || [];
         const home = cs.find(c => c.homeAway === 'home') || cs[0];
         const away = cs.find(c => c.homeAway === 'away') || cs[1];
@@ -643,9 +646,8 @@ async function fetchFromESPN(overrideDates) {
             t2: flip ? homeStats : awayStats,
           },
         });
-      }
-    } catch(_) { /* skip date */ }
-  }
+      } // end event loop (for const ev)
+    } // end parallel day results (for const dayResult)
   // Return what we found — empty list is valid on non-match days
   return { groupMatches: found, knockoutMatches: koFound, unmatched };
 }

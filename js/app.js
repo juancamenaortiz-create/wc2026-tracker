@@ -90,11 +90,14 @@ async function loadStaticResults() {
     }
     const matches = (data && data.matches) || [];
     if (!matches.length) return;
-    // KV only ever holds fully-completed matches (2+ days old) — it's the canonical
-    // synced source for those matchIds, so it should always win over a possibly-stale
-    // local cache. (Recent/live matches aren't in KV, so localStorage entries for those
-    // are untouched by this merge — only matching matchIds get overwritten.)
-    STATE.results.groupMatches = mergeResults(STATE.results.groupMatches, matches);
+    // Separate group matches (≤72) from KO matches (>72) — they belong in different
+    // STATE arrays. Putting KO results in groupMatches causes getAnyMatchResult to
+    // find stale KV snapshots before the fresh ESPN data in knockoutMatches.
+    // Also skip any LIVE/NS entries — KV should only hold FT matches, but guard anyway.
+    const kvGroup = matches.filter(m => m.matchId <= 72 && m.status === 'FT' && m.score1 != null);
+    const kvKO    = matches.filter(m => m.matchId  > 72 && m.status === 'FT' && m.score1 != null);
+    STATE.results.groupMatches    = mergeResults(STATE.results.groupMatches,    kvGroup);
+    STATE.results.knockoutMatches = mergeResults(STATE.results.knockoutMatches || [], kvKO);
     // Persist the corrected merge immediately so a stale local cache can't shadow it again
     try {
       localStorage.setItem('wc2026_results', JSON.stringify({

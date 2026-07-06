@@ -10,8 +10,17 @@ function saveTeamCache(team, data) {
     localStorage.setItem('wc2026_teams', JSON.stringify(c));
   } catch(_) {}
 }
+function loadRosterCache() {
+  try { return JSON.parse(localStorage.getItem('wc2026_roster') || '{}'); } catch(_) { return {}; }
+}
+function saveRosterCache(team, data) {
+  try {
+    const c = loadRosterCache(); c[team] = { data, ts: Date.now() };
+    localStorage.setItem('wc2026_roster', JSON.stringify(c));
+  } catch(_) {}
+}
 
-// ── Computed helpers ──────────────────────────────────────────────────────────
+// ── Computed helpers (local, instant — no network wait) ──────────────────────
 function getTeamAllMatches(team) {
   const all = [...(STATE.results.groupMatches||[]), ...(STATE.results.knockoutMatches||[])];
   return all.filter(m =>
@@ -27,7 +36,6 @@ function getTournamentStats(team) {
     const gf = isT1 ? m.score1 : m.score2;
     const ga = isT1 ? m.score2 : m.score1;
     P++; GF+=(gf||0); GA+=(ga||0);
-    // Bug 4 fix: PSO matches count as W or L based on penalty scores, not the drawn regular score
     if (m.substatus === 'PSO') {
       const penW = isT1 ? m.penScore1 : m.penScore2;
       const penL = isT1 ? m.penScore2 : m.penScore1;
@@ -51,16 +59,17 @@ function getTournamentStats(team) {
            shots:Math.round(shots), shotsOT:Math.round(shotsOT) };
 }
 
-function getTeamPlayerStats(team) {
+// Fallback player stats (goals/cards only) computed from local match events —
+// used if the ESPN roster+stats fetch fails or hasn't returned yet.
+function getTeamPlayerStatsLocal(team) {
   const map = {};
   for (const m of getTeamAllMatches(team)) {
     const isT1 = normName(m.team1)===normName(team);
     const tid  = isT1 ? m.tid1 : m.tid2;
     (m.events||[]).forEach(ev => {
       if (ev.tid!==tid || !ev.p) return;
-      if (!map[ev.p]) map[ev.p] = { name:ev.p, goals:0, pk:0, og:0, y:0, r:0 };
+      if (!map[ev.p]) map[ev.p] = { name:ev.p, goals:0, pk:0, y:0, r:0 };
       if (ev.g && !ev.og) { map[ev.p].goals++; if (ev.pk) map[ev.p].pk++; }
-      if (ev.og) map[ev.p].og++;
       if (ev.y) map[ev.p].y++;
       if (ev.r) map[ev.p].r++;
     });
@@ -71,70 +80,110 @@ function getTeamPlayerStats(team) {
 // ── Public entry point ────────────────────────────────────────────────────────
 async function openTeamProfile(team) {
   if (!team) return;
-  // Bug 1 fix: target the content div, not the outer overlay
-  const modal  = document.getElementById('team-profile-modal');
-  const el     = document.getElementById('team-profile-content');
+  const modal = document.getElementById('team-profile-modal');
+  const el    = document.getElementById('team-profile-content');
   if (!modal || !el) return;
 
-  // Store current team for the pin button handler in the sheet bar
   window._tpCurrentTeam = team;
   const nameEl = document.getElementById('tp-sheet-team-name');
   const pinEl  = document.getElementById('tp-sheet-pin-btn');
   if (nameEl) nameEl.textContent = displayName(team);
   if (pinEl)  pinEl.classList.toggle('on', isMyTeam(team));
 
-  el.innerHTML = tpLoading();
+  // ── Phase 1: render everything computable from LOCAL data instantly.
+  // No network wait for hero, record, stats, next match, or match log —
+  // this is the fix for the "takes too long to load" complaint. Only the
+  // squad/player-stats (ESPN roster fetch) and AI profile (Claude call)
+  // load progressively into their own placeholders below.
+  el.innerHTML = tpStaticContent(team) + tpSquadPlaceholder() + tpProfilePlaceholder();
   modal.classList.add('open');
   document.body.style.overflow = 'hidden';
 
-  // Serve from cache if fresh
-  const cache  = loadTeamCache();
+  // ── Phase 2a: squad + per-player stats (ESPN roster endpoint) ───────────────
+  const espnId = getEspnTeamId(team);
+  const rCache = loadRosterCache();
+  const rCached = rCache[team];
+  const R_AGE = 24 * 60 * 60 * 1000; // 24h — squads rarely change mid-tournament
+  if (rCached && (Date.now() - rCached.ts) < R_AGE) {
+    _fillSquadSlot(team, rCached.data);
+  } else if (espnId) {
+    fetchTeamRosterWithStats(espnId).then(roster => {
+      if (roster.length) saveRosterCache(team, roster);
+      _fillSquadSlot(team, roster);
+    }).catch(() => _fillSquadSlot(team, []));
+  } else {
+    _fillSquadSlot(team, []);
+  }
+
+  // ── Phase 2b: AI profile (manager, style, WC history) ───────────────────────
+  const cache = loadTeamCache();
   const cached = cache[team];
   const AGE_MS = 12 * 60 * 60 * 1000;
   if (cached && (Date.now() - cached.ts) < AGE_MS) {
-    el.innerHTML = tpContent(team, cached.data);
-    _startRosterFetch(team, el);
-    return;
+    _fillProfileSlot(cached.data);
+  } else {
+    (async () => {
+      try {
+        const ctrl = new AbortController();
+        const timeout = setTimeout(() => ctrl.abort(), 9000);
+        const resp = await fetch('/api/preview', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: ctrl.signal,
+          body: JSON.stringify({ teamProfile: team }),
+        });
+        clearTimeout(timeout);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const raw = await resp.json();
+        const d = raw.data || {};
+        saveTeamCache(team, d);
+        _fillProfileSlot(d);
+      } catch(e) {
+        _fillProfileSlot(cached?.data || null);
+      }
+    })();
   }
-
-  // Bug 2 fix: call preview API with a team-profile specific prompt via a separate flag
-  try {
-    const ctrl = new AbortController();
-    const timeout = setTimeout(() => ctrl.abort(), 9000);
-    const resp = await fetch('/api/preview', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      signal: ctrl.signal,
-      body: JSON.stringify({ teamProfile: team }),  // special flag handled in api/preview.js
-    });
-    clearTimeout(timeout);
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const raw = await resp.json();
-    const d = raw.data || raw.profile || {};
-    saveTeamCache(team, d);
-    el.innerHTML = tpContent(team, d);
-  } catch(e) {
-    el.innerHTML = tpContent(team, cached?.data || {});
-  }
-  _startRosterFetch(team, el);
 }
 
-function _startRosterFetch(team, el) {
-  const espnId = getEspnTeamId(team);
-  if (!espnId) {
-    const slot = document.getElementById('tp-roster-slot');
-    if (slot) slot.innerHTML = '<div class="tp-loading-sm">Squad data not yet available — check back after the team\'s first match.</div>';
-    return;
+function _fillSquadSlot(team, roster) {
+  const slot = document.getElementById('tp-squad-slot');
+  const psSlot = document.getElementById('tp-playerstats-slot');
+  if (slot) slot.innerHTML = roster.length ? buildRosterHtml(roster)
+    : '<div class="tp-empty-note">Squad not available from ESPN for this team yet.</div>';
+  if (psSlot) {
+    // Prefer real ESPN per-player stats (goals/assists/shots/cards) when available;
+    // fall back to locally-computed goals/cards only if the roster fetch came up empty.
+    const withStats = roster.filter(p => (p.g||0) + (p.a||0) + (p.shot||0) + (p.yc||0) + (p.rc||0) > 0);
+    psSlot.innerHTML = withStats.length
+      ? buildPlayerCardsHtml(withStats)
+      : buildPlayerCardsHtml(getTeamPlayerStatsLocal(team).map(p => ({
+          name: p.name, g: p.goals, pk: p.pk, yc: p.y, rc: p.r,
+          a: null, shot: null, sog: null, fc: null, fa: null,
+        })));
   }
-  fetchTeamRoster(espnId).then(roster => {
-    const slot = document.getElementById('tp-roster-slot');
-    if (!slot) return;
-    slot.innerHTML = roster.length ? buildRosterHtml(roster)
-      : '<div class="tp-loading-sm">Squad not available from ESPN.</div>';
-  }).catch(() => {
-    const slot = document.getElementById('tp-roster-slot');
-    if (slot) slot.innerHTML = '<div class="tp-loading-sm">Could not load squad.</div>';
-  });
+}
+
+function _fillProfileSlot(d) {
+  const slot = document.getElementById('tp-profile-slot');
+  if (!slot) return;
+  d = d || {};
+  const titlesNote = (d.wcHistory?.titles||0)>0 ? ` · ${d.wcHistory.titles} title${d.wcHistory.titles>1?'s':''}` : '';
+  const hasAny = d.manager||d.style||d.strengths||d.weaknesses||d.ranking||d.confederation;
+  if (!hasAny) { slot.innerHTML = ''; return; }
+  slot.innerHTML = `
+  <div class="tp-section-lbl">Profile</div>
+  <div class="tp-card tp-info">
+    ${d.ranking?`<div class="tp-row"><span class="tp-row-lbl">FIFA rank</span><span>#${d.ranking}</span></div>`:''}
+    ${d.confederation?`<div class="tp-row"><span class="tp-row-lbl">Confederation</span><span>${d.confederation}</span></div>`:''}
+    ${d.manager?`<div class="tp-row"><span class="tp-row-lbl">Manager</span><span>${d.manager}</span></div>`:''}
+    ${d.style?`<div class="tp-row"><span class="tp-row-lbl">Style</span><span>${d.style}</span></div>`:''}
+    ${d.wcHistory?`<div class="tp-row"><span class="tp-row-lbl">WC history</span><span>${d.wcHistory.appearances} appearances${titlesNote}</span></div>`:''}
+    ${d.wcHistory?.bestFinish?`<div class="tp-row"><span class="tp-row-lbl">Best finish</span><span>${d.wcHistory.bestFinish}</span></div>`:''}
+  </div>
+  ${(d.strengths||d.weaknesses)?`<div class="tp-card tp-sw-card">
+    ${d.strengths?`<div class="tp-sw"><span class="tp-sw-ico up">▲</span><span><b>Strength</b> — ${d.strengths}</span></div>`:''}
+    ${d.weaknesses?`<div class="tp-sw"><span class="tp-sw-ico down">▼</span><span><b>Watch</b> — ${d.weaknesses}</span></div>`:''}
+  </div>`:''}`;
 }
 
 function closeTeamProfile() {
@@ -147,31 +196,74 @@ function tpTogglePin(team) {
   const i = STATE.myTeams.findIndex(t => normName(t)===normName(team));
   if (i >= 0) STATE.myTeams.splice(i, 1);
   else if (STATE.myTeams.length < 10) STATE.myTeams.push(team);
-  try { localStorage.setItem('wc2026_my_teams', JSON.stringify(STATE.myTeams)); } catch(_){}
+  try { localStorage.setItem('wc2026_myteams', JSON.stringify(STATE.myTeams)); } catch(_){}
   const pinEl = document.getElementById('tp-sheet-pin-btn');
   if (pinEl) pinEl.classList.toggle('on', isMyTeam(team));
   renderActiveTab();
 }
 
-// ── Roster fetch ──────────────────────────────────────────────────────────────
-async function fetchTeamRoster(espnId) {
-  const url = `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/teams/${espnId}/roster`;
-  const r = await fetch(url);
-  if (!r.ok) return [];
-  const d = await r.json();
-  const groups = Array.isArray(d.athletes) ? d.athletes : [];
+// ── ESPN roster + per-player stats fetch ─────────────────────────────────────
+// ESPN's roster table (confirmed against the live site) reports per-player
+// tournament stats: APP, SUB, G, A, SHOT, SOG, FC, FA, YC, RC, SV, GA — the
+// same columns shown on espn.com's own squad pages. ESPN's site API commonly
+// returns tabular player data as parallel labels[]/stats[] arrays rather than
+// named fields, so this parser handles both that shape and a named-field
+// fallback, and tries a couple of endpoint variants since the exact query
+// needed to include stats isn't publicly documented.
+async function fetchTeamRosterWithStats(espnId) {
+  const urls = [
+    `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/teams/${espnId}/roster`,
+    `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/teams/${espnId}?enable=roster,stats`,
+  ];
+  for (const url of urls) {
+    try {
+      const r = await fetch(url);
+      if (!r.ok) continue;
+      const d = await r.json();
+      const parsed = _parseRosterResponse(d);
+      if (parsed.length) return parsed;
+    } catch(e) { /* try next url shape */ }
+  }
+  return [];
+}
+
+function _parseRosterResponse(d) {
+  // Roster groups can appear at d.athletes, d.team.athletes, or d.roster
+  const groups = Array.isArray(d.athletes) ? d.athletes
+               : Array.isArray(d.team?.athletes) ? d.team.athletes
+               : Array.isArray(d.roster) ? d.roster
+               : [];
   const flat = [];
   for (const g of groups) {
-    const pos  = g.position || g.displayName || '';
-    const items = Array.isArray(g.items) ? g.items : (Array.isArray(g.athletes) ? g.athletes : []);
+    const posLabel = g.position || g.displayName || '';
+    const items = Array.isArray(g.items) ? g.items
+                : Array.isArray(g.athletes) ? g.athletes
+                : [];
+    // Parallel-array pattern: g.labels = ['G','A','SHOT',...], each athlete has .stats = [3,1,0,...]
+    const labels = Array.isArray(g.labels) ? g.labels.map(l => String(l).toUpperCase()) : null;
     for (const p of items) {
+      const statMap = {};
+      if (labels && Array.isArray(p.stats)) {
+        labels.forEach((lbl, i) => { statMap[lbl] = parseFloat(p.stats[i]); });
+      } else if (Array.isArray(p.statistics)) {
+        p.statistics.forEach(s => {
+          const key = String(s.abbreviation || s.name || '').toUpperCase();
+          statMap[key] = parseFloat(s.value ?? s.displayValue);
+        });
+      }
+      const num = k => { const v = statMap[k]; return (typeof v === 'number' && !isNaN(v)) ? v : null; };
       flat.push({
         name:    p.fullName || p.displayName || p.shortName || '',
         jersey:  p.jersey || '',
-        pos:     (p.position?.abbreviation || pos || '').toUpperCase().slice(0,3),
-        posLong: p.position?.displayName || pos || '',
-        age:     p.age || '',
+        pos:     (p.position?.abbreviation || posLabel || '').toUpperCase().slice(0,3),
+        age:     p.age || null,
         club:    p.team?.displayName || p.club?.displayName || '',
+        app:     num('APP'), sub: num('SUB'),
+        g:       num('G'),   a:   num('A'),
+        shot:    num('SHOT'),sog: num('SOG'),
+        fc:      num('FC'),  fa:  num('FA'),
+        yc:      num('YC'),  rc:  num('RC'),
+        sv:      num('SV'),  ga:  num('GA'),
       });
     }
   }
@@ -179,7 +271,7 @@ async function fetchTeamRoster(espnId) {
 }
 
 function buildRosterHtml(roster) {
-  const ORDER = { GK:0, GKP:0, DF:1, DEF:1, CB:1, LB:1, RB:1, WB:1,
+  const ORDER = { GK:0, DF:1, DEF:1, CB:1, LB:1, RB:1, WB:1,
                   MF:2, MID:2, CM:2, DM:2, AM:2,
                   FW:3, ATT:3, CF:3, LW:3, RW:3, ST:3 };
   const posGroup = p => {
@@ -203,25 +295,60 @@ function buildRosterHtml(roster) {
   }).join('');
 }
 
-// ── Loading state ─────────────────────────────────────────────────────────────
-function tpLoading() {
-  return '<div class="tp-loading"><div class="spinner"></div><span>Loading…</span></div>';
+// ── Individual player stat cards (MOTM-style box per player) ─────────────────
+function buildPlayerCardsHtml(players) {
+  const withInvolvement = players.filter(p => (p.g||0) > 0 || (p.a||0) > 0 || (p.yc||0) > 0 || (p.rc||0) > 0);
+  const list = withInvolvement.length ? withInvolvement : players.slice(0, 0); // nothing to show if truly no involvement
+  if (!list.length) return '<div class="tp-empty-note">No individual stats recorded yet.</div>';
+
+  list.sort((a,b) => (b.g||0)-(a.g||0) || (b.a||0)-(a.a||0));
+
+  return list.map(p => {
+    const initials = p.name.split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    const pkNote = p.pk ? `<span class="tp-pc-pk"> (${p.pk} pen)</span>` : '';
+    const stats = [];
+    if (p.g  != null) stats.push({ l:'Goals',      v:p.g,  cls:'tp-pc-goals' });
+    if (p.a  != null) stats.push({ l:'Assists',    v:p.a,  cls:'tp-pc-assists' });
+    if (p.shot!= null) stats.push({ l:'Shots',      v:p.shot });
+    if (p.sog!= null) stats.push({ l:'On Target',  v:p.sog });
+    if (p.fc != null) stats.push({ l:'Fouls',      v:p.fc });
+    if (p.yc)         stats.push({ l:'Yellow',     v:p.yc, cls:'tp-pc-yc' });
+    if (p.rc)         stats.push({ l:'Red',        v:p.rc, cls:'tp-pc-rc' });
+    return `<div class="tp-player-card">
+      <div class="tp-pc-avatar">${initials}</div>
+      <div class="tp-pc-body">
+        <div class="tp-pc-name">${p.name}${pkNote}</div>
+        <div class="tp-pc-stats">
+          ${stats.map(s => `<span class="tp-pc-stat"><b class="${s.cls||''}">${s.v}</b> ${s.l}</span>`).join('')}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
-// ── Main content renderer ─────────────────────────────────────────────────────
-function tpContent(team, d) {
-  // ── Group standing ──────────────────────────────────────────────────────────
-  let groupLetter = '', groupPos = 0;
+// ── Static placeholders for async slots ──────────────────────────────────────
+function tpSquadPlaceholder() {
+  return `
+  <div class="tp-section-lbl">Player Stats</div>
+  <div class="tp-card tp-player-stats" id="tp-playerstats-slot">
+    <div class="tp-loading-sm">Loading player stats…</div>
+  </div>
+  <div class="tp-section-lbl">Squad</div>
+  <div class="tp-card" id="tp-squad-slot">
+    <div class="tp-loading-sm">Loading squad…</div>
+  </div>`;
+}
+function tpProfilePlaceholder() {
+  return `<div id="tp-profile-slot"></div>`;
+}
+
+// ── Synchronous content (hero, record, stats, next match, match log) ────────
+function tpStaticContent(team) {
+  let groupLetter = '';
   for (const [g, teams] of Object.entries(GROUP_TEAMS)) {
-    if (teams.some(t => normName(t)===normName(team))) {
-      const st = calculateStandings(g);
-      groupLetter = g;
-      groupPos    = st.findIndex(s => normName(s.name)===normName(team)) + 1;
-      break;
-    }
+    if (teams.some(t => normName(t)===normName(team))) { groupLetter = g; break; }
   }
 
-  // ── KO status ──────────────────────────────────────────────────────────────
   const roundNames = { R32:'Round of 32', R16:'Round of 16', QF:'Quarterfinals', SF:'Semifinals', Final:'Final' };
   function getKOInfo() {
     const allKO = [...(typeof R32_MATCHES!=='undefined'?R32_MATCHES:[]),
@@ -233,8 +360,7 @@ function tpContent(team, d) {
       if (!isT1 && !isT2) continue;
       const result = getKnockoutResult(m.id);
       if (!result || result.status!=='FT') {
-        return { type:'upcoming', match:m, opponent:isT1?t2:t1,
-                 roundName:roundNames[m.round]||m.round||'Knockout' };
+        return { type:'upcoming', match:m, opponent:isT1?t2:t1, roundName:roundNames[m.round]||m.round||'Knockout' };
       }
       const winner = getKOWinner(m.id);
       if (!winner || normName(winner)!==normName(team)) {
@@ -245,49 +371,45 @@ function tpContent(team, d) {
   }
   const koInfo = getKOInfo();
 
-  // ── Tournament stats ────────────────────────────────────────────────────────
+  // ── Traditional record + stat-row layout (replaces the tile grid) ──────────
   const ts = getTournamentStats(team);
   const statsHtml = ts.P > 0 ? `
-  <div class="tp-section-lbl">2026 Tournament</div>
-  <div class="tp-card">
-    <div class="tp-stats-grid tp-stats-wide">
-      <div class="tp-stat"><span class="tp-stat-n">${ts.P}</span><span class="tp-stat-l">Played</span></div>
-      <div class="tp-stat"><span class="tp-stat-n">${ts.W}</span><span class="tp-stat-l">Won</span></div>
-      <div class="tp-stat"><span class="tp-stat-n">${ts.D}</span><span class="tp-stat-l">Drawn</span></div>
-      <div class="tp-stat"><span class="tp-stat-n">${ts.L}</span><span class="tp-stat-l">Lost</span></div>
-      <div class="tp-stat"><span class="tp-stat-n">${ts.GF}</span><span class="tp-stat-l">Goals F</span></div>
-      <div class="tp-stat"><span class="tp-stat-n">${ts.GA}</span><span class="tp-stat-l">Goals A</span></div>
-      <div class="tp-stat"><span class="tp-stat-n ${ts.GD>0?'tp-stat-green':ts.GD<0?'tp-stat-red':''}">${ts.GD>0?'+':''}${ts.GD}</span><span class="tp-stat-l">GD</span></div>
-      <div class="tp-stat"><span class="tp-stat-n">${ts.CS}</span><span class="tp-stat-l">Clean Sh</span></div>
-      <div class="tp-stat"><span class="tp-stat-n">${ts.shots||'–'}</span><span class="tp-stat-l">Shots</span></div>
-      <div class="tp-stat"><span class="tp-stat-n">${ts.shotsOT||'–'}</span><span class="tp-stat-l">On Target</span></div>
-      <div class="tp-stat"><span class="tp-stat-n">${ts.YC}</span><span class="tp-stat-l">Yellows</span></div>
-      <div class="tp-stat"><span class="tp-stat-n ${ts.RC>0?'tp-stat-red':''}">${ts.RC}</span><span class="tp-stat-l">Reds</span></div>
-    </div>
+  <div class="tp-record-hero">
+    <div class="tp-record-main">${ts.W}-${ts.D}-${ts.L}</div>
+    <div class="tp-record-sub">W&ndash;D&ndash;L &middot; ${ts.P} played</div>
+  </div>
+  <div class="tp-card tp-stat-rows">
+    <div class="tp-sr"><span>Goals For</span><b>${ts.GF}</b></div>
+    <div class="tp-sr"><span>Goals Against</span><b>${ts.GA}</b></div>
+    <div class="tp-sr"><span>Goal Difference</span><b class="${ts.GD>0?'tp-stat-green':ts.GD<0?'tp-stat-red':''}">${ts.GD>0?'+':''}${ts.GD}</b></div>
+    <div class="tp-sr"><span>Clean Sheets</span><b>${ts.CS}</b></div>
+    <div class="tp-sr"><span>Shots</span><b>${ts.shots||'–'}</b></div>
+    <div class="tp-sr"><span>Shots On Target</span><b>${ts.shotsOT||'–'}</b></div>
+    <div class="tp-sr"><span>Yellow Cards</span><b>${ts.YC}</b></div>
+    <div class="tp-sr"><span>Red Cards</span><b class="${ts.RC>0?'tp-stat-red':''}">${ts.RC}</b></div>
   </div>` : '';
 
-  // ── Next/status ─────────────────────────────────────────────────────────────
+  // ── Next / eliminated ───────────────────────────────────────────────────────
   let nextHtml = '';
   if (koInfo?.type==='eliminated') {
     nextHtml = `<div class="tp-card tp-elim-card"><span class="tp-elim-ico">✕</span> Eliminated in the ${koInfo.roundName}</div>`;
   } else if (koInfo?.type==='upcoming') {
     const m=koInfo.match, opp=koInfo.opponent;
-    nextHtml = `<div class="tp-section-lbl">Next · ${koInfo.roundName}</div>
+    nextHtml = `<div class="tp-section-lbl">Next &middot; ${koInfo.roundName}</div>
     <div class="tp-card tp-next-card">
       <span class="tp-next-opp">${getFlag(opp)} ${displayName(opp)}</span>
-      <span class="tp-next-time">${formatShortDate(m.date)} · ${formatGameTime(m.date,m.time)} ${getTZAbbr()}</span>
+      <span class="tp-next-time">${formatShortDate(m.date)} &middot; ${formatGameTime(m.date, m.time)} ${getTZAbbr()}</span>
     </div>`;
   } else {
     const upcoming = SCHEDULE.filter(m =>
       (normName(m.t1)===normName(team)||normName(m.t2)===normName(team)) &&
-      !STATE.results.groupMatches.some(r =>
-        normName(r.team1)===normName(m.t1)&&normName(r.team2)===normName(m.t2)&&r.status==='FT')
+      !STATE.results.groupMatches.some(r => normName(r.team1)===normName(m.t1)&&normName(r.team2)===normName(m.t2)&&r.status==='FT')
     ).slice(0,3);
     if (upcoming.length) {
       nextHtml = `<div class="tp-section-lbl">Upcoming</div><div class="tp-card">` +
         upcoming.map(m => {
           const opp = normName(m.t1)===normName(team) ? m.t2 : m.t1;
-          return `<div class="tp-next-row">${getFlag(opp)} ${displayName(opp)}<span class="tp-next-time">${formatShortDate(m.date)} · ${formatGameTime(m.date,m.time)} ${getTZAbbr()}</span></div>`;
+          return `<div class="tp-next-row">${getFlag(opp)} ${displayName(opp)}<span class="tp-next-time">${formatShortDate(m.date)} &middot; ${formatGameTime(m.date,m.time)} ${getTZAbbr()}</span></div>`;
         }).join('') + '</div>';
     }
   }
@@ -304,7 +426,6 @@ function tpContent(team, d) {
       const ga    = isT1 ? m.score2 : m.score1;
       const isPSO = m.substatus==='PSO';
       const isAET = m.substatus==='AET';
-      // Bug 4 fix: use penalty scores for PSO result
       const res = isPSO
         ? ((isT1 ? m.penScore1 : m.penScore2)||0) > ((isT1 ? m.penScore2 : m.penScore1)||0) ? 'W' : 'L'
         : gf>ga ? 'W' : gf<ga ? 'L' : 'D';
@@ -318,49 +439,9 @@ function tpContent(team, d) {
         <div class="tp-match-opp">${getFlag(opp)} ${displayName(opp)}</div>
         <div class="tp-match-score">${scoreStr}</div>
         <span class="tp-res-badge ${resCls}">${res}</span>
-        <div class="tp-match-meta">${formatShortDate(m.date)} · ${roundLabel}${scorers?`<div class="tp-match-scorers">${scorers}</div>`:''}</div>
+        <div class="tp-match-meta">${formatShortDate(m.date)} &middot; ${roundLabel}${scorers?`<div class="tp-match-scorers">${scorers}</div>`:''}</div>
       </div>`;
     }).join('') + `</div>` : '';
-
-  // ── Player stats ─────────────────────────────────────────────────────────── 
-  const players = getTeamPlayerStats(team);
-  // Bug 7 fix: no emojis — use text labels
-  const playerHtml = players.length ? `
-  <div class="tp-section-lbl">Player Stats</div>
-  <div class="tp-card tp-player-stats">
-    <div class="tp-ps-header"><span>Player</span><span>G</span><span>Y</span><span>R</span></div>
-    ${players.filter(p=>p.goals||p.y||p.r).map(p=>`
-    <div class="tp-ps-row">
-      <span class="tp-ps-name">${p.name}${p.pk?'<span class="tp-ps-pk"> P</span>':''}</span>
-      <span class="tp-ps-val ${p.goals?'tp-ps-goals':''}">${p.goals||'–'}</span>
-      <span class="tp-ps-val ${p.y?'tp-ps-yc':''}">${p.y||'–'}</span>
-      <span class="tp-ps-val ${p.r?'tp-ps-rc':''}">${p.r||'–'}</span>
-    </div>`).join('')}
-  </div>` : '';
-
-  // ── Squad (async) ───────────────────────────────────────────────────────────
-  const rosterHtml = `
-  <div class="tp-section-lbl">Squad</div>
-  <div class="tp-card" id="tp-roster-slot">
-    <div class="tp-loading-sm">Loading squad…</div>
-  </div>`;
-
-  // ── AI profile data ─────────────────────────────────────────────────────────
-  const titlesNote = (d.wcHistory?.titles||0)>0 ? ` · ${d.wcHistory.titles} title${d.wcHistory.titles>1?'s':''}` : '';
-  const aiHtml = (d.manager||d.style||d.strengths||d.weaknesses||d.ranking) ? `
-  <div class="tp-section-lbl">Profile</div>
-  <div class="tp-card tp-info">
-    ${d.ranking?`<div class="tp-row"><span class="tp-row-lbl">FIFA rank</span><span>#${d.ranking}</span></div>`:''}
-    ${d.confederation?`<div class="tp-row"><span class="tp-row-lbl">Confederation</span><span>${d.confederation}</span></div>`:''}
-    ${d.manager?`<div class="tp-row"><span class="tp-row-lbl">Manager</span><span>${d.manager}</span></div>`:''}
-    ${d.style?`<div class="tp-row"><span class="tp-row-lbl">Style</span><span>${d.style}</span></div>`:''}
-    ${d.wcHistory?`<div class="tp-row"><span class="tp-row-lbl">WC history</span><span>${d.wcHistory.appearances} appearances${titlesNote}</span></div>`:''}
-    ${d.wcHistory?.bestFinish?`<div class="tp-row"><span class="tp-row-lbl">Best finish</span><span>${d.wcHistory.bestFinish}</span></div>`:''}
-  </div>
-  ${(d.strengths||d.weaknesses)?`<div class="tp-card tp-sw-card">
-    ${d.strengths?`<div class="tp-sw"><span class="tp-sw-ico up">▲</span><span><b>Strength</b> — ${d.strengths}</span></div>`:''}
-    ${d.weaknesses?`<div class="tp-sw"><span class="tp-sw-ico down">▼</span><span><b>Watch</b> — ${d.weaknesses}</span></div>`:''}
-  </div>`:''}` : '';
 
   return `
   <div class="tp-hero">
@@ -368,7 +449,6 @@ function tpContent(team, d) {
     <div class="tp-hero-info">
       <div class="tp-team-name">${displayName(team)}</div>
       <div class="tp-badges">
-        ${d.ranking?`<span class="tp-badge tp-badge-gold">FIFA #${d.ranking}</span>`:''}
         ${groupLetter?`<span class="tp-badge tp-badge-neutral">Group ${groupLetter}</span>`:''}
         ${koInfo?.type==='eliminated'?`<span class="tp-badge tp-badge-red">Eliminated</span>`:''}
       </div>
@@ -376,10 +456,7 @@ function tpContent(team, d) {
   </div>
   ${statsHtml}
   ${nextHtml}
-  ${matchLogHtml}
-  ${playerHtml}
-  ${rosterHtml}
-  ${aiHtml}`;
+  ${matchLogHtml}`;
 }
 
 document.addEventListener('DOMContentLoaded', loadTeamCache);

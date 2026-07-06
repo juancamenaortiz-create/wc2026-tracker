@@ -2121,8 +2121,19 @@ img.emoji {
 .tp-section-lbl { font-size: 10px; font-weight: 700; color: #6a727e; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 7px; padding: 0 2px; margin-top: 16px; }
 .tp-section-lbl:first-child { margin-top: 0; }
 
-/* Extended stats grid — 3 cols × 4 rows gives better label legibility on mobile */
-.tp-stats-wide { grid-template-columns: repeat(3, 1fr) !important; }
+/* Traditional record hero + stat-row list (replaces the old tile grid) */
+.tp-record-hero { text-align: center; padding: 10px 0 16px; }
+.tp-record-main { font-size: 34px; font-weight: 800; color: var(--white); letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+.tp-record-sub { font-size: 11px; color: #6a727e; text-transform: uppercase; letter-spacing: .05em; margin-top: 2px; }
+.tp-stat-rows { padding: 4px 0; }
+.tp-sr {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 14px; border-bottom: 1px solid rgba(255,255,255,.04);
+  font-size: 13px;
+}
+.tp-sr:last-child { border-bottom: none; }
+.tp-sr span { color: #9aa2ae; }
+.tp-sr b { color: var(--white); font-weight: 700; font-variant-numeric: tabular-nums; }
 .tp-stat-green { color: var(--green) !important; }
 .tp-stat-red { color: var(--crimson) !important; }
 
@@ -2152,16 +2163,30 @@ img.emoji {
 .tp-match-meta { font-size: 10px; color: #6a727e; grid-column: 1 / -1; margin-top: -2px; }
 .tp-match-scorers { color: #aab2c0; margin-top: 2px; }
 
-/* Player stats */
-.tp-ps-header { display: grid; grid-template-columns: 1fr repeat(3, 32px); font-size: 10px; color: #5a6270; font-weight: 700; padding: 6px 12px; border-bottom: 1px solid rgba(255,255,255,.06); }
-.tp-ps-row { display: grid; grid-template-columns: 1fr repeat(3, 32px); align-items: center; padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,.04); }
-.tp-ps-row:last-child { border-bottom: none; }
-.tp-ps-name { font-size: 12px; color: #cdd3dc; }
-.tp-ps-pk { font-size: 10px; color: var(--muted); }
-.tp-ps-val { font-size: 12px; font-weight: 700; color: #5a6270; text-align: center; }
-.tp-ps-goals { color: var(--green); }
-.tp-ps-yc { color: var(--amber); }
-.tp-ps-rc { color: var(--crimson); }
+/* Individual player cards — one box per player, MOTM-style */
+.tp-player-stats { background: none; border: none; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.tp-player-card {
+  display: flex; align-items: center; gap: 12px;
+  background: #15181c; border: 1px solid rgba(255,255,255,.06); border-radius: 12px;
+  padding: 12px 14px;
+}
+.tp-pc-avatar {
+  width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+  background: rgba(212,175,55,.12); color: var(--gold);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 800;
+}
+.tp-pc-body { min-width: 0; flex: 1; }
+.tp-pc-name { font-size: 13px; font-weight: 700; color: var(--white); }
+.tp-pc-pk { font-size: 11px; color: var(--muted); font-weight: 500; }
+.tp-pc-stats { display: flex; flex-wrap: wrap; gap: 3px 12px; margin-top: 3px; }
+.tp-pc-stat { font-size: 11px; color: #7a828e; white-space: nowrap; }
+.tp-pc-stat b { font-size: 12px; color: #cdd3dc; font-weight: 700; margin-right: 2px; }
+.tp-pc-goals { color: var(--green) !important; }
+.tp-pc-assists { color: #3a8be0 !important; }
+.tp-pc-yc { color: var(--amber) !important; }
+.tp-pc-rc { color: var(--crimson) !important; }
+.tp-empty-note { font-size: 12px; color: #6a727e; padding: 10px 2px; }
 
 /* Squad roster */
 .tp-roster-group { margin-bottom: 12px; }

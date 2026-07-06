@@ -418,7 +418,7 @@ function tpStaticContent(team) {
   const matches = getTeamAllMatches(team);
   const matchLogHtml = matches.length ? `
   <div class="tp-section-lbl">Match Log</div>
-  <div class="tp-card tp-match-log">` +
+  <div class="tp-match-log">` +
     matches.map(m => {
       const isT1  = normName(m.team1)===normName(team);
       const opp   = isT1 ? m.team2 : m.team1;
@@ -430,22 +430,34 @@ function tpStaticContent(team) {
         ? ((isT1 ? m.penScore1 : m.penScore2)||0) > ((isT1 ? m.penScore2 : m.penScore1)||0) ? 'W' : 'L'
         : gf>ga ? 'W' : gf<ga ? 'L' : 'D';
       const resCls = res==='W'?'tp-res-w':res==='L'?'tp-res-l':'tp-res-d';
+      const barCls = res==='W'?'tp-ml-bar-w':res==='L'?'tp-ml-bar-l':'tp-ml-bar-d';
       const teamTid = isT1 ? m.tid1 : m.tid2;
       const scorers = (m.events||[]).filter(e=>e.g&&!e.og&&e.tid===teamTid&&e.p)
-        .map(e=>e.p+(e.pk?' (P)':'')).join(', ');
+        .map(e=>e.p+(e.pk?' (P)':'')).join(' · ');
       const roundLabel = m.group ? `Group ${m.group}` : (m.round||'KO');
-      const scoreStr = `${gf}–${ga}${isPSO?` (P ${isT1?m.penScore1:m.penScore2}–${isT1?m.penScore2:m.penScore1})`:''}${isAET?' aet':''}`;
-      return `<div class="tp-match-row">
-        <div class="tp-match-opp">${getFlag(opp)} ${displayName(opp)}</div>
-        <div class="tp-match-score">${scoreStr}</div>
-        <span class="tp-res-badge ${resCls}">${res}</span>
-        <div class="tp-match-meta">${formatShortDate(m.date)} &middot; ${roundLabel}${scorers?`<div class="tp-match-scorers">${scorers}</div>`:''}</div>
+      const penNote = isPSO ? ` · P ${isT1?m.penScore1:m.penScore2}–${isT1?m.penScore2:m.penScore1}` : '';
+      const pill = isPSO ? `<span class="tp-ml-pill tp-ml-pen">PEN</span>` : isAET ? `<span class="tp-ml-pill tp-ml-aet">AET</span>` : '';
+      return `<div class="tp-ml-card">
+        <div class="tp-ml-bar ${barCls}"></div>
+        <div class="tp-ml-body">
+          <div class="tp-ml-top">
+            <div class="tp-ml-opp">${getFlag(opp)} ${displayName(opp)}</div>
+            <div class="tp-ml-right">
+              <div class="tp-ml-score"><span class="tp-ml-n">${gf}</span><span class="tp-ml-sep">–</span><span class="tp-ml-n tp-ml-n-lose">${ga}</span>${pill}</div>
+              <span class="tp-res-badge ${resCls}">${res}</span>
+            </div>
+          </div>
+          <div class="tp-ml-bot">
+            <span class="tp-ml-meta">${formatShortDate(m.date)} · ${roundLabel}${penNote}</span>
+            ${scorers?`<span class="tp-ml-scorers">${scorers}</span>`:''}
+          </div>
+        </div>
       </div>`;
     }).join('') + `</div>` : '';
 
   return `
   <div class="tp-hero">
-    <span class="cflag tp-flag-lg">${getFlag(team)}</span>
+    <div class="tp-flag-tile">${getFlag(team)}</div>
     <div class="tp-hero-info">
       <div class="tp-team-name">${displayName(team)}</div>
       <div class="tp-badges">
@@ -454,8 +466,8 @@ function tpStaticContent(team) {
       </div>
     </div>
   </div>
-  ${statsHtml}
   ${nextHtml}
+  ${statsHtml}
   ${matchLogHtml}`;
 }
 

@@ -322,11 +322,16 @@ function _isShootoutDetail(d) {
   if (d.shootout === true) return true;
   const t = ((d.type && (d.type.text || d.type.name)) || '').toLowerCase();
   if (t.includes('shootout')) return true;
-  // ESPN's confirmed phrasing for SHOOTOUT kicks only. In-play penalties (including
-  // AET goals like 120+5') use "Penalty Kick Goal" or "Goal" — never "Penalty - Scored/
-  // Saved/Missed". Period-based detection removed: ESPN reuses period ≥ 5 for AET
-  // overflow minutes, causing false positives on legitimate in-play penalties.
-  if (t.includes('penalty - scored') || t.includes('penalty - saved') || t.includes('penalty - missed')) return true;
+  // ESPN uses "Penalty - Scored/Saved/Missed" for BOTH in-play penalty goals
+  // AND penalty shootout kicks in comp.details. The only reliable way to tell
+  // them apart is the period number: period 5 = the shootout round specifically.
+  // Periods 1-4 cover regulation and both halves of extra time (including 120+5').
+  // Without the period check, in-play penalties (France, Brazil, etc.) are
+  // incorrectly filtered from the timeline as if they were shootout kicks.
+  if (t.includes('penalty - scored') || t.includes('penalty - saved') || t.includes('penalty - missed')) {
+    const p = d.period && typeof d.period.number === 'number' ? d.period.number : 0;
+    return p === 5;
+  }
   return false;
 }
 

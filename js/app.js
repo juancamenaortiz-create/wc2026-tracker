@@ -492,7 +492,31 @@ async function fetchFromESPN(overrideDates) {
             const koWithThird = allKO.filter(km =>
               /^3rd-/.test(km.slot1 || '') || /^3rd-/.test(km.slot2 || '')
             );
+            // Parse the ESPN event's actual date (ds = 'YYYYMMDD') for proximity checks
+            const evDate = ds ? new Date(`${ds.slice(0,4)}-${ds.slice(4,6)}-${ds.slice(6,8)}T12:00:00`) : null;
             for (const km of koWithThird) {
+              // GUARD 1: skip any candidate that already has a confirmed FT result.
+              // A settled match must never be reassigned to a different, later event —
+              // this is exactly how a real R16 game (e.g. Switzerland vs Colombia, Jul 7)
+              // was previously able to silently overwrite the correct R32 result
+              // (Switzerland vs Algeria, Jul 2) for the same match ID.
+              const existing = getAnyMatchResult(km.id);
+              if (existing && existing.status === 'FT') {
+                if (_diag) console.log('[KO DEBUG] skipping match', km.id, '— already has a confirmed FT result');
+                continue;
+              }
+              // GUARD 2: the candidate's scheduled date must be within ~2 days of this
+              // event's actual date. Without this, the SAME fixed team (e.g. Switzerland,
+              // who plays multiple KO rounds) can incorrectly match an R32 slot's fixed
+              // team check even when the event is really a later round entirely.
+              if (evDate && km.date) {
+                const kmDate = new Date(km.date + 'T12:00:00');
+                const dayDiff = Math.abs((evDate - kmDate) / 86400000);
+                if (dayDiff > 2) {
+                  if (_diag) console.log('[KO DEBUG] skipping match', km.id, '— date too far off (', km.date, 'vs event', ds, ')');
+                  continue;
+                }
+              }
               const fixedSlotStr = /^3rd-/.test(km.slot1 || '') ? km.slot2 : km.slot1;
               const fixedTeam = resolveKOSlot(fixedSlotStr);
               if (_diag) console.log('[KO DEBUG] checking match', km.id, '| fixedSlot:', fixedSlotStr, '| fixedTeam resolves to:', fixedTeam);

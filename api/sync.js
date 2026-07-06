@@ -165,8 +165,14 @@ export default async function handler(req, res) {
     }
     let matches = stored.matches || [];
 
+    // Process ALL requested dates — safe because fetches run in parallel via
+    // Promise.allSettled (total time ≈ slowest single request, not the sum).
+    // The old .slice(0,15) cap was a leftover from when fetches ran sequentially
+    // with per-request timeouts; it silently dropped the tail end of any longer
+    // date range (e.g. the last week of group stage), causing KV to under-report
+    // completed matches vs. what the client's own historical backfill found locally.
     const results = await Promise.allSettled(
-      dates.slice(0, 15).map(async ds => {
+      dates.map(async ds => {
         const r = await fetch(
           `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=${ds}`,
           { signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined }

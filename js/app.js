@@ -555,20 +555,20 @@ async function fetchFromESPN(overrideDates) {
           });
           continue;
         }
-        if (status === 'NS') continue; // group matches: already known from SCHEDULE, skip NS entries
-        // Extract win probability while we have the event in scope (NS matches already continued above)
-        (() => {
-          const odds = (comp.odds || [])[0] || {};
-          const pred = comp.predictor || {};
-          const h  = parseFloat(odds.homeTeamOdds?.winPercentage || pred.homeTeam?.gameProjection || 0) || null;
-          const a  = parseFloat(odds.awayTeamOdds?.winPercentage || pred.awayTeam?.gameProjection || 0) || null;
-          const dr = parseFloat(odds.drawOdds?.drawPercentage || 0) || null;
-          if (h || a) {
-            const flip2 = normName(m.t1) === normName(n2);
-            STATE.winProbs[m.id] = { home: flip2 ? a : h, away: flip2 ? h : a,
-              draw: dr || Math.max(0, 100 - (h||0) - (a||0)) };
+        // Extract win probability for upcoming matches before the NS skip below
+        // (odds are only meaningful pre-kickoff — this is the only time ESPN provides them)
+        if (!status || status === 'NS') {
+          const oddsObj = (comp.odds || [])[0] || {};
+          const predObj = comp.predictor || {};
+          const wpH = parseFloat(oddsObj.homeTeamOdds?.winPercentage || predObj.homeTeam?.gameProjection || 0) || null;
+          const wpA = parseFloat(oddsObj.awayTeamOdds?.winPercentage || predObj.awayTeam?.gameProjection || 0) || null;
+          if ((wpH || wpA) && m?.id) {
+            const flip0 = normName(m.t1) === normName(n2);
+            STATE.winProbs[m.id] = { home: flip0 ? wpA : wpH, away: flip0 ? wpH : wpA,
+              draw: Math.max(0, 100 - (wpH||0) - (wpA||0)) };
           }
-        })();
+        }
+        if (status === 'NS') continue; // group matches: already known from SCHEDULE, skip NS entries
         const flip = normName(m.t1) === normName(n2);
         // Extract events (goals + cards) and live clock from ESPN
         const homeId = home.team?.id || '';

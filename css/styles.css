@@ -557,9 +557,11 @@ img.emoji {
 .sched-card-count { font-size: 11px; font-weight: 600; color: #6a727e; flex-shrink: 0; white-space: nowrap; }
 
 .srow {
-  display: grid; grid-template-columns: 54px 1fr auto; gap: 11px; align-items: center;
-  padding: 11px 15px; border-bottom: 1px solid rgba(255,255,255,.04);
+  display: grid; grid-template-columns: 54px 1fr auto; gap: 11px 11px; align-items: center;
+  padding: 11px 15px 9px; border-bottom: 1px solid rgba(255,255,255,.04);
 }
+/* Prob bar and delay bar span all 3 columns so they sit as full-width rows */
+.srow-prob-wrap, .srow-delay-bar { grid-column: 1 / -1; margin-top: -4px; }
 .srow:last-child { border-bottom: none; }
 .srow-click { cursor: pointer; transition: background .12s; }
 .srow-click:hover { background: rgba(255,255,255,.025); }
@@ -2110,11 +2112,17 @@ img.emoji {
 .tp-hero { display: flex; align-items: center; gap: 13px; margin-bottom: 18px; }
 .tp-hero-info { min-width: 0; }
 .tp-badge-red { color: var(--crimson); background: rgba(240,84,75,.1); }
+.tp-pin-hdr {
+  background: none; border: 1px solid var(--dim); color: var(--muted);
+  font-size: 16px; width: 34px; height: 34px; border-radius: 50%; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.tp-pin-hdr.on { color: var(--gold); border-color: var(--gold); }
 .tp-section-lbl { font-size: 10px; font-weight: 700; color: #6a727e; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 7px; padding: 0 2px; margin-top: 16px; }
 .tp-section-lbl:first-child { margin-top: 0; }
 
-/* Extended stats grid */
-.tp-stats-wide { grid-template-columns: repeat(4, 1fr) !important; }
+/* Extended stats grid — 3 cols × 4 rows gives better label legibility on mobile */
+.tp-stats-wide { grid-template-columns: repeat(3, 1fr) !important; }
 .tp-stat-green { color: var(--green) !important; }
 .tp-stat-red { color: var(--crimson) !important; }
 

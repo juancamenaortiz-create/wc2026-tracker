@@ -10,7 +10,45 @@ export default async function handler(req, res) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return res.status(200).json({ error: 'API key not configured', data: null });
 
-  const { team1, team2, group, round, city, date, groupStandings } = req.body || {};
+  const { team1, team2, group, round, city, date, groupStandings, teamProfile } = req.body || {};
+
+  // ── Team profile request (different prompt) ────────────────────────────────
+  if (teamProfile) {
+    const tpPrompt = 'You are a FIFA World Cup 2026 expert. Return a JSON profile for '
+      + teamProfile + ' as ONLY a raw JSON object — no markdown, no backticks.\n\n'
+      + 'Return ONLY this JSON:\n'
+      + '{\n'
+      + '  "ranking": <FIFA world ranking integer>,\n'
+      + '  "confederation": "<e.g. UEFA, CONMEBOL, CAF>",\n'
+      + '  "manager": "<current manager full name>",\n'
+      + '  "style": "<1 sentence tactical identity>",\n'
+      + '  "strengths": "<1 sentence key strength>",\n'
+      + '  "weaknesses": "<1 sentence key weakness>",\n'
+      + '  "wcHistory": { "appearances": <integer>, "titles": <integer>, "bestFinish": "<e.g. Champions, 4th place>" }\n'
+      + '}\n'
+      + 'Be factual and current. Return ONLY the JSON.';
+    try {
+      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 600,
+          tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+          messages: [{ role: 'user', content: tpPrompt }] }),
+      });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const apiData = await resp.json();
+      const text = (apiData.content||[]).filter(b=>b.type==='text').map(b=>b.text||'').join('').trim();
+      const start = text.indexOf('{'), end = text.lastIndexOf('}');
+      if (start !== -1 && end > start) {
+        const parsed = JSON.parse(text.slice(start, end+1));
+        return res.status(200).json({ data: parsed });
+      }
+      return res.status(200).json({ data: {} });
+    } catch(e) {
+      return res.status(200).json({ data: {} });
+    }
+  }
+
   if (!team1 || !team2) return res.status(400).json({ error: 'Missing team names', data: null });
 
   const roundLabel = group ? ('Group ' + group) : (round || 'Knockout Round');

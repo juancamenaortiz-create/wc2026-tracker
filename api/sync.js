@@ -5,12 +5,18 @@
 
 import { Redis } from '@upstash/redis';
 import { createRequire } from 'module';
-
 const require = createRequire(import.meta.url);
-const kv = new Redis({
-  url:   process.env.UPSTASH_REDIS_REST_URL,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN,
-});
+
+// Redis.fromEnv() auto-detects whichever naming pattern Vercel's Upstash
+// integration used: UPSTASH_REDIS_REST_URL/TOKEN, KV_REST_API_URL/TOKEN, etc.
+// Wrapped in a try so a missing/archived database returns a clear error
+// rather than crashing the module at cold-start time.
+let kv;
+try {
+  kv = Redis.fromEnv();
+} catch(e) {
+  kv = null; // handled per-request below
+}
 
 // ── Shared data — loaded via createRequire so no assert/with import syntax needed
 const SCHEDULE   = require('../data/schedule.json');   // 72 group matches
@@ -190,6 +196,7 @@ export default async function handler(req, res) {
 
   // GET → return current KV store
   if (req.method === 'GET') {
+    if (!kv) return res.json({ matches: [], asOf: null, _error: 'KV not configured' });
     try {
       const stored = await kv.get('wc2026:results') || { matches: [], asOf: null };
       res.setHeader('Cache-Control', 'public, s-maxage=60');
@@ -201,6 +208,7 @@ export default async function handler(req, res) {
 
   // POST { dates: ['20260611',...] } → sync those dates from ESPN → store in KV
   if (req.method === 'POST') {
+    if (!kv) return res.status(503).json({ error: 'KV not configured — check UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN env vars in Vercel' });
     const dates = req.body?.dates;
     if (!Array.isArray(dates) || !dates.length) {
       return res.status(400).json({ error: 'dates array required' });

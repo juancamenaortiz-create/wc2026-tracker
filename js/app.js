@@ -447,9 +447,6 @@ async function fetchFromESPN(overrideDates) {
         const n2 = espnToApp(away.team?.displayName || '');
         const s1 = parseInt(home.score) || 0;
         const s2 = parseInt(away.score) || 0;
-        // ── TEMPORARY DIAGNOSTIC — remove once Switzerland/Algeria bug is confirmed fixed ──
-        const _diag = /switzerland|algeria/i.test(n1) || /switzerland|algeria/i.test(n2);
-        if (_diag) console.log('[KO DEBUG] ESPN event:', n1, 'vs', n2, '| date:', ds, '| status:', status);
 
         const m = SCHEDULE.find(m =>
           (normName(m.t1)===normName(n1) && normName(m.t2)===normName(n2)) ||
@@ -470,7 +467,6 @@ async function fetchFromESPN(overrideDates) {
               koMatch = km; break;
             }
           }
-          if (_diag) console.log('[KO DEBUG] exact two-team match result:', koMatch ? koMatch.id : 'none');
           if (!koMatch) {
             // Exact two-team match failed — try a looser one-team match for any KO
             // match that has a 3rd-place slot. Our bracket projection algorithm can
@@ -501,10 +497,7 @@ async function fetchFromESPN(overrideDates) {
               // was previously able to silently overwrite the correct R32 result
               // (Switzerland vs Algeria, Jul 2) for the same match ID.
               const existing = getAnyMatchResult(km.id);
-              if (existing && existing.status === 'FT') {
-                if (_diag) console.log('[KO DEBUG] skipping match', km.id, '— already has a confirmed FT result');
-                continue;
-              }
+              if (existing && existing.status === 'FT') continue;
               // GUARD 2: the candidate's scheduled date must be within ~2 days of this
               // event's actual date. Without this, the SAME fixed team (e.g. Switzerland,
               // who plays multiple KO rounds) can incorrectly match an R32 slot's fixed
@@ -512,30 +505,23 @@ async function fetchFromESPN(overrideDates) {
               if (evDate && km.date) {
                 const kmDate = new Date(km.date + 'T12:00:00');
                 const dayDiff = Math.abs((evDate - kmDate) / 86400000);
-                if (dayDiff > 2) {
-                  if (_diag) console.log('[KO DEBUG] skipping match', km.id, '— date too far off (', km.date, 'vs event', ds, ')');
-                  continue;
-                }
+                if (dayDiff > 2) continue;
               }
               const fixedSlotStr = /^3rd-/.test(km.slot1 || '') ? km.slot2 : km.slot1;
               const fixedTeam = resolveKOSlot(fixedSlotStr);
-              if (_diag) console.log('[KO DEBUG] checking match', km.id, '| fixedSlot:', fixedSlotStr, '| fixedTeam resolves to:', fixedTeam);
               if (!fixedTeam) continue;
               const fixedNorm = normName(fixedTeam);
               if (fixedNorm === normName(n1) || fixedNorm === normName(n2)) {
                 koMatch = km;
-                if (_diag) console.log('[KO DEBUG] MATCHED on match', km.id, 'via fixed team', fixedTeam);
                 break;
               }
             }
           }
           if (!koMatch) {
-            if (_diag) console.log('[KO DEBUG] UNMATCHED — this event never got stored:', n1, 'vs', n2);
             const label = `${n1} vs ${n2}`;
             if (!unmatched.includes(label)) unmatched.push(label);
             continue;
           }
-          if (_diag) console.log('[KO DEBUG] Final koMatch.id:', koMatch.id, '| status:', status);
           // Found a KO match — build result using same logic as group matches below.
           // Use ESPN's actual team names as ground truth since our 3rd-place projection
           // may differ from FIFA's official matrix (e.g. we project Algeria but ESPN

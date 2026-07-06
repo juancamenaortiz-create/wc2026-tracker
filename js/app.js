@@ -445,6 +445,10 @@ async function fetchFromESPN(overrideDates) {
         const n2 = espnToApp(away.team?.displayName || '');
         const s1 = parseInt(home.score) || 0;
         const s2 = parseInt(away.score) || 0;
+        // ── TEMPORARY DIAGNOSTIC — remove once Switzerland/Algeria bug is confirmed fixed ──
+        const _diag = /switzerland|algeria/i.test(n1) || /switzerland|algeria/i.test(n2);
+        if (_diag) console.log('[KO DEBUG] ESPN event:', n1, 'vs', n2, '| date:', ds, '| status:', status);
+
         const m = SCHEDULE.find(m =>
           (normName(m.t1)===normName(n1) && normName(m.t2)===normName(n2)) ||
           (normName(m.t1)===normName(n2) && normName(m.t2)===normName(n1))
@@ -464,6 +468,7 @@ async function fetchFromESPN(overrideDates) {
               koMatch = km; break;
             }
           }
+          if (_diag) console.log('[KO DEBUG] exact two-team match result:', koMatch ? koMatch.id : 'none');
           if (!koMatch) {
             // Exact two-team match failed — try a looser one-team match for any KO
             // match that has a 3rd-place slot. Our bracket projection algorithm can
@@ -488,19 +493,23 @@ async function fetchFromESPN(overrideDates) {
             for (const km of koWithThird) {
               const fixedSlotStr = /^3rd-/.test(km.slot1 || '') ? km.slot2 : km.slot1;
               const fixedTeam = resolveKOSlot(fixedSlotStr);
+              if (_diag) console.log('[KO DEBUG] checking match', km.id, '| fixedSlot:', fixedSlotStr, '| fixedTeam resolves to:', fixedTeam);
               if (!fixedTeam) continue;
               const fixedNorm = normName(fixedTeam);
               if (fixedNorm === normName(n1) || fixedNorm === normName(n2)) {
                 koMatch = km;
+                if (_diag) console.log('[KO DEBUG] MATCHED on match', km.id, 'via fixed team', fixedTeam);
                 break;
               }
             }
           }
           if (!koMatch) {
+            if (_diag) console.log('[KO DEBUG] UNMATCHED — this event never got stored:', n1, 'vs', n2);
             const label = `${n1} vs ${n2}`;
             if (!unmatched.includes(label)) unmatched.push(label);
             continue;
           }
+          if (_diag) console.log('[KO DEBUG] Final koMatch.id:', koMatch.id, '| status:', status);
           // Found a KO match — build result using same logic as group matches below.
           // Use ESPN's actual team names as ground truth since our 3rd-place projection
           // may differ from FIFA's official matrix (e.g. we project Algeria but ESPN

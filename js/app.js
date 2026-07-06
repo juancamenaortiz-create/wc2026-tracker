@@ -216,6 +216,13 @@ function init() {
     localStorage.removeItem('wc2026_previews');
     localStorage.setItem('wc2026_pred_v2', '1');
   }
+  // One-time clear: a stale count-based cache in getThirdPlaceAssignments could
+  // have persisted an incorrect bracket 3rd-place team into localStorage before
+  // this fix. Force a clean refetch once so any corrupted cached result is discarded.
+  if (!localStorage.getItem('wc2026_results_v2')) {
+    localStorage.removeItem('wc2026_results');
+    localStorage.setItem('wc2026_results_v2', '1');
+  }
   try { STATE.myTeams = JSON.parse(localStorage.getItem('wc2026_myteams') || '[]'); } catch(e) { STATE.myTeams = []; }
   loadPreviewCache();
   try {
@@ -462,18 +469,28 @@ async function fetchFromESPN(overrideDates) {
             // match that has a 3rd-place slot. Our bracket projection algorithm can
             // assign a different 3rd-place team than FIFA's official matrix, so
             // "Belgium vs Algeria" in our projection vs "Belgium vs Senegal" from
-            // ESPN is a known class of mismatch. If the confirmed fixed-slot team
+            // ESPN is a known class of mismatch. If the confirmed FIXED-slot team
             // (e.g. Belgium = 1st-G, which is unambiguous) matches one of ESPN's
             // teams, we can confidently identify the match and trust ESPN for the
             // actual opponent.
+            //
+            // CRITICAL: only ever check the FIXED slot's team here, never the
+            // speculative 3rd-place projection (kt1/kt2 as a pair). The projection
+            // can — and did — place a real 3rd-place team (e.g. Algeria) into a
+            // completely DIFFERENT match's speculative slot. If we matched on
+            // "any resolved team" instead of specifically the fixed one, an
+            // unrelated match's wrong guess could coincidentally equal one of
+            // THIS event's real ESPN teams and win the loop first, silently
+            // misattributing the result to the wrong match ID entirely.
             const koWithThird = allKO.filter(km =>
               /^3rd-/.test(km.slot1 || '') || /^3rd-/.test(km.slot2 || '')
             );
             for (const km of koWithThird) {
-              const [kt1, kt2] = getKOMatchTeams(km.id);
-              const resolved = [kt1, kt2].filter(Boolean).map(normName);
-              const espnTeams = [normName(n1), normName(n2)];
-              if (resolved.some(t => espnTeams.includes(t))) {
+              const fixedSlotStr = /^3rd-/.test(km.slot1 || '') ? km.slot2 : km.slot1;
+              const fixedTeam = resolveKOSlot(fixedSlotStr);
+              if (!fixedTeam) continue;
+              const fixedNorm = normName(fixedTeam);
+              if (fixedNorm === normName(n1) || fixedNorm === normName(n2)) {
                 koMatch = km;
                 break;
               }
@@ -516,7 +533,7 @@ async function fetchFromESPN(overrideDates) {
               score1: null, score2: null, status: 'NS', substatus: '',
               round: koMatch.round || 'R32', date: koMatch.date,
               clock: '', events: [], pso: [],
-              tid1: flipKO ? (home.team?.id||'') : (home.team?.id||''),
+              tid1: flipKO ? (away.team?.id||'') : (home.team?.id||''),
               tid2: flipKO ? (home.team?.id||'') : (away.team?.id||''),
             });
             continue;
@@ -1298,16 +1315,16 @@ const MATCH_ELIGIBLE = {
   81: 'BEFIJ', 82: 'AEHIJ', 85: 'EFGIJ', 87: 'DEIJL'
 };
 
-let _3rdCache = { key: null, result: null };
-
 // Returns { [slotGroups]: teamName } e.g. { 'CEFHI': 'Mexico', ... }
+// NOTE: previously memoized by a count-based fingerprint, but that caused a
+// real bug — the cache key only tracked HOW MANY FT group matches existed,
+// not their actual content. If groupMatches was ever transiently polluted or
+// under-counted at some point (e.g. by an earlier sync bug), a wrong
+// assignment could get cached under a fingerprint that later recurs
+// legitimately, and would then never recompute. This calculation is cheap
+// (12 small sorts + an 8-slot backtracking search), so it's safer to just
+// always recompute fresh rather than maintain a fragile cache key.
 function getThirdPlaceAssignments(ovr) {
-  // Cache key includes result count + overrides so it busts when live scores update
-  const resultFingerprint = (STATE.results.groupMatches || []).filter(m => m.status === 'FT').length;
-  const key = resultFingerprint + '|' + JSON.stringify(ovr || {});
-  if (_3rdCache.key === key) return _3rdCache.result;
-
-  // 1. Rank all 12 third-place teams by Pts → GD → GF
   //    Only include groups that have played ≥2 games (enough data to project)
   const thirds = Object.keys(GROUP_TEAMS).map(g => {
     const s  = calculateStandings(g, ovr);
@@ -1354,7 +1371,6 @@ function getThirdPlaceAssignments(ovr) {
   for (const [mid, team] of Object.entries(assigned)) {
     result[MATCH_ELIGIBLE[mid]] = team;
   }
-  _3rdCache = { key, result };
   return result;
 }
 

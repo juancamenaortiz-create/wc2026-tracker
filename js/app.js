@@ -326,6 +326,35 @@ const ESPN_NAMES = {
 };
 function espnToApp(n) { return ESPN_NAMES[n] || n || ''; }
 
+// Convert American moneyline odds (e.g. "+250", "-150") to implied win probability.
+// CONFIRMED via live diagnostic: ESPN's soccer scoreboard has no winPercentage
+// field and no predictor field at all — comp.odds[0].moneyline.{home,away,draw}
+// gives American odds strings instead, which need this conversion.
+function americanOddsToProb(oddsStr) {
+  const n = parseFloat(oddsStr);
+  if (isNaN(n)) return null;
+  return n > 0 ? 100 / (n + 100) : Math.abs(n) / (Math.abs(n) + 100);
+}
+// Extract normalized home/away/draw win probability from ESPN's moneyline odds.
+// Raw implied probabilities from the three independent moneylines always sum
+// to slightly over 100% (the bookmaker's built-in margin/vig), so this
+// normalizes them to sum to exactly 100%.
+function extractWinProb(comp) {
+  const odds = (comp.odds || [])[0];
+  const ml = odds?.moneyline;
+  if (!ml) return null;
+  const hOdds = ml.home?.close?.odds ?? ml.home?.open?.odds;
+  const aOdds = ml.away?.close?.odds ?? ml.away?.open?.odds;
+  const dOdds = ml.draw?.close?.odds ?? ml.draw?.open?.odds;
+  const pH = americanOddsToProb(hOdds);
+  const pA = americanOddsToProb(aOdds);
+  const pD = americanOddsToProb(dOdds);
+  if (pH == null && pA == null) return null;
+  const total = (pH||0) + (pA||0) + (pD||0);
+  if (!total) return null;
+  return { home: (pH||0)/total*100, away: (pA||0)/total*100, draw: (pD||0)/total*100 };
+}
+
 // Detect whether an ESPN comp.details[] entry is a penalty SHOOTOUT kick
 // (as opposed to a regular in-play penalty goal, or a normal-time/extra-time goal).
 // Multiple signals are checked since ESPN's exact field shape can vary by endpoint version.
@@ -540,21 +569,11 @@ async function fetchFromESPN(overrideDates) {
           // or events yet. This ensures bracket/today always show the correct
           // pairing (e.g. Switzerland vs Algeria) instead of our projection.
           if (status === 'NS') {
-            const nsOdds = (comp.odds || [])[0] || {};
-            const nsPred = comp.predictor || {};
-            const nsH = parseFloat(nsOdds.homeTeamOdds?.winPercentage || nsPred.homeTeam?.gameProjection || 0) || null;
-            const nsA = parseFloat(nsOdds.awayTeamOdds?.winPercentage || nsPred.awayTeam?.gameProjection || 0) || null;
-            if (!window._wpLogCount) window._wpLogCount = 0;
-            if (window._wpLogCount < 6) {
-              window._wpLogCount++;
-              console.log('[WINPROB DEBUG]', actualT1, 'vs', actualT2,
-                '| comp.odds:', JSON.stringify(comp.odds || 'MISSING'),
-                '| comp.predictor:', JSON.stringify(comp.predictor || 'MISSING'));
-            }
-            if (nsH || nsA) {
-              STATE.winProbs[koMatch.id] = {
-                home: flipKO ? nsA : nsH, away: flipKO ? nsH : nsA,
-                draw: Math.max(0, 100 - (nsH||0) - (nsA||0)) };
+            const wp = extractWinProb(comp);
+            if (wp) {
+              STATE.winProbs[koMatch.id] = flipKO
+                ? { home: wp.away, away: wp.home, draw: wp.draw }
+                : wp;
             }
             koFound.push({
               matchId: koMatch.id, team1: actualT1, team2: actualT2, espnId: ev.id,
@@ -609,14 +628,12 @@ async function fetchFromESPN(overrideDates) {
         // Extract win probability for upcoming matches before the NS skip below
         // (odds are only meaningful pre-kickoff — this is the only time ESPN provides them)
         if (!status || status === 'NS') {
-          const oddsObj = (comp.odds || [])[0] || {};
-          const predObj = comp.predictor || {};
-          const wpH = parseFloat(oddsObj.homeTeamOdds?.winPercentage || predObj.homeTeam?.gameProjection || 0) || null;
-          const wpA = parseFloat(oddsObj.awayTeamOdds?.winPercentage || predObj.awayTeam?.gameProjection || 0) || null;
-          if ((wpH || wpA) && m?.id) {
+          const wp = extractWinProb(comp);
+          if (wp && m?.id) {
             const flip0 = normName(m.t1) === normName(n2);
-            STATE.winProbs[m.id] = { home: flip0 ? wpA : wpH, away: flip0 ? wpH : wpA,
-              draw: Math.max(0, 100 - (wpH||0) - (wpA||0)) };
+            STATE.winProbs[m.id] = flip0
+              ? { home: wp.away, away: wp.home, draw: wp.draw }
+              : wp;
           }
         }
         if (status === 'NS') continue; // group matches: already known from SCHEDULE, skip NS entries

@@ -203,13 +203,10 @@ function tpTogglePin(team) {
 }
 
 // ── ESPN roster + per-player stats fetch ─────────────────────────────────────
-// ESPN's roster table (confirmed against the live site) reports per-player
-// tournament stats: APP, SUB, G, A, SHOT, SOG, FC, FA, YC, RC, SV, GA — the
-// same columns shown on espn.com's own squad pages. ESPN's site API commonly
-// returns tabular player data as parallel labels[]/stats[] arrays rather than
-// named fields, so this parser handles both that shape and a named-field
-// fallback, and tries a couple of endpoint variants since the exact query
-// needed to include stats isn't publicly documented.
+// CONFIRMED via live diagnostic: d.athletes is a FLAT array of real players
+// (26 = a full World Cup squad) — NOT an array of position-groups with nested
+// .items, as originally assumed. Each player object has its own .position
+// (single object, not a group descriptor) and its own .statistics field.
 async function fetchTeamRosterWithStats(espnId) {
   const urls = [
     `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/teams/${espnId}/roster`,
@@ -218,64 +215,69 @@ async function fetchTeamRosterWithStats(espnId) {
   for (const url of urls) {
     try {
       const r = await fetch(url);
-      console.log('[ROSTER DEBUG] fetch', url, '→ HTTP', r.status);
       if (!r.ok) continue;
       const d = await r.json();
-      console.log('[ROSTER DEBUG] top-level keys:', Object.keys(d));
-      const parsed = _parseRosterResponse(d, /*diag=*/true);
-      console.log('[ROSTER DEBUG] parsed', parsed.length, 'players from', url);
+      const parsed = _parseRosterResponse(d);
       if (parsed.length) return parsed;
-    } catch(e) {
-      console.log('[ROSTER DEBUG] fetch threw:', e.message);
-    }
+    } catch(e) { /* try next url shape */ }
   }
   return [];
 }
 
-function _parseRosterResponse(d, diag) {
-  // Roster groups can appear at d.athletes, d.team.athletes, or d.roster
-  const groups = Array.isArray(d.athletes) ? d.athletes
-               : Array.isArray(d.team?.athletes) ? d.team.athletes
-               : Array.isArray(d.roster) ? d.roster
-               : [];
-  if (diag) console.log('[ROSTER DEBUG] group count:', groups.length, groups[0] ? 'first group keys: ' + Object.keys(groups[0]) : '(no groups found)');
-  const flat = [];
-  for (const g of groups) {
-    const posLabel = g.position || g.displayName || '';
-    const items = Array.isArray(g.items) ? g.items
-                : Array.isArray(g.athletes) ? g.athletes
+function _parseRosterResponse(d) {
+  // Confirmed shape: d.athletes is the flat player list directly.
+  // Kept the d.team.athletes / d.roster fallbacks in case ESPN varies this
+  // by team or league in edge cases.
+  const players = Array.isArray(d.athletes) ? d.athletes
+                : Array.isArray(d.team?.athletes) ? d.team.athletes
+                : Array.isArray(d.roster) ? d.roster
                 : [];
-    // Parallel-array pattern: g.labels = ['G','A','SHOT',...], each athlete has .stats = [3,1,0,...]
-    const labels = Array.isArray(g.labels) ? g.labels.map(l => String(l).toUpperCase()) : null;
-    if (diag && groups.indexOf(g) === 0) {
-      console.log('[ROSTER DEBUG] first group: posLabel=', posLabel, '| items:', items.length, '| labels:', labels);
-      if (items[0]) console.log('[ROSTER DEBUG] first athlete raw object:', JSON.stringify(items[0]).slice(0, 2000));
-    }
-    for (const p of items) {
-      const statMap = {};
-      if (labels && Array.isArray(p.stats)) {
-        labels.forEach((lbl, i) => { statMap[lbl] = parseFloat(p.stats[i]); });
-      } else if (Array.isArray(p.statistics)) {
-        p.statistics.forEach(s => {
+
+  // TEMPORARY DIAGNOSTIC — the only remaining unknown is the exact shape of
+  // each player's .statistics field. Dump the first non-empty one so we can
+  // finish mapping G/A/SHOT/SOG/FC/FA/YC/RC precisely, then remove this.
+  const sample = players.find(p => p.statistics && (Array.isArray(p.statistics) ? p.statistics.length : Object.keys(p.statistics).length));
+  if (sample) {
+    console.log('[ROSTER DEBUG] sample player:', sample.fullName || sample.displayName);
+    console.log('[ROSTER DEBUG] statistics field:', JSON.stringify(sample.statistics).slice(0, 3000));
+  } else if (players.length) {
+    console.log('[ROSTER DEBUG] no player has a non-empty statistics field. First player keys:', Object.keys(players[0]));
+  }
+
+  const flat = [];
+  for (const p of players) {
+    const statMap = {};
+    // Try a few plausible shapes for p.statistics until we confirm the real one:
+    if (Array.isArray(p.statistics)) {
+      p.statistics.forEach(s => {
+        // Shape A: flat {name/abbreviation, value/displayValue}
+        if (s && (s.name || s.abbreviation) && (s.value != null || s.displayValue != null)) {
           const key = String(s.abbreviation || s.name || '').toUpperCase();
           statMap[key] = parseFloat(s.value ?? s.displayValue);
-        });
-      }
-      const num = k => { const v = statMap[k]; return (typeof v === 'number' && !isNaN(v)) ? v : null; };
-      flat.push({
-        name:    p.fullName || p.displayName || p.shortName || '',
-        jersey:  p.jersey || '',
-        pos:     (p.position?.abbreviation || posLabel || '').toUpperCase().slice(0,3),
-        age:     p.age || null,
-        club:    p.team?.displayName || p.club?.displayName || '',
-        app:     num('APP'), sub: num('SUB'),
-        g:       num('G'),   a:   num('A'),
-        shot:    num('SHOT'),sog: num('SOG'),
-        fc:      num('FC'),  fa:  num('FA'),
-        yc:      num('YC'),  rc:  num('RC'),
-        sv:      num('SV'),  ga:  num('GA'),
+        }
+        // Shape B: nested category {name, stats: [{name, value}, ...]}
+        if (Array.isArray(s?.stats)) {
+          s.stats.forEach(s2 => {
+            const key = String(s2.abbreviation || s2.name || '').toUpperCase();
+            statMap[key] = parseFloat(s2.value ?? s2.displayValue);
+          });
+        }
       });
     }
+    const num = k => { const v = statMap[k]; return (typeof v === 'number' && !isNaN(v)) ? v : null; };
+    flat.push({
+      name:    p.fullName || p.displayName || p.shortName || '',
+      jersey:  p.jersey || '',
+      pos:     (p.position?.abbreviation || '').toUpperCase().slice(0,3),
+      age:     p.age || null,
+      club:    p.team?.displayName || p.club?.displayName || '',
+      app:     num('APP'), sub: num('SUB'),
+      g:       num('G'),   a:   num('A'),
+      shot:    num('SHOT'),sog: num('SOG'),
+      fc:      num('FC'),  fa:  num('FA'),
+      yc:      num('YC'),  rc:  num('RC'),
+      sv:      num('SV'),  ga:  num('GA'),
+    });
   }
   return flat;
 }

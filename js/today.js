@@ -345,6 +345,10 @@ function buildMatchCard(match, now) {
     const wp = STATE.winProbs && STATE.winProbs[match.id];
     if (wp && (wp.home || wp.away)) {
       const h = Math.round(wp.home || 0), d = Math.round(wp.draw || 0), a = Math.round(wp.away || 0);
+      // Short team labels so each percentage is unambiguous — colored bar segments
+      // alone (home/draw/away) don't make clear which side is which team.
+      const t1Short = displayName(match.t1);
+      const t2Short = displayName(match.t2);
       winProbHtml = `<div class="mc-prob">
         <div class="mc-prob-bar">
           <div class="mc-prob-seg mc-prob-home" style="width:${h}%"></div>
@@ -352,9 +356,9 @@ function buildMatchCard(match, now) {
           <div class="mc-prob-seg mc-prob-away" style="width:${a}%"></div>
         </div>
         <div class="mc-prob-labels">
-          <span class="mc-prob-lbl">${h}%</span>
+          <span class="mc-prob-lbl"><span class="mc-prob-team">${t1Short}</span> ${h}%</span>
           <span class="mc-prob-lbl mc-prob-lbl-c">Draw ${d}%</span>
-          <span class="mc-prob-lbl">${a}%</span>
+          <span class="mc-prob-lbl"><span class="mc-prob-team">${t2Short}</span> ${a}%</span>
         </div>
       </div>`;
     }

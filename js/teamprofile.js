@@ -233,35 +233,20 @@ function _parseRosterResponse(d) {
                 : Array.isArray(d.roster) ? d.roster
                 : [];
 
-  // TEMPORARY DIAGNOSTIC — the only remaining unknown is the exact shape of
-  // each player's .statistics field. Dump the first non-empty one so we can
-  // finish mapping G/A/SHOT/SOG/FC/FA/YC/RC precisely, then remove this.
-  const sample = players.find(p => p.statistics && (Array.isArray(p.statistics) ? p.statistics.length : Object.keys(p.statistics).length));
-  if (sample) {
-    console.log('[ROSTER DEBUG] sample player:', sample.fullName || sample.displayName);
-    console.log('[ROSTER DEBUG] statistics field:', JSON.stringify(sample.statistics).slice(0, 3000));
-  } else if (players.length) {
-    console.log('[ROSTER DEBUG] no player has a non-empty statistics field. First player keys:', Object.keys(players[0]));
-  }
-
   const flat = [];
   for (const p of players) {
     const statMap = {};
-    // Try a few plausible shapes for p.statistics until we confirm the real one:
-    if (Array.isArray(p.statistics)) {
-      p.statistics.forEach(s => {
-        // Shape A: flat {name/abbreviation, value/displayValue}
-        if (s && (s.name || s.abbreviation) && (s.value != null || s.displayValue != null)) {
+    // CONFIRMED real shape via live diagnostic: p.statistics.splits.categories
+    // is an array of { name, stats: [{ name, abbreviation, value, displayValue }] }.
+    // Every abbreviation (G, A, SHOT, SOG, FC, FA, YC, RC, SV, GA, APP, SUB)
+    // matches exactly what was already being looked up below.
+    const categories = p.statistics?.splits?.categories;
+    if (Array.isArray(categories)) {
+      categories.forEach(cat => {
+        (cat.stats || []).forEach(s => {
           const key = String(s.abbreviation || s.name || '').toUpperCase();
           statMap[key] = parseFloat(s.value ?? s.displayValue);
-        }
-        // Shape B: nested category {name, stats: [{name, value}, ...]}
-        if (Array.isArray(s?.stats)) {
-          s.stats.forEach(s2 => {
-            const key = String(s2.abbreviation || s2.name || '').toUpperCase();
-            statMap[key] = parseFloat(s2.value ?? s2.displayValue);
-          });
-        }
+        });
       });
     }
     const num = k => { const v = statMap[k]; return (typeof v === 'number' && !isNaN(v)) ? v : null; };

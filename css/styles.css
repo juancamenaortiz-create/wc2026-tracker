@@ -1924,6 +1924,7 @@ img.emoji {
   font-size: 10px; font-weight: 700; color: #7a828e;
 }
 .mc-prob-lbl-c { color: #5a6270; }
+.mc-prob-team { color: #9aa2ae; font-weight: 600; margin-right: 3px; }
 
 /* Schedule row win probability mini-bar */
 .srow-prob-wrap { margin: 3px 0 1px; }

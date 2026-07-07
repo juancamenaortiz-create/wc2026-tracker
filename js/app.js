@@ -544,6 +544,13 @@ async function fetchFromESPN(overrideDates) {
             const nsPred = comp.predictor || {};
             const nsH = parseFloat(nsOdds.homeTeamOdds?.winPercentage || nsPred.homeTeam?.gameProjection || 0) || null;
             const nsA = parseFloat(nsOdds.awayTeamOdds?.winPercentage || nsPred.awayTeam?.gameProjection || 0) || null;
+            if (!window._wpLogCount) window._wpLogCount = 0;
+            if (window._wpLogCount < 6) {
+              window._wpLogCount++;
+              console.log('[WINPROB DEBUG]', actualT1, 'vs', actualT2,
+                '| comp.odds:', JSON.stringify(comp.odds || 'MISSING'),
+                '| comp.predictor:', JSON.stringify(comp.predictor || 'MISSING'));
+            }
             if (nsH || nsA) {
               STATE.winProbs[koMatch.id] = {
                 home: flipKO ? nsA : nsH, away: flipKO ? nsH : nsA,

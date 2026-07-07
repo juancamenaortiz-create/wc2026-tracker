@@ -218,21 +218,27 @@ async function fetchTeamRosterWithStats(espnId) {
   for (const url of urls) {
     try {
       const r = await fetch(url);
+      console.log('[ROSTER DEBUG] fetch', url, '→ HTTP', r.status);
       if (!r.ok) continue;
       const d = await r.json();
-      const parsed = _parseRosterResponse(d);
+      console.log('[ROSTER DEBUG] top-level keys:', Object.keys(d));
+      const parsed = _parseRosterResponse(d, /*diag=*/true);
+      console.log('[ROSTER DEBUG] parsed', parsed.length, 'players from', url);
       if (parsed.length) return parsed;
-    } catch(e) { /* try next url shape */ }
+    } catch(e) {
+      console.log('[ROSTER DEBUG] fetch threw:', e.message);
+    }
   }
   return [];
 }
 
-function _parseRosterResponse(d) {
+function _parseRosterResponse(d, diag) {
   // Roster groups can appear at d.athletes, d.team.athletes, or d.roster
   const groups = Array.isArray(d.athletes) ? d.athletes
                : Array.isArray(d.team?.athletes) ? d.team.athletes
                : Array.isArray(d.roster) ? d.roster
                : [];
+  if (diag) console.log('[ROSTER DEBUG] group count:', groups.length, groups[0] ? 'first group keys: ' + Object.keys(groups[0]) : '(no groups found)');
   const flat = [];
   for (const g of groups) {
     const posLabel = g.position || g.displayName || '';
@@ -241,6 +247,10 @@ function _parseRosterResponse(d) {
                 : [];
     // Parallel-array pattern: g.labels = ['G','A','SHOT',...], each athlete has .stats = [3,1,0,...]
     const labels = Array.isArray(g.labels) ? g.labels.map(l => String(l).toUpperCase()) : null;
+    if (diag && groups.indexOf(g) === 0) {
+      console.log('[ROSTER DEBUG] first group: posLabel=', posLabel, '| items:', items.length, '| labels:', labels);
+      if (items[0]) console.log('[ROSTER DEBUG] first athlete raw object:', JSON.stringify(items[0]).slice(0, 2000));
+    }
     for (const p of items) {
       const statMap = {};
       if (labels && Array.isArray(p.stats)) {

@@ -241,18 +241,19 @@ function buildBracketCard(card, round) {
 }
 
 function buildThirdPlaceCard() {
+  // Match 103 already exists in ko.json with the correct slots (L-M101/L-M102 —
+  // loser of each semifinal) and real date/time/city. This was previously a fully
+  // static stub ("SF1 Loser"/"SF2 Loser" hardcoded text) that never looked up the
+  // actual match — build the same card object shape used everywhere else in the
+  // bracket and reuse buildBracketCard's real team/score/result resolution.
+  const m = (typeof KO_ROUNDS !== 'undefined' ? KO_ROUNDS : []).find(k => k.id === 103);
+  if (!m) return '';
+  const card = { matchId: 103, y: 0, ...m };
+  const dateLabel = m.date ? new Date(m.date + 'T12:00:00')
+    .toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+
   return `<div class="third-place-wrap">
-    <div class="third-place-label">Third Place · Jul 18 · Miami</div>
-    <div class="bracket-card third-place-card" style="width:${CARD_W + 20}px">
-      <div class="bc-team">
-        <span class="bc-badge empty"></span>
-        <span class="bc-name tbd">SF1 Loser</span>
-      </div>
-      <div class="bc-divider"></div>
-      <div class="bc-team">
-        <span class="bc-badge empty"></span>
-        <span class="bc-name tbd">SF2 Loser</span>
-      </div>
-    </div>
+    <div class="third-place-label">Third Place${dateLabel ? ` · ${dateLabel}` : ''}${m.city ? ` · ${m.city}` : ''}</div>
+    <div class="third-place-card-slot">${buildBracketCard(card, 4)}</div>
   </div>`;
 }
